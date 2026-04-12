@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.2.0...v1.3.0) (2026-04-12)
+
+### Features
+
+* adicionar verificação de disponibilidade do Playwright e fallback para geração de PDF ([08c84d0](https://github.com/CesarAVB/nutritional-monorepo/commit/08c84d0cb67a741a7111555e1ee220b80b89a6d6))
+
 ## [1.2.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.1.0...v1.2.0) (2026-04-12)
 
 ### Features
