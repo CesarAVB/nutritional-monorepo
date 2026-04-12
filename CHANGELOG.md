@@ -1,3 +1,9 @@
+## [1.2.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.1.0...v1.2.0) (2026-04-12)
+
+### Features
+
+* otimizar instalação do Chromium no Docker e remover código desnecessário do PlaywrightPdfService ([d71ed7b](https://github.com/CesarAVB/nutritional-monorepo/commit/d71ed7b2db1dec3511fe2bc9f64d9c373c65d825))
+
 ## [1.1.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.0.0...v1.1.0) (2026-04-12)
 
 ### Features
