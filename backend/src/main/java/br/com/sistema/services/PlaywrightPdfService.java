@@ -39,6 +39,7 @@ public class PlaywrightPdfService {
 
     private Playwright playwright;
     private Browser browser;
+    private volatile boolean available;
 
     @PostConstruct
     public void init() {
@@ -65,10 +66,12 @@ public class PlaywrightPdfService {
             }
 
             browser = playwright.chromium().launch(options);
+            available = true;
             log.info("Playwright Chromium pronto.");
         } catch (Exception e) {
+            available = false;
             log.error("Falha ao inicializar Playwright: {}", e.getMessage(), e);
-            throw new RuntimeException("Não foi possível inicializar o Playwright/Chromium", e);
+            log.warn("Playwright desabilitado; o sistema seguirá com fallback de PDF.");
         }
     }
 
@@ -76,7 +79,12 @@ public class PlaywrightPdfService {
     public void destroy() {
         if (browser != null)     { try { browser.close();     } catch (Exception ignored) {} }
         if (playwright != null)  { try { playwright.close();  } catch (Exception ignored) {} }
+        available = false;
         log.info("Playwright encerrado.");
+    }
+
+    public boolean isAvailable() {
+        return available && browser != null;
     }
 
     /**
@@ -87,6 +95,9 @@ public class PlaywrightPdfService {
      * @return bytes do PDF gerado em formato A4
      */
     public byte[] generatePdf(String html) {
+        if (!isAvailable()) {
+            throw new IllegalStateException("Playwright indisponivel para geracao de PDF");
+        }
         BrowserContext ctx = browser.newContext();
         try {
             Page page = ctx.newPage();

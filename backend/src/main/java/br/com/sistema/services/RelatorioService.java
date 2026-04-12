@@ -111,7 +111,12 @@ public class RelatorioService {
         // 6. Gerar e retornar PDF
         if ("relatorio-comparativo".equals(template)) {
             log.info("### PDF COMPARATIVO via Playwright");
-            return playwrightPdfService.generatePdf(html);
+            try {
+                return playwrightPdfService.generatePdf(html);
+            } catch (Exception ex) {
+                log.warn("Playwright indisponivel para comparativo. Fallback OpenHTMLtoPDF. Motivo: {}", ex.getMessage());
+                return gerarPDF(html);
+            }
         }
         return gerarPDF(html);
     }
@@ -183,8 +188,12 @@ public class RelatorioService {
 
         String html = templateEngine.process("relatorio-nutricional-detalhado", context);
         log.info("### RELATÓRIO DETALHADO processado com template fixo e gerado via Playwright");
-
-        return playwrightPdfService.generatePdf(html);
+        try {
+            return playwrightPdfService.generatePdf(html);
+        } catch (Exception ex) {
+            log.warn("Playwright indisponivel para relatorio detalhado. Fallback OpenHTMLtoPDF. Motivo: {}", ex.getMessage());
+            return gerarPDF(html);
+        }
     }
 
     // ==============================================
@@ -423,7 +432,12 @@ public class RelatorioService {
 
         String html = templateEngine.process("relatorio-comparativo", context);
         log.info("### RELATÃ“RIO COMPARATIVO gerado com Playwright â€” {} consultas", itens.size());
-        return playwrightPdfService.generatePdf(html);
+        try {
+            return playwrightPdfService.generatePdf(html);
+        } catch (Exception ex) {
+            log.warn("Playwright indisponivel no comparativo consolidado. Fallback OpenHTMLtoPDF. Motivo: {}", ex.getMessage());
+            return gerarPDF(html);
+        }
     }
 
 
