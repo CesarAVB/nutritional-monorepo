@@ -3,6 +3,7 @@ package br.com.sistema.services;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -50,17 +51,12 @@ public class PlaywrightPdfService {
 
             playwright = Playwright.create();
 
-            BrowserType.LaunchOptions options = new BrowserType.LaunchOptions()
-                    .setHeadless(true)
-                    .setArgs(List.of(
-                            "--no-sandbox",
-                            "--disable-setuid-sandbox",
-                            "--disable-gpu",
-                            "--disable-dev-shm-usage"
-                    ));
+            BrowserType.LaunchOptions baseOptions = buildLaunchOptions();
 
             String chromiumPath = System.getenv("CHROMIUM_PATH");
             Path chromiumExecutable = resolveChromiumExecutable(chromiumPath);
+
+            BrowserType.LaunchOptions options = buildLaunchOptions();
             if (chromiumExecutable != null) {
                 options.setExecutablePath(chromiumExecutable);
                 log.info("Playwright usando Chromium do sistema: {}", chromiumExecutable);
@@ -68,12 +64,22 @@ public class PlaywrightPdfService {
                 log.warn("CHROMIUM_PATH configurado, mas arquivo nao encontrado em {}. Tentando launcher padrao do Playwright.", chromiumPath);
             }
 
-            browser = playwright.chromium().launch(options);
+            try {
+                browser = playwright.chromium().launch(options);
+            } catch (Exception firstLaunchError) {
+                if (chromiumExecutable != null && isSnapChromiumFailure(firstLaunchError)) {
+                    log.warn("Chromium do sistema parece ser wrapper snap e nao funciona neste ambiente. Tentando Chromium gerenciado pelo Playwright.");
+                    browser = playwright.chromium().launch(baseOptions);
+                } else {
+                    throw firstLaunchError;
+                }
+            }
+
             available = true;
             log.info("Playwright Chromium pronto.");
         } catch (Exception e) {
             available = false;
-            if (e.getMessage() != null && e.getMessage().contains("executable doesn't exist")) {
+            if (isMissingExecutableFailure(e) || isSnapChromiumFailure(e)) {
                 log.warn("Playwright indisponivel por falta de executavel Chromium: {}", e.getMessage());
             } else {
                 log.error("Falha ao inicializar Playwright: {}", e.getMessage(), e);
@@ -146,7 +152,7 @@ public class PlaywrightPdfService {
     private Path resolveChromiumExecutable(String configuredPath) {
         if (configuredPath != null && !configuredPath.isBlank()) {
             Path configured = Paths.get(configuredPath);
-            if (Files.isExecutable(configured)) {
+            if (Files.isExecutable(configured) && isUsableChromiumExecutable(configured)) {
                 return configured;
             }
         }
@@ -159,11 +165,47 @@ public class PlaywrightPdfService {
 
         for (String candidate : candidates) {
             Path path = Paths.get(candidate);
-            if (Files.isExecutable(path)) {
+            if (Files.isExecutable(path) && isUsableChromiumExecutable(path)) {
                 return path;
             }
         }
         return null;
+    }
+
+    private BrowserType.LaunchOptions buildLaunchOptions() {
+        return new BrowserType.LaunchOptions()
+                .setHeadless(true)
+                .setArgs(List.of(
+                        "--no-sandbox",
+                        "--disable-setuid-sandbox",
+                        "--disable-gpu",
+                        "--disable-dev-shm-usage"
+                ));
+    }
+
+    private boolean isUsableChromiumExecutable(Path executable) {
+        try {
+            Process process = new ProcessBuilder(executable.toString(), "--version")
+                    .redirectErrorStream(true)
+                    .start();
+            boolean finished = process.waitFor(Duration.ofSeconds(3).toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS);
+            if (!finished) {
+                process.destroyForcibly();
+                return false;
+            }
+            String output = new String(process.getInputStream().readAllBytes());
+            return process.exitValue() == 0 && !output.toLowerCase().contains("requires the chromium snap");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean isMissingExecutableFailure(Exception e) {
+        return e.getMessage() != null && e.getMessage().contains("executable doesn't exist");
+    }
+
+    private boolean isSnapChromiumFailure(Exception e) {
+        return e.getMessage() != null && e.getMessage().toLowerCase().contains("requires the chromium snap");
     }
 
     private void closeResources() {
