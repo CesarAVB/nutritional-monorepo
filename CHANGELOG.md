@@ -1,3 +1,9 @@
+## [1.4.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.3.0...v1.4.0) (2026-04-12)
+
+### Features
+
+* melhorar a resolução do executável do Chromium e adicionar tratamento de erros no PlaywrightPdfService ([0f3214e](https://github.com/CesarAVB/nutritional-monorepo/commit/0f3214e768408a2ebe3e37c4a1a0f8877d65d503))
+
 ## [1.3.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.2.0...v1.3.0) (2026-04-12)
 
 ### Features
