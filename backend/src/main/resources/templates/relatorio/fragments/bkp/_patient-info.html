@@ -1,0 +1,68 @@
+﻿<div th:fragment="patientInfo(paciente, idadePaciente, dataConsulta, proximaConsulta)"
+     xmlns:th="http://www.thymeleaf.org" class="card">
+
+  <div class="card-title"><i class="fas fa-user-circle icon-circle primary"></i> Dados do Paciente</div>
+
+  <!-- Informações Pessoais -->
+  <h4 style="font-size: 13px; color: #0d9488; margin: 0 0 12px 0;"><i class="fas fa-user"></i> INFORMAÇÕES PESSOAIS</h4>
+
+  <table class="tbl tbl-striped tbl-modern" style="margin-bottom: 24px;">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Valor</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Nome</td>
+        <td th:text="${paciente != null ? paciente.nomeCompleto : 'Nome do Paciente'}">Nome do Paciente</td>
+      </tr>
+      <tr>
+        <td>Nascimento</td>
+        <td>
+          <span th:text="${paciente != null and paciente.dataNascimento != null ? #temporals.format(paciente.dataNascimento, 'dd/MM/yyyy') : '--'}">--</span>
+          <span style="color: #64748b; font-size: 12px;">(<span th:text="${idadePaciente != null ? idadePaciente : '0'}">0</span> anos)</span>
+        </td>
+      </tr>
+      <tr>
+        <td>Sexo</td>
+        <td th:text="${paciente != null ? paciente.sexo : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>CPF</td>
+        <td th:text="${paciente != null and paciente.cpf != null ? paciente.cpf : '--'}">--</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Contato & Consultas -->
+  <h4 style="font-size: 13px; color: #0d9488; margin: 0 0 12px 0;"><i class="fas fa-address-book"></i> CONTATO &amp; CONSULTAS</h4>
+
+  <table class="tbl tbl-striped tbl-modern">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Valor</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>WhatsApp</td>
+        <td th:text="${paciente != null and paciente.telefoneWhatsapp != null ? paciente.telefoneWhatsapp : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>E-mail</td>
+        <td th:text="${paciente != null and paciente.email != null ? paciente.email : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Consulta</td>
+        <td th:text="${dataConsulta != null ? dataConsulta : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Próxima</td>
+        <td th:text="${proximaConsulta != null ? proximaConsulta : '--'}">--</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

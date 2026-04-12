@@ -1,0 +1,46 @@
+<div th:fragment="photos(registroFotografico)"
+     xmlns:th="http://www.thymeleaf.org" class="card">
+  
+  <div class="card-title"><i class="fas fa-camera-retro icon-circle primary"></i> Registro Fotográfico</div>
+  
+  <table class="photos-grid">
+    <tr>
+      <td class="photo-cell">
+        <div class="photo-container" th:if="${registroFotografico != null and registroFotografico.fotoAnterior != null}">
+          <img th:src="${registroFotografico.fotoAnterior}" alt="Vista Anterior" class="photo-img" />
+        </div>
+        <div class="photo-placeholder" th:if="${registroFotografico == null or registroFotografico.fotoAnterior == null}">
+          <i class="fas fa-image" style="font-size: 32px; color: #94a3b8;"></i>
+        </div>
+        <p class="photo-label"><i class="fas fa-arrow-up"></i> Anterior</p>
+      </td>
+      <td class="photo-cell">
+        <div class="photo-container" th:if="${registroFotografico != null and registroFotografico.fotoPosterior != null}">
+          <img th:src="${registroFotografico.fotoPosterior}" alt="Vista Posterior" class="photo-img" />
+        </div>
+        <div class="photo-placeholder" th:if="${registroFotografico == null or registroFotografico.fotoPosterior == null}">
+          <i class="fas fa-image" style="font-size: 32px; color: #94a3b8;"></i>
+        </div>
+        <p class="photo-label"><i class="fas fa-arrow-down"></i> Posterior</p>
+      </td>
+      <td class="photo-cell">
+        <div class="photo-container" th:if="${registroFotografico != null and registroFotografico.fotoLateralEsquerda != null}">
+          <img th:src="${registroFotografico.fotoLateralEsquerda}" alt="Lateral Esquerda" class="photo-img" />
+        </div>
+        <div class="photo-placeholder" th:if="${registroFotografico == null or registroFotografico.fotoLateralEsquerda == null}">
+          <i class="fas fa-image" style="font-size: 32px; color: #94a3b8;"></i>
+        </div>
+        <p class="photo-label"><i class="fas fa-arrow-left"></i> Lateral Esq.</p>
+      </td>
+      <td class="photo-cell">
+        <div class="photo-container" th:if="${registroFotografico != null and registroFotografico.fotoLateralDireita != null}">
+          <img th:src="${registroFotografico.fotoLateralDireita}" alt="Lateral Direita" class="photo-img" />
+        </div>
+        <div class="photo-placeholder" th:if="${registroFotografico == null or registroFotografico.fotoLateralDireita == null}">
+          <i class="fas fa-image" style="font-size: 32px; color: #94a3b8;"></i>
+        </div>
+        <p class="photo-label"><i class="fas fa-arrow-right"></i> Lateral Dir.</p>
+      </td>
+    </tr>
+  </table>
+</div>

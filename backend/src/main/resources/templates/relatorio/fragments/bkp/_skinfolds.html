@@ -1,0 +1,45 @@
+<div th:fragment="skinfolds(avaliacaoFisica, soma7Dobras, soma3Dobras, percentualGorduraPollock)"
+     xmlns:th="http://www.thymeleaf.org" class="card">
+  
+  <div class="card-title"><i class="fas fa-hand-point-right"></i> Dobras Cutâneas (em mm)</div>
+
+  <h4 style="font-size: 13px; color: #0d9488; margin: 0 0 12px 0;"><i class="fas fa-percentage"></i> DOBRAS CUTÂNEAS (em mm)</h4>
+
+  <table class="tbl tbl-striped tbl-modern">
+    <thead>
+      <tr>
+        <th>Local</th>
+        <th>Valor (mm)</th>
+        <th>Local</th>
+        <th>Valor (mm)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Tríceps</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.dobraTriceps : '0.00'}">0.00</td>
+        <td>Subescapular</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.dobraSubescapular : '0.00'}">0.00</td>
+      </tr>
+      <tr>
+        <td>Peitoral</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.dobraPeito : '0.00'}">0.00</td>
+        <td>Supra-ilíaca</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.dobraSupraIliaca : '0.00'}">0.00</td>
+      </tr>
+      <tr>
+        <td>Axilar Média</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.dobraAxilarMedia : '0.00'}">0.00</td>
+        <td>Coxa</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.dobraCoxa : '0.00'}">0.00</td>
+      </tr>
+      <tr>
+        <td>Abdominal</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.dobraAbdominal : '0.00'}">0.00</td>
+        <td>&#160;</td>
+        <td>&#160;</td>
+      </tr>
+    </tbody>
+  </table>
+  
+</div>

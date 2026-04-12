@@ -1,0 +1,81 @@
+<div th:fragment="imcTable(classificacaoAtual)"
+     xmlns:th="http://www.thymeleaf.org" class="card">
+  
+  <div class="card-title"><i class="fas fa-chart-bar"></i> Tabela de Classificação do IMC (OMS)</div>
+  
+  <table class="tbl tbl-modern">
+    <thead>
+      <tr>
+        <th>Classificação</th>
+        <th>IMC (kg/m²)</th>
+        <th>Risco de Comorbidades</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:classappend="${classificacaoAtual == 'MAGREZA_III' ? 'tbl-current' : ''}">
+        <td>
+          Magreza Grau III
+          <span th:if="${classificacaoAtual == 'MAGREZA_III'}" class="current-badge">Atual</span>
+        </td>
+        <td>&lt; 16,0</td>
+        <td><span class="risk-badge risk-muito-alto">Muito Alto</span></td>
+      </tr>
+      <tr th:classappend="${classificacaoAtual == 'MAGREZA_II' ? 'tbl-current' : ''}">
+        <td>
+          Magreza Grau II
+          <span th:if="${classificacaoAtual == 'MAGREZA_II'}" class="current-badge">Atual</span>
+        </td>
+        <td>16,0 - 16,9</td>
+        <td><span class="risk-badge risk-alto">Alto</span></td>
+      </tr>
+      <tr th:classappend="${classificacaoAtual == 'MAGREZA_I' ? 'tbl-current' : ''}">
+        <td>
+          Magreza Grau I
+          <span th:if="${classificacaoAtual == 'MAGREZA_I'}" class="current-badge">Atual</span>
+        </td>
+        <td>17,0 - 18,4</td>
+        <td><span class="risk-badge risk-moderado">Moderado</span></td>
+      </tr>
+      <tr th:classappend="${classificacaoAtual == 'EUTROFIA' ? 'tbl-current' : ''}">
+        <td>
+          Eutrofia (Normal)
+          <span th:if="${classificacaoAtual == 'EUTROFIA'}" class="current-badge">Atual</span>
+        </td>
+        <td>18,5 - 24,9</td>
+        <td><span class="risk-badge risk-normal">Normal</span></td>
+      </tr>
+      <tr th:classappend="${classificacaoAtual == 'SOBREPESO' ? 'tbl-current' : ''}">
+        <td>
+          Sobrepeso (Pré-obesidade)
+          <span th:if="${classificacaoAtual == 'SOBREPESO'}" class="current-badge">Atual</span>
+        </td>
+        <td>25,0 - 29,9</td>
+        <td><span class="risk-badge risk-aumentado">Aumentado</span></td>
+      </tr>
+      <tr th:classappend="${classificacaoAtual == 'OBESIDADE_I' ? 'tbl-current' : ''}">
+        <td>
+          Obesidade Grau I
+          <span th:if="${classificacaoAtual == 'OBESIDADE_I'}" class="current-badge">Atual</span>
+        </td>
+        <td>30,0 - 34,9</td>
+        <td><span class="risk-badge risk-moderado">Moderado</span></td>
+      </tr>
+      <tr th:classappend="${classificacaoAtual == 'OBESIDADE_II' ? 'tbl-current' : ''}">
+        <td>
+          Obesidade Grau II
+          <span th:if="${classificacaoAtual == 'OBESIDADE_II'}" class="current-badge">Atual</span>
+        </td>
+        <td>35,0 - 39,9</td>
+        <td><span class="risk-badge risk-alto">Alto</span></td>
+      </tr>
+      <tr th:classappend="${classificacaoAtual == 'OBESIDADE_III' ? 'tbl-current' : ''}">
+        <td>
+          Obesidade Grau III
+          <span th:if="${classificacaoAtual == 'OBESIDADE_III'}" class="current-badge">Atual</span>
+        </td>
+        <td>≥ 40,0</td>
+        <td><span class="risk-badge risk-muito-alto">Muito Alto</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>

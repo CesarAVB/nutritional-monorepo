@@ -1,0 +1,73 @@
+<div th:fragment="referenceTables(sexoPaciente, faixaEtaria)"
+     xmlns:th="http://www.thymeleaf.org" class="card">
+  
+  <div class="card-title"><i class="fas fa-book"></i> Tabelas de Referência</div>
+  
+  <!-- Tabela % Gordura Ideal -->
+  <h4 style="font-size: 13px; color: #0d9488; margin: 0 0 12px 0;"><i class="fas fa-percentage"></i> TABELA % GORDURA IDEAL (ACMS - Lea &amp; Febiger, 1986)</h4>
+  
+  <table class="tbl tbl-striped tbl-modern" style="margin-bottom: 24px;">
+    <thead>
+      <tr>
+        <th>Anos</th>
+        <th class="text-center">18 a 29</th>
+        <th class="text-center">30 a 39</th>
+        <th class="text-center">40 a 49</th>
+        <th class="text-center">50 a 59</th>
+        <th class="text-center">&gt;60</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:classappend="${sexoPaciente == 'MASCULINO' ? 'tbl-current' : ''}">
+        <td><strong>Homens</strong></td>
+        <td class="text-center" th:classappend="${sexoPaciente == 'MASCULINO' and faixaEtaria == '18-29' ? 'tbl-current' : ''}">14%</td>
+        <td class="text-center" th:classappend="${sexoPaciente == 'MASCULINO' and faixaEtaria == '30-39' ? 'tbl-current' : ''}">16%</td>
+        <td class="text-center" th:classappend="${sexoPaciente == 'MASCULINO' and faixaEtaria == '40-49' ? 'tbl-current' : ''}">17%</td>
+        <td class="text-center" th:classappend="${sexoPaciente == 'MASCULINO' and faixaEtaria == '50-59' ? 'tbl-current' : ''}">18%</td>
+        <td class="text-center" th:classappend="${sexoPaciente == 'MASCULINO' and faixaEtaria == '60+' ? 'tbl-current' : ''}">21%</td>
+      </tr>
+      <tr th:classappend="${sexoPaciente == 'FEMININO' ? 'tbl-current' : ''}">
+        <td><strong>Mulheres</strong></td>
+        <td class="text-center" th:classappend="${sexoPaciente == 'FEMININO' and faixaEtaria == '18-29' ? 'tbl-current' : ''}">19%</td>
+        <td class="text-center" th:classappend="${sexoPaciente == 'FEMININO' and faixaEtaria == '30-39' ? 'tbl-current' : ''}">21%</td>
+        <td class="text-center" th:classappend="${sexoPaciente == 'FEMININO' and faixaEtaria == '40-49' ? 'tbl-current' : ''}">22%</td>
+        <td class="text-center" th:classappend="${sexoPaciente == 'FEMININO' and faixaEtaria == '50-59' ? 'tbl-current' : ''}">23%</td>
+        <td class="text-center" th:classappend="${sexoPaciente == 'FEMININO' and faixaEtaria == '60+' ? 'tbl-current' : ''}">26%</td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <!-- Tabela IMC -->
+  <h4 style="font-size: 13px; color: #0d9488; margin: 0 0 12px 0;"><i class="fas fa-chart-line"></i> TABELA IMC (Organização Mundial de Saúde)</h4>
+  
+  <table class="tbl tbl-striped tbl-modern">
+    <thead>
+      <tr>
+        <th>Classificação</th>
+        <th class="text-center">IMC</th>
+        <th>Classificação</th>
+        <th class="text-center">IMC</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Baixo</td>
+        <td class="text-center">&lt; 18,5</td>
+        <td>Obes. Leve</td>
+        <td class="text-center">30,0 a 34,9</td>
+      </tr>
+      <tr>
+        <td>Ideal</td>
+        <td class="text-center">18,5 a 24,9</td>
+        <td>Obes. Moderada</td>
+        <td class="text-center">35,0 a 39,9</td>
+      </tr>
+      <tr>
+        <td>Sobrepeso</td>
+        <td class="text-center">25,0 a 29,9</td>
+        <td>Obes. Mórbida</td>
+        <td class="text-center">&gt; 40,0</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

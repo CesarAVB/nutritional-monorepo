@@ -1,0 +1,31 @@
+<div th:fragment="signatureFooter(doctorName, doctorTitle, crn)"
+     xmlns:th="http://www.thymeleaf.org" class="report-signature-wrapper">
+
+  <div class="report-signature-card">
+    <table class="report-signature-table">
+      <tr>
+        <td class="report-signature-left">
+          <div class="report-signature-line"></div>
+          <p class="report-signature-name">
+            <i class="fas fa-user-md report-signature-icon"></i>
+            <span th:text="${doctorName != null ? doctorName : 'André Reis'}">André Reis</span>
+          </p>
+          <p class="report-signature-role">
+            <i class="fas fa-stethoscope report-signature-icon"></i>
+            <span th:text="${doctorTitle != null ? doctorTitle : 'Nutricionista Clínico e Esportivo'}">Nutricionista Clínico e Esportivo</span>
+          </p>
+          <p class="report-signature-crn">
+            <i class="fas fa-id-badge report-signature-icon"></i>
+            CRN: <span th:text="${crn != null ? crn : '22102151'}">22102151</span>
+          </p>
+        </td>
+        <td class="report-signature-right">
+          <p class="report-signature-label">Documento emitido em</p>
+          <p class="report-signature-date" th:text="${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy HH:mm')}">16/03/2026 10:00</p>
+          <p class="report-signature-note">Relatório técnico de avaliação nutricional.</p>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+</div>

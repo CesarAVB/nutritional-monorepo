@@ -1,0 +1,1335 @@
+<head th:fragment="head" xmlns:th="http://www.thymeleaf.org">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prontuário de Nutrição - André Reis</title>
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <style>
+    /* ========================================
+       OPENHTMLTOPDF - CONFIGURAÇÃO BASE
+       ======================================== */
+    @page {
+      size: A4;
+      margin: 0mm 0mm 20mm 0mm;
+      @bottom-center {
+        content: "Andre Reis | Nutricao Clinica e Esportiva | Av. Dr. Mario Guimaraes, 318, Sala 1001 | Nova Iguacu, RJ | CEP 26255-230";
+        font-size: 10.5px;
+        font-weight: 600;
+        text-align: center;
+        color: #0b6b57;
+        margin: 7px;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif;
+      font-size: 13px;
+      color: #1e293b;
+      background-color: #ffffff;
+      line-height: 1.5;
+    }
+
+    .doc {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: #ffffff;
+    }
+
+    /* ========================================
+       VARIÁVEIS DE COR (via classes)
+       ======================================== */
+    .bg-primary { background-color: #0d9488; }
+    .bg-primary-light { background-color: #5eead4; }
+    .text-primary { color: #0d9488; }
+    .text-dark { color: #1e293b; }
+    .text-muted { color: #64748b; }
+    .text-label { color: #94a3b8; }
+    .border-color { border-color: #e2e8f0; }
+
+    /* ========================================
+       HEADER
+       ======================================== */
+    .header {
+      background-color: #0d9488;
+      color: #ffffff;
+      padding: 24px;
+      margin: 0;
+      page-break-inside: avoid;
+    }
+
+    .header-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .header-left h1 {
+      margin: 0 0 4px 0;
+      font-size: 24px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .header-left p {
+      margin: 0;
+      font-size: 13px;
+      color: rgba(255,255,255,0.9);
+    }
+
+    /* Logo highlight (mais forte) */
+    .logo-container {
+      display:inline-block;
+      background: #dcfce7; /* verde claro mais saturado */
+      padding: 10px;
+      border-radius: 12px;
+      border: 2px solid #10b981; /* borda mais evidente */
+      vertical-align: middle;
+      -webkit-print-color-adjust: exact;
+    }
+
+    .clinic-logo {
+      display:block;
+      max-width: 160px;
+      max-height: 160px;
+      object-fit:contain;
+    }
+
+    /* small variant for tighter headers */
+    .logo-container.small { padding:8px; border-radius:10px; }
+
+
+    .header-right {
+      text-align: right;
+      color: #ffffff;
+    }
+
+    .header-right .doctor-name {
+      font-weight: 600;
+      font-size: 15px;
+      margin: 0;
+    }
+
+    .header-right .crn {
+      font-size: 13px;
+      opacity: 0.9;
+      margin: 0;
+    }
+
+    /* ========================================
+       CARDS (modern, PDF-safe)
+       ======================================== */
+    .card {
+      background-color: #ffffff;
+      padding: 18px;
+      margin: 0 0 20px 0;
+      border: 1px solid #e6eef0;
+      border-radius: 10px;
+      page-break-inside: avoid;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #064e3b;
+      margin: 0 0 12px 0;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(6,78,59,0.06);
+    }
+
+    .card-title i { margin-right: 8px; }
+
+    .section-title { font-size:13px; color:#0d9488; margin:8px 0 10px 0; font-weight:700; }
+    .muted { color:#64748b; font-size:12px; }
+
+    .icon-circle { display:inline-block; font-size:16px; margin-right:8px; }
+    .icon-circle.primary { color: #047857; }
+    .icon-circle.info { color: #0369a1; }
+    .icon-circle.warning { color: #d97706; }
+
+    /* ========================================
+       PATIENT INFO GRID (table-based, stable)
+       ======================================== */
+    .patient-grid { width: 100%; border-collapse: collapse; font-size:13px; }
+    .patient-grid td { padding: 8px 12px; vertical-align: top; }
+    .patient-grid th { text-align:left; background-color:#f0fdfa; padding:8px 12px; color:#055e52; font-weight:700; }
+    .patient-label { color:#055e52; font-weight:700; }
+    .info-value { font-size:14px; color:#1e293b; }
+
+    /* ========================================
+       METRICS (table layout with inner rounded card)
+       ======================================== */
+    .metrics-grid { width:100%; border-collapse: separate; border-spacing: 12px 0; page-break-inside: avoid; }
+    .metric-box { width: 33.333%; padding: 4px; vertical-align: top; }
+    .metric-card { background-color:#f8fffb; border:1px solid rgba(6,120,87,0.08); border-radius:12px; padding:10px; min-height:88px; text-align:center; box-sizing:border-box; -webkit-print-color-adjust:exact; }
+    .metric-icon { display:inline-block; width:42px; height:42px; line-height:42px; border-radius:21px; background-color:#ecfdf5; color:#047857; font-size:16px; margin:0 auto 8px auto; }
+    .metric-value { font-size:18px; font-weight:800; color:#064e3b; margin:0; }
+    .metric-value-small { font-size:12px; font-weight:700; color:#6b7280; margin-left:6px; }
+    .metric-label { font-size:12px; color:#6b7280; margin-top:6px; display:block; }
+
+    /* simple variants (background-color fallbacks) */
+    .metric-card.metric-weight { background-color:#f0fff7; border-color: rgba(6,120,87,0.10); }
+    .metric-card.metric-height { background-color:#eff8ff; border-color: rgba(3,105,161,0.08); }
+    .metric-card.metric-imc    { background-color:#fff8ed; border-color: rgba(217,119,6,0.08); }
+
+    /* ========================================
+       COMPOSITION CARDS
+       ======================================== */
+    .composicao-grid { width: 100%; border-collapse: separate; border-spacing: 12px 0; page-break-inside: avoid; }
+    .composicao-card { width:25%; padding:6px; vertical-align: top; }
+    .comp-card { background-color:#ffffff; border:1px solid rgba(6,120,87,0.06); border-radius:10px; padding:10px; min-height:100px; text-align:center; -webkit-print-color-adjust: exact; }
+    .comp-card .icon { width:40px; height:40px; line-height:40px; border-radius:20px; background-color:#f8fffb; color:#047857; margin:0 auto 8px auto; }
+    .comp-card .value { font-weight:700; font-size:16px; color:#064e3b; }
+    .comp-card .label { color:#6b7280; font-size:12px; margin-top:6px; }
+
+    /* variants */
+    .comp-card.comp-gordura { border-color: rgba(217,119,6,0.08); }
+    .comp-card.comp-massa-gorda { border-color: rgba(219,39,119,0.06); }
+    .comp-card.comp-massa-magra { border-color: rgba(3,105,161,0.06); }
+    .comp-card.comp-agua { border-color: rgba(6,120,87,0.06); }
+
+    /* ========================================
+       TABLES (modern but safe) - Atualizado com paleta verde suave
+       ======================================== */
+    .tbl { width:100%; border-collapse: separate; border-spacing: 0; font-size:13px; border:1px solid #e6f1ee; border-radius:10px; overflow:hidden; }
+    .tbl th { background-color:#eef6f2; padding:14px 16px; text-align:left; font-weight:700; color:#0b6b57; border-bottom:1px solid #f0fbf9; font-size:14px; }
+    .tbl td { padding:12px 16px; border-bottom:1px solid #f7fbf9; color:#1e293b; }
+    .tbl tr:nth-child(even) td { background-color:#fbfffe; }
+
+    /* rounded corners for header/footer */
+    .tbl th:first-child { border-top-left-radius:10px; }
+    .tbl th:last-child { border-top-right-radius:10px; }
+    .tbl tr:last-child td:first-child { border-bottom-left-radius:10px; }
+    .tbl tr:last-child td:last-child { border-bottom-right-radius:10px; }
+
+    /* emphasize previous value / reference columns (third column in many tables) */
+    .tbl td.value-prev { color:#0b6b57; font-weight:700; }
+    .tbl td:nth-child(3) { color:#0b6b57; font-weight:700; }
+
+    /* small helpers */
+    .text-right { text-align:right; }
+    .text-center { text-align:center; }
+    .muted { color:#64748b; font-size:12px; }
+    .page-break { page-break-after: always; }
+
+
+    .tbl-striped tr:nth-child(even) {
+      background-color: #f8fafb;
+    }
+
+    .tbl-current {
+      background-color: #f0fdfa;
+    }
+
+    .tbl-current td:first-child {
+      font-weight: 600;
+    }
+
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .text-left { text-align: left; }
+
+    /* ========================================
+       RISK BADGES
+       ======================================== */
+    .risk-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .risk-muito-alto { background-color: #fee2e2; color: #dc2626; }
+    .risk-alto { background-color: #fef3c7; color: #d97706; }
+    .risk-moderado { background-color: #fef9c3; color: #ca8a04; }
+    .risk-normal { background-color: #dcfce7; color: #15803d; }
+    .risk-aumentado { background-color: #ffedd5; color: #ea580c; }
+
+    .current-badge {
+      display: inline-block;
+      background-color: #0d9488;
+      color: #ffffff;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-left: 8px;
+      -webkit-print-color-adjust: exact;
+    }
+
+    /* Buttons (report actions / inline CTA) */
+    .btn {
+      display:inline-block;
+      padding:6px 12px;
+      border-radius:6px;
+      text-decoration:none;
+      font-weight:700;
+      font-size:13px;
+      vertical-align:middle;
+      -webkit-print-color-adjust: exact;
+    }
+    .btn-primary { background-color:#0d9488; color:#ffffff; border:1px solid #0b6b57; }
+    .btn-secondary { background-color:#0369a1; color:#ffffff; border:1px solid #024e63; }
+
+    /* Risk badges - stronger contrast */
+    .risk-badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+
+    .risk-muito-alto { background-color: #fee2e2; color: #9b1c1c; border-color:#fda4af; }
+    .risk-alto { background-color: #fef3c7; color: #b45309; border-color:#fde68a; }
+    .risk-moderado { background-color: #fef9c3; color: #a16207; border-color:#fef08a; }
+    .risk-normal { background-color: #dcfce7; color: #056e3b; border-color:#bbf7d0; }
+    .risk-aumentado { background-color: #ffedd5; color: #b45309; border-color:#ffd9b6; }
+
+    /* Card title coloured accent when inside section variant */
+    .section-primary .card-title { border-left: 6px solid #0d9488; padding-left: 10px; }
+    .section-secondary .card-title { border-left: 6px solid #0369a1; padding-left: 10px; }
+    .section-warning .card-title { border-left: 6px solid #d97706; padding-left: 10px; }
+    .section-muted .card-title { border-left: 6px solid #94a3b8; padding-left: 10px; }
+
+    /* Signature styling for primary section */
+    .signature.section-primary .sig-block { background-color: #e6fffa; border: 1px solid #cdeee6; padding: 14px; }
+    .signature.section-primary .sig-clinic { background-color: transparent; color:#065f46; font-weight:700; }
+    .signature.section-primary .sig-name { color:#063f3a; }
+    .signature.section-primary .sig-meta { color:#065f46; }
+
+    /* subtle emphasis for values in tables */
+    .tbl td.value-prev { color:#0b6b57; font-weight:700; }
+    .tbl td:nth-child(3) { color:#0b6b57; font-weight:700; }
+
+    /* ========================================
+       PERIMETERS TABLE
+       ======================================== */
+    .perimetros-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      page-break-inside: avoid;
+    }
+
+    .perimetros-table th {
+      background-color: #f8fafb;
+      padding: 10px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #0d9488;
+    }
+
+    .perimetros-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .perimetros-table td:nth-child(2),
+    .perimetros-table td:nth-child(4) {
+      font-weight: 600;
+      color: #1e293b;
+      text-align: center;
+    }
+
+    .perimetros-table tr:nth-child(even) {
+      background-color: #f8fafb;
+    }
+
+    /* ========================================
+       SUMMARY BOXES
+       ======================================== */
+    .summary-grid {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 12px 0;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .summary-box {
+      background-color: #f8fafb;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      width: 33.33%;
+    }
+
+    .summary-box .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin: 0 0 4px 0;
+    }
+
+    .summary-box .value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0d9488;
+      margin: 0;
+    }
+
+    /* ========================================
+       DOBRAS SUMMARY
+       ======================================== */
+    .dobras-summary {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 12px 0;
+      margin-top: 20px;
+    }
+
+    .dobras-summary-box {
+      background-color: #f0fdfa;
+      padding: 16px;
+      border-radius: 10px;
+      text-align: center;
+      width: 33.33%;
+      border: 1px solid rgba(6,120,87,0.06);
+    }
+
+    .dobras-summary-box .value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0d9488;
+      margin: 0;
+    }
+
+    .dobras-summary-box .label {
+      font-size: 12px;
+      color: #64748b;
+      margin: 4px 0 0 0;
+    }
+
+    /* ========================================
+       COMPOSIÇÃO CORPORAL
+       ======================================== */
+    .composicao-grid {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 16px 0;
+      page-break-inside: avoid;
+    }
+
+    .composicao-card {
+      background-color: #f8fafb;
+      padding: 24px;
+      text-align: center;
+      width: 25%;
+      page-break-inside: avoid;
+    }
+
+    .composicao-card .icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px auto;
+      text-align: center;
+      padding-top: 10px;
+      font-size: 20px;
+    }
+
+    .icon-gordura { background-color: #fef3c7; }
+    .icon-massa-gorda { background-color: #ffedd5; }
+    .icon-massa-magra { background-color: #d1fae5; }
+    .icon-agua { background-color: #e0f2fe; }
+
+    .composicao-card .value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    .composicao-card .value-primary {
+      color: #0d9488;
+    }
+
+    .composicao-card .label {
+      font-size: 12px;
+      color: #64748b;
+      margin: 4px 0 0 0;
+    }
+
+    /* ========================================
+       INFO ROW
+       ======================================== */
+    .info-row {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 16px 0;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+      page-break-inside: avoid;
+    }
+      .info-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #0d9488;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+      }
+
+    .info-row-item .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin: 0 0 4px 0;
+    }
+
+    .info-row-item .value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    /* ========================================
+       TWO COLUMN LAYOUT
+       ======================================== */
+    .two-cols-layout {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 16px 0;
+      page-break-inside: avoid;
+    }
+
+    .two-cols-layout > tbody > tr > td {
+      width: 50%;
+      vertical-align: top;
+    }
+
+    .col-card {
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid #e2e8f0;
+      height: 100%;
+      page-break-inside: avoid;
+    }
+
+    /* ========================================
+       OBJETIVOS
+       ======================================== */
+    .objetivo-principal {
+      margin-bottom: 16px;
+    }
+
+    .objetivo-principal .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin: 0 0 4px 0;
+    }
+
+    .objetivo-principal .value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    .metas-grid {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 12px 0;
+      margin-bottom: 16px;
+    }
+
+    .meta-box {
+      background-color: #f8fafb;
+      padding: 12px;
+      border-radius: 8px;
+      width: 50%;
+    }
+
+    .meta-box .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin: 0;
+    }
+
+    .meta-box .value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0d9488;
+      margin: 0;
+    }
+
+    .prazo-box {
+      background-color: #f8fafb;
+      padding: 12px;
+      border-radius: 8px;
+    }
+
+    .prazo-box .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin: 0;
+    }
+
+    .prazo-box .value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    /* ========================================
+       OBSERVAÇÕES
+       ======================================== */
+    .observacoes-content {
+      font-size: 14px;
+      line-height: 1.7;
+      color: #1e293b;
+    }
+
+    .observacoes-content p {
+      margin: 0 0 8px 0;
+    }
+
+    .observacoes-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* ========================================
+       LIFESTYLE / ESTILO DE VIDA
+       ======================================== */
+    .lifestyle-grid {
+      width: 100%;
+      border-collapse: collapse;
+      page-break-inside: avoid;
+    }
+
+    .lifestyle-grid td {
+      padding: 8px;
+      vertical-align: top;
+      width: 33.33%;
+    }
+
+    .lifestyle-item {
+      background-color: #f7fffc;
+      padding: 12px;
+      border-radius: 4px;
+      border-left: 3px solid #059669;
+    }
+
+    .lifestyle-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      margin: 0 0 4px 0;
+      font-weight: 600;
+    }
+
+    .lifestyle-value {
+      font-size: 13px;
+      color: #1e293b;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    /* ========================================
+       FOOTER
+       ======================================== */
+    .footer {
+      margin: 24px 0 0 0;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      page-break-inside: avoid;
+    }
+
+    .footer-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .footer-left {
+      vertical-align: top;
+    }
+
+    .footer-right {
+      text-align: right;
+      vertical-align: top;
+    }
+
+    .footer-left p,
+    .footer-right p {
+      margin: 0;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .footer-right .name {
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    /* ========================================
+       SIGNATURE
+       ======================================== */
+    .signature-section {
+      margin: 0;
+      padding: 16px;
+      background-color: #f8fafb;
+      border: 1px solid #e2e8f0;
+      page-break-inside: avoid;
+    }
+
+    .signature-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 25px;
+    }
+
+    .signature-left {
+      width: 60%;
+      vertical-align: top;
+    }
+
+    .signature-right {
+      width: 40%;
+      vertical-align: top;
+      text-align: right;
+    }
+
+    .signature-line {
+      width: 250px;
+      border-top: 2px solid #1e293b;
+      margin-bottom: 10px;
+    }
+
+    .signature-name {
+      margin: 0 0 3px 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .signature-title {
+      margin: 0 0 3px 0;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .next-appointment {
+      margin: 0 0 3px 0;
+      font-size: 13px;
+      color: #1e293b;
+    }
+
+    .footer-divider {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 20px;
+    }
+
+    .footer-info {
+      margin: 0;
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    .footer-disclaimer {
+      margin: 10px 0 0 0;
+      font-size: 10px;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+    /* ========================================
+       UTILITIES
+       ======================================== */
+    .mt-0 { margin-top: 0; }
+    .mt-6 { margin-top: 6px; }
+    .mt-10 { margin-top: 10px; }
+    .mt-14 { margin-top: 14px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-20 { margin-top: 20px; }
+    .mt-24 { margin-top: 24px; }
+
+    .mb-0 { margin-bottom: 0; }
+    .mb-6 { margin-bottom: 6px; }
+    .mb-10 { margin-bottom: 10px; }
+    .mb-16 { margin-bottom: 16px; }
+    .mb-20 { margin-bottom: 20px; }
+
+    .avoid-break { page-break-inside: avoid; }
+    .page-break { page-break-before: always; }
+
+    /* ========================================
+       PHOTOS SECTION (updated: framed photos, badges &amp; captions)
+       ======================================== */
+    .photos-grid {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 12px 0;
+      page-break-inside: avoid;
+    }
+
+    .photo-cell {
+      width: 50%; /* two per row */
+      text-align: center;
+      vertical-align: top;
+      padding: 10px 8px;
+    }
+
+    /* outer container that provides a clean framed card */
+    .photo-container {
+      width: 100%;
+      height: 320px; /* larger image area */
+      border-radius: 12px;
+      overflow: visible;
+      background-color: transparent;
+      position: relative;
+      padding: 8px;
+    }
+
+    /* inner frame holds the image and has subtle background/border */
+    .photo-frame {
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      overflow: hidden;
+      background-color: #ffffff;
+      border: 1px solid #e6f1ee;
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+    }
+
+    .photo-img {
+      display:block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* caption below each photo */
+    .photo-caption {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 700;
+    }
+
+    /* small floating badge (top-left) to identify view) */
+    .photo-badge {
+      position: absolute;
+      left: 14px;
+      top: 14px;
+      background-color: #065f46;
+      color: #ffffff;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      -webkit-print-color-adjust: exact;
+    }
+
+    /* placeholders (when photo missing) */
+    .photo-placeholder {
+      width: 100%;
+      height: 260px; /* match larger visual */
+      background-color: #f8fafb;
+      border-radius: 10px;
+      border: 1px dashed #e2e8f0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .photo-placeholder .photo-icon {
+      font-size: 36px;
+      color: #94a3b8;
+      opacity: 0.6;
+    }
+
+    /* compact caption variant for small screens / prints */
+    .photo-caption small { color: #94a3b8; font-weight:600; }
+
+    /* ========================================
+       RELATÓRIO COMPARATIVO
+       ======================================== */
+    .comp-title {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+      color: #0d9488;
+      margin: 16px 0 4px 0;
+    }
+    .comp-subtitle {
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+      margin: 0 0 24px 0;
+    }
+
+    /* Cards de evolução */
+    .evo-grid { width: 100%; border-collapse: separate; border-spacing: 8px 0; }
+    .evo-cell { padding: 4px; vertical-align: top; }
+    .evo-card {
+      background-color: #f8fafb;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+    .evo-card .evo-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      letter-spacing: 0.04em;
+      margin: 0 0 3px 0;
+    }
+    .evo-card .evo-val {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0;
+    }
+    .evo-card .evo-val.positive { color: #15803d; }
+    .evo-card .evo-val.negative { color: #dc2626; }
+    .evo-card .evo-val.neutral  { color: #64748b; }
+    .evo-card .evo-unit { font-size: 10px; color: #94a3b8; }
+
+    /* Tabela comparativa de dados */
+    .comp-tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .comp-tbl th {
+      background-color: #0d9488;
+      color: #ffffff;
+      padding: 8px 10px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 11px;
+      border: 1px solid #0b826f;
+      -webkit-print-color-adjust: exact;
+    }
+    .comp-tbl th:first-child { text-align: left; }
+    .comp-tbl td {
+      padding: 7px 10px;
+      border: 1px solid #e2e8f0;
+      text-align: center;
+      color: #334155;
+    }
+    .comp-tbl td:first-child { text-align: left; font-weight: 600; color: #0d9488; }
+    .comp-tbl tr:nth-child(even) td { background-color: #f0fdfa; }
+
+    /* Grade de gráficos 2 colunas */
+    .charts-grid { width: 100%; border-collapse: collapse; }
+    .charts-grid td { padding: 0 6px 16px 0; vertical-align: top; width: 50%; }
+    .charts-grid td:last-child { padding-right: 0; padding-left: 6px; }
+
+    /* Card de gráfico simples */
+    .chart-card {
+      border: 1px solid #e6eef0;
+      border-radius: 10px;
+      padding: 14px 14px 10px 14px;
+      background-color: #ffffff;
+      page-break-inside: avoid;
+    }
+    .chart-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #064e3b;
+      margin: 0 0 10px 0;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(6,78,59,0.06);
+    }
+
+    /* Card de gráfico de linha inteira (dual) */
+    .chart-card-full {
+      border: 1px solid #e6eef0;
+      border-radius: 10px;
+      padding: 14px;
+      background-color: #ffffff;
+      margin-bottom: 16px;
+      page-break-inside: avoid;
+    }
+    .chart-card-full .chart-card-title { font-size: 14px; }
+
+    /* Legenda de gráfico dual */
+    .legend { font-size: 10px; margin-bottom: 8px; }
+    .legend-item { display: inline-block; margin-right: 12px; }
+    .legend-dot  { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; -webkit-print-color-adjust: exact; }
+
+    /* Badges de consulta */
+    .badge-first { background-color: #dbeafe; color: #1e40af; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; -webkit-print-color-adjust: exact; }
+    .badge-last  { background-color: #dcfce7; color: #15803d; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; -webkit-print-color-adjust: exact; }
+
+    /* Placeholder sem dados */
+    .no-data { text-align: center; color: #94a3b8; font-size: 12px; padding: 20px 0; }
+
+    /* ========================================
+       VISUAL REFRESH - RELATÓRIO DETALHADO
+       ======================================== */
+    body {
+      background: linear-gradient(180deg, #f0fdfa 0%, #ffffff 180px);
+      letter-spacing: 0.01em;
+    }
+
+    .doc {
+      padding-bottom: 16px;
+    }
+
+    .report-main-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 800;
+      color: #0d9488;
+      margin: 18px 0 24px 0;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .header {
+      border-bottom: 3px solid #0b826f;
+      box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+    }
+
+    .header-right .doctor-name {
+      letter-spacing: 0.02em;
+      margin-bottom: 2px;
+    }
+
+    .header-right .crn {
+      margin-top: 2px;
+    }
+
+    .header-social {
+      margin-top: 4px;
+      font-size: 13px;
+      opacity: 0.95;
+    }
+
+    .card {
+      border: 1px solid #d9ece8;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 22px;
+      box-shadow: 0 4px 18px rgba(6, 78, 59, 0.05);
+      -webkit-print-color-adjust: exact;
+    }
+
+    .card-title {
+      font-size: 17px;
+      color: #065f46;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #d8ebe7;
+      letter-spacing: 0.01em;
+    }
+
+    .section-title,
+    .section-subtitle {
+      display: inline-block;
+      font-size: 12px;
+      color: #0b6b57;
+      margin: 0 0 12px 0;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background-color: #ecfdf5;
+      border: 1px solid #c6f3df;
+      border-radius: 999px;
+      padding: 4px 12px;
+      -webkit-print-color-adjust: exact;
+    }
+
+    .table-spaced {
+      margin-bottom: 24px;
+    }
+
+    .tbl {
+      border-color: #d9ece8;
+      border-radius: 12px;
+    }
+
+    .tbl th {
+      background-color: #e8f6f2;
+      color: #0a6b58;
+      font-size: 13px;
+      padding: 12px 14px;
+      border-bottom-color: #d9ece8;
+    }
+
+    .tbl td {
+      padding: 11px 14px;
+      border-bottom-color: #edf5f3;
+    }
+
+    .tbl td:first-child {
+      color: #0b5f50;
+      font-weight: 700;
+    }
+
+    .metric-card {
+      border-radius: 14px;
+      border-width: 1px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    .metric-card.metric-weight {
+      background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
+      border-color: #86efac;
+    }
+
+    .metric-card.metric-height {
+      background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+      border-color: #93c5fd;
+    }
+
+    .metric-card.metric-imc {
+      background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+      border-color: #fcd34d;
+    }
+
+    .metric-icon {
+      box-shadow: 0 6px 14px rgba(6, 120, 87, 0.15);
+    }
+
+    .metric-card.metric-weight .metric-icon {
+      background-color: #dcfce7;
+      color: #15803d;
+      box-shadow: 0 6px 14px rgba(21, 128, 61, 0.2);
+    }
+
+    .metric-card.metric-height .metric-icon {
+      background-color: #dbeafe;
+      color: #1d4ed8;
+      box-shadow: 0 6px 14px rgba(29, 78, 216, 0.2);
+    }
+
+    .metric-card.metric-imc .metric-icon {
+      background-color: #fef3c7;
+      color: #b45309;
+      box-shadow: 0 6px 14px rgba(180, 83, 9, 0.2);
+    }
+
+    .comp-card {
+      border-radius: 12px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      border-width: 1px;
+      border-style: solid;
+    }
+
+    .comp-card .value {
+      font-size: 17px;
+      letter-spacing: 0.01em;
+    }
+
+    .comp-card.comp-gordura {
+      background: linear-gradient(180deg, #fffbeb 0%, #fff7ed 100%);
+      border-color: #fdba74;
+    }
+
+    .comp-card.comp-gordura .icon {
+      background-color: #ffedd5;
+      color: #c2410c;
+    }
+
+    .comp-card.comp-gordura .value {
+      color: #9a3412;
+    }
+
+    .comp-card.comp-massa-gorda {
+      background: linear-gradient(180deg, #fdf2f8 0%, #fce7f3 100%);
+      border-color: #f9a8d4;
+    }
+
+    .comp-card.comp-massa-gorda .icon {
+      background-color: #fce7f3;
+      color: #be185d;
+    }
+
+    .comp-card.comp-massa-gorda .value {
+      color: #9d174d;
+    }
+
+    .comp-card.comp-massa-magra {
+      background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+      border-color: #93c5fd;
+    }
+
+    .comp-card.comp-massa-magra .icon {
+      background-color: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .comp-card.comp-massa-magra .value {
+      color: #1e3a8a;
+    }
+
+    .comp-card.comp-agua {
+      background: linear-gradient(180deg, #ecfeff 0%, #ccfbf1 100%);
+      border-color: #5eead4;
+    }
+
+    .comp-card.comp-agua .icon {
+      background-color: #ccfbf1;
+      color: #0f766e;
+    }
+
+    .comp-card.comp-agua .value {
+      color: #134e4a;
+    }
+
+    /* Composição corporal no mesmo padrão estrutural de Medidas Antropométricas */
+    .composicao-grid {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 12px 0;
+      page-break-inside: avoid;
+    }
+
+    .composicao-card {
+      width: 25%;
+      padding: 4px;
+      vertical-align: top;
+      background-color: transparent;
+    }
+
+    .comp-card {
+      min-height: 136px;
+      padding: 12px 10px;
+      border-radius: 14px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    .comp-card .icon {
+      width: 42px;
+      height: 42px;
+      line-height: 42px;
+      border-radius: 21px;
+      margin: 0 auto 8px auto;
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+    }
+
+    .comp-card .label {
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .photo-intro {
+      margin-top: 8px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: #4b5563;
+    }
+
+    .photo-frame {
+      border-color: #d7ebe7;
+      border-width: 1px;
+    }
+
+    .photo-badge {
+      background-color: #0b6b57;
+      border-radius: 999px;
+      font-size: 11px;
+      padding: 5px 10px;
+    }
+
+    .report-signature-wrapper {
+      margin-top: 18px;
+      border-top: 1px solid #bde7dc;
+      padding-top: 12px;
+      page-break-inside: avoid;
+    }
+
+    .report-signature-card {
+      background: linear-gradient(180deg, #f4fffc 0%, #ecfdf7 100%);
+      border: 1px solid #bfe8dc;
+      border-radius: 10px;
+      padding: 12px 14px;
+      -webkit-print-color-adjust: exact;
+    }
+
+    .report-signature-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .report-signature-left {
+      width: 62%;
+      vertical-align: top;
+      padding-right: 12px;
+    }
+
+    .report-signature-right {
+      width: 38%;
+      text-align: right;
+      vertical-align: top;
+      padding-left: 12px;
+      border-left: 1px solid #d8efe8;
+    }
+
+    .report-signature-line {
+      width: 82%;
+      border-bottom: 1px solid #0b6b57;
+      margin-bottom: 8px;
+    }
+
+    .report-signature-name {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 800;
+      color: #064e3b;
+    }
+
+    .report-signature-role,
+    .report-signature-crn {
+      margin: 4px 0 0 0;
+      font-size: 11.5px;
+      color: #065f46;
+      font-weight: 600;
+    }
+
+    .report-signature-icon {
+      color: #0d9488;
+      margin-right: 6px;
+    }
+
+    .report-signature-label {
+      margin: 0;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      font-weight: 700;
+    }
+
+    .report-signature-date {
+      margin: 4px 0 0 0;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #0b6b57;
+    }
+
+    .report-signature-note {
+      margin: 7px 0 0 0;
+      font-size: 10.5px;
+      color: #5f6f7e;
+    }
+  </style>
+</head>

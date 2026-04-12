@@ -1,0 +1,35 @@
+<div th:fragment="header(logoUrl, clinicName, clinicSubtitle, doctorName, crn, phone, instagram)" 
+     xmlns:th="http://www.thymeleaf.org" class="header">
+  <table class="header-table">
+    <tr>
+      <td class="header-left">
+        <table>
+          <tr>
+            <td th:if="${logoUrl != null}" style="padding-right: 15px; vertical-align: middle;">
+              <img th:src="${logoUrl}"
+                   src="https://minio-s3.cesaravb.com.br/public/logo.png"
+                   alt="Logo"
+                   style="display:block; max-width: 150px; max-height: 150px;" />
+            </td>
+            <td style="vertical-align: middle;">
+<!--              <h1 style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 26px; color: #fff; margin: 0 0 4px 0;">-->
+<!--                <i class="fas fa-leaf" style="color:#5eead4;"></i>-->
+<!--                <span th:text="${clinicName != null ? clinicName : 'André Reis'}">André Reis</span>-->
+<!--              </h1>-->
+<!--              <p style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #e0f2fe; margin: 0;">-->
+<!--                <i class="fas fa-apple-alt" style="color:#0d9488;"></i>-->
+<!--                <span th:text="${clinicSubtitle != null ? clinicSubtitle : 'Nutrição Clínica e Esportiva'}">Nutrição Clínica e Esportiva</span>-->
+<!--              </p>-->
+            </td>
+          </tr>
+        </table>
+      </td>
+      <td class="header-right">
+        <p class="doctor-name" th:text="${doctorName}">Dr. Nome</p>
+        <p class="crn">CRN: <span th:text="${crn != null ? crn : '22102151'}">22102151</span></p>
+        <p class="crn"><i class="fas fa-phone"></i> <span th:text="${phone != null ? phone : '(21) 99929-1477'}">(21) 99929-1477</span></p>
+        <p style="margin:4px 0 0 0;"><i class="fab fa-instagram"></i> <span th:text="${instagram != null ? instagram : '@personalnutri.andrereis'}">@personalnutri.andrereis</span></p>
+      </td>
+    </tr>
+  </table>
+</div>

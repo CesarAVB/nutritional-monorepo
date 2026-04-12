@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Relatório de Evolução Nutricional</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    :root {
+      --primary:       #0d9488;
+      --primary-dark:  #0f766e;
+      --text:          #1e293b;
+      --muted:         #64748b;
+      --border:        #cbd5e1;
+      --bg:            #f8fafc;
+      --white:         #ffffff;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+      font-size: 12px; color: var(--text); background: var(--white);
+      line-height: 1.4;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .page {
+      width: 794px; min-height: 1123px;
+      padding: 0 32px 28px; margin: 0 auto;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    /* ── HEADER ── */
+    .header {
+      background-color: #0d9488;
+      color: #ffffff;
+      padding: 24px;
+      margin: 0 -32px 0 -32px;
+      page-break-inside: avoid;
+    }
+    .header-table { width: 100%; border-collapse: collapse; }
+    .logo-container {
+      display: inline-block;
+      background: #dcfce7;
+      padding: 10px;
+      border-radius: 12px;
+      border: 2px solid #10b981;
+      vertical-align: middle;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .clinic-logo {
+      display: block;
+      max-width: 160px;
+      max-height: 160px;
+      object-fit: contain;
+    }
+    .header-right { text-align: right; color: #ffffff; }
+    .header-right .doctor-name { font-weight: 600; font-size: 15px; margin: 0; }
+    .header-right .crn { font-size: 13px; opacity: 0.9; margin: 0; }
+    .header-right p { font-size: 13px; opacity: 0.9; margin: 0; }
+    
+    /* ── TÍTULO ── */
+    .report-title { text-align:center; padding:4px 0 0; }
+    .report-title h1 { font-size:18px; font-weight:800; color:var(--text); letter-spacing:-0.02em; text-transform: uppercase; }
+    .report-title p  { font-size:11.5px; color:var(--muted); margin-top:2px; }
+    
+    /* ── PATIENT BAR ── */
+    .patient-bar { display:flex; border: 1.5px solid var(--text); border-radius: 8px; padding:10px 16px; background: var(--white); }
+    .patient-bar-item { flex:1; border-right:1px solid var(--border); padding-right:14px; margin-right:14px; }
+    .patient-bar-item:last-child { border-right:none; padding-right:0; margin-right:0; }
+    .pbi-label { font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; font-weight: 600; }
+    .pbi-value { font-size:12.5px; font-weight:700; margin-top:2px; color: var(--text); }
+
+    /* ── INBODY STYLE SECTIONS ── */
+    .inbody-section { border: 1.5px solid var(--text); border-radius: 8px; margin-bottom: 0; overflow: hidden; background: var(--white); }
+    .inbody-header { background: var(--text); color: white; padding: 5px 12px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .inbody-body { padding: 12px; }
+    
+    .inbody-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .inbody-table th { border-bottom: 1px solid var(--border); padding: 6px 4px; text-align: center; color: var(--muted); font-weight: 600; }
+    .inbody-table th:first-child { text-align: left; }
+    .inbody-table td { border-bottom: 1px solid var(--border); padding: 6px 4px; text-align: center; }
+    .inbody-table td:first-child { text-align: left; font-weight: 600; }
+    .inbody-table tr:last-child td { border-bottom: none; }
+    
+    .inbody-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* ── EVO CARDS ── */
+    .evo-grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom: 10px; }
+    .evo-grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .evo-card { border:1px solid var(--border); border-radius:6px; padding:10px; text-align:center; background: var(--bg); }
+    .evo-card-label { font-size:9.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin-bottom:4px; font-weight: 600; }
+    .evo-card-value { font-size:18px; font-weight:800; letter-spacing:-0.03em; line-height:1; }
+    .evo-card-unit  { font-size:9.5px; color:var(--muted); margin-top:2px; }
+    .positive { color:#15803d; } .negative { color:#dc2626; } .neutral { color:var(--text); }
+
+    /* ── CHARTS ── */
+    .chart-full { border:1px solid var(--border); border-radius:6px; padding:12px; margin-bottom: 10px; }
+    .chart-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom: 10px; }
+    .chart-half { border:1px solid var(--border); border-radius:6px; padding:12px; }
+    .chart-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px; }
+    .chart-title { font-size:11px; font-weight:700; color:var(--text); text-transform: uppercase; }
+    .chart-unit { font-size:9.5px; color:var(--muted); font-weight:normal; text-transform: none; }
+    .chart-canvas-wrap-full { position:relative; height:140px; }
+    .chart-canvas-wrap-half { position:relative; height:120px; }
+
+    /* Evita quebra visual de gráficos entre páginas */
+    .inbody-section,
+    .chart-full,
+    .chart-grid-2,
+    .chart-half,
+    .chart-canvas-wrap-full,
+    .chart-canvas-wrap-half {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .chart-canvas-wrap-full canvas,
+    .chart-canvas-wrap-half canvas {
+      display: block;
+    }
+
+    /* ── TENDÊNCIA (HISTÓRICO) ── */
+    .trend-cell { white-space: nowrap; }
+    .trend-arrow { font-size: 11px; margin-left: 4px; font-weight: 700; }
+    .trend-up { color: #dc2626; }
+    .trend-down { color: #15803d; }
+    .trend-neutral { color: #64748b; }
+
+    /* ── RESUMO PRIMEIRA PÁGINA ── */
+    .summary-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 10px; }
+    .summary-card { border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: #f8fafc; }
+    .summary-title { font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700; }
+    .summary-item { display: flex; justify-content: space-between; border-bottom: 1px dashed #dbe1ea; padding: 5px 0; font-size: 11px; }
+    .summary-item:last-child { border-bottom: none; }
+    .summary-item-label { color: var(--muted); }
+    .summary-item-value { color: var(--text); font-weight: 700; }
+    .topvar-list { display: grid; gap: 8px; }
+    .topvar-card { border: 1px solid var(--border); border-radius: 6px; padding: 8px; background: #fff; }
+    .topvar-metric { font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.04em; margin-bottom: 3px; }
+    .topvar-value { font-size: 15px; font-weight: 800; }
+    .topvar-value.positive { color: #15803d; }
+    .topvar-value.negative { color: #dc2626; }
+
+    /* ── FOOTER (igual ao detalhado) ── */
+    .report-signature-wrapper {
+      margin-top: 18px;
+      border-top: 1px solid #bde7dc;
+      padding-top: 12px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .report-signature-card {
+      background: linear-gradient(180deg, #f4fffc 0%, #ecfdf7 100%);
+      border: 1px solid #bfe8dc;
+      border-radius: 10px;
+      padding: 12px 14px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .report-signature-table { width: 100%; border-collapse: collapse; }
+    .report-signature-left { width: 62%; vertical-align: top; padding-right: 12px; }
+    .report-signature-right { width: 38%; text-align: right; vertical-align: top; padding-left: 12px; border-left: 1px solid #d8efe8; }
+    .report-signature-line { width: 82%; border-bottom: 1px solid #0b6b57; margin-bottom: 8px; }
+    .report-signature-name { margin: 0; font-size: 14px; font-weight: 800; color: #064e3b; }
+    .report-signature-role,
+    .report-signature-crn { margin: 4px 0 0 0; font-size: 11.5px; color: #065f46; font-weight: 600; }
+    .report-signature-icon { color: #0d9488; margin-right: 6px; }
+    .report-signature-label { margin: 0; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 700; }
+    .report-signature-date { margin: 4px 0 0 0; font-size: 12.5px; font-weight: 800; color: #0b6b57; }
+    .report-signature-note { margin: 7px 0 0 0; font-size: 10.5px; color: #5f6f7e; }
+
+    /* ── COMPARAÇÃO DE FOTOS ── */
+    .photo-compare-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .photo-compare-table th,
+    .photo-compare-table td { border: 1px solid var(--border); padding: 6px; vertical-align: top; }
+    .photo-compare-table thead th { background: #f8fafc; color: var(--text); font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .photo-position-col { width: 120px; font-size: 11px; font-weight: 700; color: var(--text); background: #f8fafc; }
+    .photo-consulta-col { font-size: 10px; font-weight: 700; color: var(--muted); text-align: center; }
+    .photo-mini {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #f8fafc;
+      min-height: 120px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .photo-mini img {
+      max-width: 100%;
+      max-height: 220px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      display: block;
+    }
+    .photo-mini-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 112px;
+      width: 100%;
+      font-size: 16px;
+      color: #94a3b8;
+    }
+
+    .comparativo-footer {
+      margin-top: auto;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    
+    @page {
+      size: A4;
+      margin: 6mm 0 12mm 0;
+    }
+
+    @page:first {
+      margin: 0 0 12mm 0;
+    }
+  </style>
+</head>
+
+<body>
+<div class="page">
+
+  <!-- ── HEADER ────────────────────────────────────────────────── -->
+  <div th:replace="~{relatorio/fragments/_header :: header(
+      logoUrl=${logoUrl != null ? logoUrl : 'https://minio-s3.cesaravb.com.br/public/logo.png'},
+      clinicName=${clinicName != null ? clinicName : 'André Reis'},
+      clinicSubtitle=${clinicSubtitle != null ? clinicSubtitle : 'Nutrição Clínica e Esportiva'},
+      doctorName=${doctorName},
+      crn=${crn != null ? crn : '22102151'},
+      phone=${phone != null ? phone : '(21) 99929-1477'},
+      instagram=${instagram != null ? instagram : '@personalnutri.andrereis'}
+    )}">
+  </div>
+
+  <!-- ── TÍTULO ────────────────────────────────────────────────── -->
+  <div class="report-title">
+    <h1>Histórico de Composição Corporal</h1>
+    <p th:text="${paciente != null ? 'Acompanhamento de ' + paciente.nomeCompleto : 'Acompanhamento Nutricional'}">Acompanhamento Nutricional</p>
+  </div>
+
+  <!-- ── BARRA DO PACIENTE ─────────────────────────────────────── -->
+  <div class="patient-bar">
+    <div class="patient-bar-item" style="flex: 2;">
+      <div class="pbi-label">Paciente</div>
+      <div class="pbi-value" th:text="${paciente != null ? paciente.nomeCompleto : '—'}">—</div>
+    </div>
+    <div class="patient-bar-item">
+      <div class="pbi-label">Idade</div>
+      <div class="pbi-value" th:text="${idadePaciente != null ? idadePaciente + ' anos' : '—'}">—</div>
+    </div>
+    <div class="patient-bar-item">
+      <div class="pbi-label">Sexo</div>
+      <div class="pbi-value" th:text="${paciente != null ? paciente.sexo : '—'}">—</div>
+    </div>
+    <div class="patient-bar-item">
+      <div class="pbi-label">Consultas</div>
+      <div class="pbi-value" th:text="${totalConsultas != null ? totalConsultas : 0}">0</div>
+    </div>
+    <div class="patient-bar-item" th:if="${evolucao != null and !#maps.isEmpty(evolucao)}">
+      <div class="pbi-label">Período</div>
+      <div class="pbi-value" style="font-size: 11px;" th:text="${evolucao.primeiraData + ' a ' + evolucao.ultimaData}">—</div>
+    </div>
+  </div>
+
+  <!-- ── CARDS DE EVOLUÇÃO ─────────────────────────────────────── -->
+  <div class="inbody-section" th:if="${evolucao != null and !#maps.isEmpty(evolucao)}">
+    <div class="inbody-header">Variação Global (Primeira vs Última Consulta)</div>
+    <div class="inbody-body">
+      <div class="evo-grid-4">
+        <div class="evo-card">
+          <div class="evo-card-label">Peso</div>
+          <div class="evo-card-value" th:class="'evo-card-value ' + (${evolucao.melhoriaPeso} ? 'positive' : 'negative')" th:text="${evolucao.diffPeso}">—</div>
+          <div class="evo-card-unit">kg</div>
+        </div>
+        <div class="evo-card">
+          <div class="evo-card-label">IMC</div>
+          <div class="evo-card-value" th:class="'evo-card-value ' + (${evolucao.melhoriaImc} ? 'positive' : 'negative')" th:text="${evolucao.diffImc}">—</div>
+          <div class="evo-card-unit">kg/m²</div>
+        </div>
+        <div class="evo-card">
+          <div class="evo-card-label">% Gordura</div>
+          <div class="evo-card-value" th:class="'evo-card-value ' + (${evolucao.melhoriaGordura} ? 'positive' : 'negative')" th:text="${evolucao.diffGordura}">—</div>
+          <div class="evo-card-unit">%</div>
+        </div>
+        <div class="evo-card">
+          <div class="evo-card-label">Massa Magra</div>
+          <div class="evo-card-value" th:class="'evo-card-value ' + (${evolucao.melhoriaMagra} ? 'positive' : 'negative')" th:text="${evolucao.diffMassaMagra}">—</div>
+          <div class="evo-card-unit">kg</div>
+        </div>
+      </div>
+      <div class="evo-grid-3">
+        <div class="evo-card">
+          <div class="evo-card-label">Cintura</div>
+          <div class="evo-card-value neutral" th:text="${evolucao.diffCintura}">—</div>
+          <div class="evo-card-unit">cm</div>
+        </div>
+        <div class="evo-card">
+          <div class="evo-card-label">Abdominal</div>
+          <div class="evo-card-value neutral" th:text="${evolucao.diffAbdominal}">—</div>
+          <div class="evo-card-unit">cm</div>
+        </div>
+        <div class="evo-card">
+          <div class="evo-card-label">Quadril</div>
+          <div class="evo-card-value neutral" th:text="${evolucao.diffQuadril}">—</div>
+          <div class="evo-card-unit">cm</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="inbody-section" th:if="${resumoExecutivo != null and !#maps.isEmpty(resumoExecutivo)}">
+    <div class="inbody-header">Resumo Executivo do Período</div>
+    <div class="inbody-body">
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-title">Visão Geral</div>
+          <div class="summary-item">
+            <span class="summary-item-label">Período analisado</span>
+            <span class="summary-item-value" th:text="${resumoExecutivo.periodo}">—</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-item-label">Consultas no comparativo</span>
+            <span class="summary-item-value" th:text="${resumoExecutivo.totalConsultas}">0</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-item-label">Consultas com foto</span>
+            <span class="summary-item-value" th:text="${resumoExecutivo.consultasComFoto}">0</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-item-label">Tempo de acompanhamento</span>
+            <span class="summary-item-value" th:text="${resumoExecutivo.diasAcompanhamento + ' dias'}">0 dias</span>
+          </div>
+        </div>
+
+        <div class="summary-card" th:if="${topVariacoes != null and !#lists.isEmpty(topVariacoes)}">
+          <div class="summary-title">Top 3 Variações</div>
+          <div class="topvar-list">
+            <div class="topvar-card" th:each="v : ${topVariacoes}">
+              <div class="topvar-metric" th:text="${v.metrica}">Métrica</div>
+              <div class="topvar-value" th:classappend="${v.melhora} ? ' positive' : ' negative'"
+                   th:text="${(v.delta >= 0 ? '+' : '') + #numbers.formatDecimal(v.delta,1,'POINT',2,'COMMA') + ' ' + v.unidade}">+0,00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GRÁFICOS ─────────────────────────────────────────────── -->
+  <div class="inbody-section">
+    <div class="inbody-header">Evolução Gráfica</div>
+    <div class="inbody-body">
+      
+      <!-- Chart 1: Composição Corporal -->
+      <div class="chart-full">
+        <div class="chart-header">
+          <div class="chart-title">Composição Corporal <span class="chart-unit">(kg)</span></div>
+        </div>
+        <div class="chart-canvas-wrap-full"><canvas id="chartComposicao"></canvas></div>
+      </div>
+
+      <!-- Charts 2 + 3: Peso | IMC -->
+      <div class="chart-grid-2">
+        <div class="chart-half">
+          <div class="chart-header">
+            <div class="chart-title">Peso Corporal <span class="chart-unit">(kg)</span></div>
+          </div>
+          <div class="chart-canvas-wrap-half"><canvas id="chartPeso"></canvas></div>
+        </div>
+        <div class="chart-half">
+          <div class="chart-header">
+            <div class="chart-title">IMC <span class="chart-unit">(kg/m²)</span></div>
+          </div>
+          <div class="chart-canvas-wrap-half"><canvas id="chartImc"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Charts 4 + 5: % Gordura | Perímetros -->
+      <div class="chart-grid-2" style="margin-bottom: 0;">
+        <div class="chart-half">
+          <div class="chart-header">
+            <div class="chart-title">% Gordura Corporal <span class="chart-unit">(%)</span></div>
+          </div>
+          <div class="chart-canvas-wrap-half"><canvas id="chartGordura"></canvas></div>
+        </div>
+        <div class="chart-half">
+          <div class="chart-header">
+            <div class="chart-title">Perímetros Centrais <span class="chart-unit">(cm)</span></div>
+          </div>
+          <div class="chart-canvas-wrap-half"><canvas id="chartPerimetros"></canvas></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── TABELA HISTÓRICO ─────────────────────────────────────── -->
+  <div class="inbody-section">
+    <div class="inbody-header">Histórico de Avaliações</div>
+    <div class="inbody-body" style="padding: 0;">
+      <div th:if="${consultasComparativas != null and !#lists.isEmpty(consultasComparativas)}">
+        <table class="inbody-table">
+          <thead>
+            <tr>
+              <th style="padding-left: 12px;">Data</th>
+              <th>Peso</th>
+              <th>IMC</th>
+              <th>Gordura</th>
+              <th>M. Magra</th>
+              <th>M. Gorda</th>
+              <th>Cintura</th>
+              <th>Abdom.</th>
+              <th style="padding-right: 12px;">Quadril</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="item, s : ${consultasComparativas}" th:with="prev=${s.index > 0 ? consultasComparativas[s.index - 1] : null}">
+              <td style="padding-left: 12px;">
+                <div th:text="${item.dataFormatada}">—</div>
+                <div style="font-size: 9px; color: var(--muted); font-weight: normal;" th:text="${item.objetivo != null ? item.objetivo : ''}"></div>
+              </td>
+              <td class="trend-cell">
+                <span th:text="${item.peso != null ? #numbers.formatDecimal(item.peso,1,'POINT',1,'COMMA') : '—'}">—</span>
+                <span th:if="${prev != null and item.peso != null and prev.peso != null}"
+                      th:class="${item.peso > prev.peso ? 'trend-arrow trend-up' : (item.peso < prev.peso ? 'trend-arrow trend-down' : 'trend-arrow trend-neutral')}"
+                      th:text="${item.peso > prev.peso ? '▲' : (item.peso < prev.peso ? '▼' : '•')}">•</span>
+              </td>
+              <td class="trend-cell">
+                <span th:text="${item.imc != null ? #numbers.formatDecimal(item.imc, 1,'POINT',1,'COMMA') : '—'}">—</span>
+                <span th:if="${prev != null and item.imc != null and prev.imc != null}"
+                      th:class="${item.imc > prev.imc ? 'trend-arrow trend-up' : (item.imc < prev.imc ? 'trend-arrow trend-down' : 'trend-arrow trend-neutral')}"
+                      th:text="${item.imc > prev.imc ? '▲' : (item.imc < prev.imc ? '▼' : '•')}">•</span>
+              </td>
+              <td class="trend-cell">
+                <span th:text="${item.percentualGordura != null ? #numbers.formatDecimal(item.percentualGordura,1,'POINT',1,'COMMA') + '%' : '—'}">—</span>
+                <span th:if="${prev != null and item.percentualGordura != null and prev.percentualGordura != null}"
+                      th:class="${item.percentualGordura > prev.percentualGordura ? 'trend-arrow trend-up' : (item.percentualGordura < prev.percentualGordura ? 'trend-arrow trend-down' : 'trend-arrow trend-neutral')}"
+                      th:text="${item.percentualGordura > prev.percentualGordura ? '▲' : (item.percentualGordura < prev.percentualGordura ? '▼' : '•')}">•</span>
+              </td>
+              <td class="trend-cell">
+                <span th:text="${item.massaMagra != null ? #numbers.formatDecimal(item.massaMagra, 1,'POINT',1,'COMMA') : '—'}">—</span>
+                <span th:if="${prev != null and item.massaMagra != null and prev.massaMagra != null}"
+                      th:class="${item.massaMagra > prev.massaMagra ? 'trend-arrow trend-up' : (item.massaMagra < prev.massaMagra ? 'trend-arrow trend-down' : 'trend-arrow trend-neutral')}"
+                      th:text="${item.massaMagra > prev.massaMagra ? '▲' : (item.massaMagra < prev.massaMagra ? '▼' : '•')}">•</span>
+              </td>
+              <td class="trend-cell">
+                <span th:text="${item.massaGorda != null ? #numbers.formatDecimal(item.massaGorda, 1,'POINT',1,'COMMA') : '—'}">—</span>
+                <span th:if="${prev != null and item.massaGorda != null and prev.massaGorda != null}"
+                      th:class="${item.massaGorda > prev.massaGorda ? 'trend-arrow trend-up' : (item.massaGorda < prev.massaGorda ? 'trend-arrow trend-down' : 'trend-arrow trend-neutral')}"
+                      th:text="${item.massaGorda > prev.massaGorda ? '▲' : (item.massaGorda < prev.massaGorda ? '▼' : '•')}">•</span>
+              </td>
+              <td class="trend-cell">
+                <span th:text="${item.perimetroCintura != null ? #numbers.formatDecimal(item.perimetroCintura, 1,'POINT',1,'COMMA') : '—'}">—</span>
+                <span th:if="${prev != null and item.perimetroCintura != null and prev.perimetroCintura != null}"
+                      th:class="${item.perimetroCintura > prev.perimetroCintura ? 'trend-arrow trend-up' : (item.perimetroCintura < prev.perimetroCintura ? 'trend-arrow trend-down' : 'trend-arrow trend-neutral')}"
+                      th:text="${item.perimetroCintura > prev.perimetroCintura ? '▲' : (item.perimetroCintura < prev.perimetroCintura ? '▼' : '•')}">•</span>
+              </td>
+              <td class="trend-cell">
+                <span th:text="${item.perimetroAbdominal != null ? #numbers.formatDecimal(item.perimetroAbdominal,1,'POINT',1,'COMMA') : '—'}">—</span>
+                <span th:if="${prev != null and item.perimetroAbdominal != null and prev.perimetroAbdominal != null}"
+                      th:class="${item.perimetroAbdominal > prev.perimetroAbdominal ? 'trend-arrow trend-up' : (item.perimetroAbdominal < prev.perimetroAbdominal ? 'trend-arrow trend-down' : 'trend-arrow trend-neutral')}"
+                      th:text="${item.perimetroAbdominal > prev.perimetroAbdominal ? '▲' : (item.perimetroAbdominal < prev.perimetroAbdominal ? '▼' : '•')}">•</span>
+              </td>
+              <td class="trend-cell" style="padding-right: 12px;">
+                <span th:text="${item.perimetroQuadril != null ? #numbers.formatDecimal(item.perimetroQuadril, 1,'POINT',1,'COMMA') : '—'}">—</span>
+                <span th:if="${prev != null and item.perimetroQuadril != null and prev.perimetroQuadril != null}"
+                      th:class="${item.perimetroQuadril > prev.perimetroQuadril ? 'trend-arrow trend-up' : (item.perimetroQuadril < prev.perimetroQuadril ? 'trend-arrow trend-down' : 'trend-arrow trend-neutral')}"
+                      th:text="${item.perimetroQuadril > prev.perimetroQuadril ? '▲' : (item.perimetroQuadril < prev.perimetroQuadril ? '▼' : '•')}">•</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="text-align:center;color:var(--muted);padding:20px 0;font-size:12px;"
+           th:unless="${consultasComparativas != null and !#lists.isEmpty(consultasComparativas)}">
+        Nenhuma consulta com avaliação física encontrada.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── COMPARAÇÃO FOTOGRÁFICA ───────────────────────────────── -->
+  <div class="inbody-section" th:if="${hasComparacaoFotos}">
+    <div class="inbody-header">Comparação Fotográfica</div>
+    <div class="inbody-body">
+      <table class="photo-compare-table" th:if="${consultasComFoto != null and !#lists.isEmpty(consultasComFoto)}">
+        <thead>
+          <tr>
+            <th class="photo-position-col">Posição</th>
+            <th th:each="c : ${consultasComFoto}" class="photo-consulta-col" th:text="${c.dataFormatada}">--/--/----</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="photo-position-col">Anterior</td>
+            <td th:each="c : ${consultasComFoto}">
+              <div class="photo-mini">
+                <img th:if="${c.fotoAnterior != null}" th:src="${c.fotoAnterior}" alt="Foto anterior" />
+                <div th:if="${c.fotoAnterior == null}" class="photo-mini-empty"><i class="fas fa-image"></i></div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="photo-position-col">Posterior</td>
+            <td th:each="c : ${consultasComFoto}">
+              <div class="photo-mini">
+                <img th:if="${c.fotoPosterior != null}" th:src="${c.fotoPosterior}" alt="Foto posterior" />
+                <div th:if="${c.fotoPosterior == null}" class="photo-mini-empty"><i class="fas fa-image"></i></div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="photo-position-col">Lateral Esquerda</td>
+            <td th:each="c : ${consultasComFoto}">
+              <div class="photo-mini">
+                <img th:if="${c.fotoLateralEsquerda != null}" th:src="${c.fotoLateralEsquerda}" alt="Foto lateral esquerda" />
+                <div th:if="${c.fotoLateralEsquerda == null}" class="photo-mini-empty"><i class="fas fa-image"></i></div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="photo-position-col">Lateral Direita</td>
+            <td th:each="c : ${consultasComFoto}">
+              <div class="photo-mini">
+                <img th:if="${c.fotoLateralDireita != null}" th:src="${c.fotoLateralDireita}" alt="Foto lateral direita" />
+                <div th:if="${c.fotoLateralDireita == null}" class="photo-mini-empty"><i class="fas fa-image"></i></div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="comparativo-footer" th:replace="~{relatorio/fragments/_signature-footer :: signatureFooter(
+      doctorName=${doctorName != null ? doctorName : 'André Reis'},
+      doctorTitle=${doctorTitle != null ? doctorTitle : 'Nutricionista Clínico e Esportivo'},
+      crn=${crn != null ? crn : '22102151'}
+    )}">
+  </div>
+
+</div><!-- end .page -->
+
+<!-- Chart.js via CDN + fallback -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+if (!window.Chart) {
+  var __chartFallback = document.createElement('script');
+  __chartFallback.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js';
+  document.head.appendChild(__chartFallback);
+}
+</script>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+const REPORT = /*[[${reportData}]]*/ {};
+
+let _chartsRendered = 0;
+const _TOTAL_CHARTS = 5;
+function _onChartDone() {
+  if (++_chartsRendered >= _TOTAL_CHARTS) window.__chartsReady = true;
+}
+setTimeout(function() { window.__chartsReady = true; }, 8000);
+
+function _renderCharts() {
+  if (!window.Chart) {
+    window.__chartsReady = true;
+    return;
+  }
+
+  Chart.defaults.font.family = "system-ui,-apple-system,'Segoe UI',Arial,sans-serif";
+  const _gridColor = '#e2e8f0', _tickColor = '#64748b', _tickFont = { size: 9 };
+  const _tooltipCfg = { backgroundColor:'rgba(30,41,59,0.9)', padding:8, cornerRadius:4, titleFont:{size:10}, bodyFont:{size:10} };
+
+  function _baseOptions(extraPlugins) {
+    return {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: Object.assign({ legend: { display: false }, tooltip: _tooltipCfg }, extraPlugins || {}),
+      scales: {
+        x: { grid: { display: false }, ticks: { color: _tickColor, font: _tickFont } },
+        y: { grid: { color: _gridColor, drawBorder: false }, ticks: { color: _tickColor, font: _tickFont }, beginAtZero: false }
+      },
+      elements: {
+        point: { radius: 3, hoverRadius: 5, borderWidth: 2 },
+        line:  { tension: 0.1, borderWidth: 2 }
+      },
+      animation: { duration: 0, onComplete: _onChartDone }
+    };
+  }
+  function _ds(label, data, color, fill) {
+    return {
+      label, data, borderColor: color,
+      backgroundColor: fill ? color + '15' : 'transparent',
+      pointBackgroundColor: '#ffffff', pointBorderColor: color, fill: !!fill
+    };
+  }
+
+  const lbl = REPORT.labels || [];
+
+  new Chart(document.getElementById('chartComposicao'), {
+  type: 'line',
+  data: { labels: lbl, datasets: [ _ds('Massa Magra', REPORT.massaMagra, '#0369a1', true), _ds('Massa Gorda', REPORT.massaGorda, '#d97706', false) ] },
+  options: _baseOptions({
+    legend: { display: true, position: 'top', align: 'end', labels: { boxWidth: 8, boxHeight: 8, usePointStyle: true, font: { size: 10 } } }
+  })
+  });
+  new Chart(document.getElementById('chartPeso'), {
+  type: 'line',
+  data: { labels: lbl, datasets: [ _ds('Peso (kg)', REPORT.peso, '#0d9488', true) ] },
+  options: _baseOptions()
+  });
+  new Chart(document.getElementById('chartImc'), {
+  type: 'line',
+  data: { labels: lbl, datasets: [ _ds('IMC', REPORT.imc, '#8b5cf6', true) ] },
+  options: _baseOptions()
+  });
+  new Chart(document.getElementById('chartGordura'), {
+  type: 'line',
+  data: { labels: lbl, datasets: [ _ds('% Gordura', REPORT.percentualGordura, '#db2777', true) ] },
+  options: _baseOptions()
+  });
+  new Chart(document.getElementById('chartPerimetros'), {
+  type: 'line',
+  data: { labels: lbl, datasets: [
+    _ds('Cintura',   REPORT.cintura,   '#0d9488', false),
+    _ds('Abdominal', REPORT.abdominal, '#0369a1', false),
+    _ds('Quadril',   REPORT.quadril,   '#14b8a6', false)
+  ]},
+  options: _baseOptions({
+    legend: { display: true, position: 'top', align: 'end', labels: { boxWidth: 8, boxHeight: 8, usePointStyle: true, font: { size: 10 } } }
+  })
+  });
+}
+
+function _waitAndRenderCharts(triesLeft) {
+  if (window.Chart) {
+    _renderCharts();
+    return;
+  }
+  if (triesLeft <= 0) {
+    window.__chartsReady = true;
+    return;
+  }
+  setTimeout(function() { _waitAndRenderCharts(triesLeft - 1); }, 250);
+}
+
+_waitAndRenderCharts(40);
+/*]]>*/
+</script>
+</body>
+</html>

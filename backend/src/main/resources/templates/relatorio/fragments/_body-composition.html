@@ -1,0 +1,38 @@
+<div th:fragment="bodyComposition(avaliacaoFisica)"
+     xmlns:th="http://www.thymeleaf.org" class="card">
+  
+  <div class="card-title"><i class="fas fa-weight-scale icon-circle primary"></i> Composição Corporal</div>
+  
+  <table class="composicao-grid">
+    <tr>
+      <td class="composicao-card">
+        <div class="comp-card comp-gordura">
+          <div class="icon"><i class="fas fa-percentage" aria-hidden="true"></i></div>
+          <p class="value"><span th:text="${(avaliacaoFisica != null and avaliacaoFisica.percentualGordura != null) ? avaliacaoFisica.percentualGordura : '0.00'}">0.00</span>%</p>
+          <p class="label">Gordura Corporal</p>
+        </div>
+      </td>
+      <td class="composicao-card">
+        <div class="comp-card comp-massa-gorda">
+          <div class="icon"><i class="fas fa-fire" aria-hidden="true"></i></div>
+          <p class="value"><span th:text="${(avaliacaoFisica != null and avaliacaoFisica.massaGorda != null) ? avaliacaoFisica.massaGorda : '0.00'}">0.00</span> kg</p>
+          <p class="label">Massa Gorda</p>
+        </div>
+      </td>
+      <td class="composicao-card">
+        <div class="comp-card comp-massa-magra">
+          <div class="icon"><i class="fas fa-dumbbell" aria-hidden="true"></i></div>
+          <p class="value"><span th:text="${(avaliacaoFisica != null and avaliacaoFisica.massaMagra != null) ? avaliacaoFisica.massaMagra : '0.00'}">0.00</span> kg</p>
+          <p class="label">Massa Magra</p>
+        </div>
+      </td>
+      <td class="composicao-card">
+        <div class="comp-card comp-agua">
+          <div class="icon"><i class="fas fa-balance-scale" aria-hidden="true"></i></div>
+          <p class="value"><span th:text="${(avaliacaoFisica != null and avaliacaoFisica.pesoAtual != null) ? avaliacaoFisica.pesoAtual : '0.00'}">0.00</span> kg</p>
+          <p class="label">Peso Total</p>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>

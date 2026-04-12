@@ -1,0 +1,141 @@
+<div th:fragment="lifestyle(questionario)"
+     xmlns:th="http://www.thymeleaf.org" class="card">
+  
+  <div class="card-title"><i class="fas fa-heartbeat icon-circle primary"></i> Estilo de Vida e Hábitos</div>
+  
+  <!-- Objetivos e Treino -->
+  <h4 style="font-size: 13px; color: #0d9488; margin: 0 0 12px 0;"><i class="fas fa-bullseye"></i> OBJETIVOS E ATIVIDADE FÍSICA</h4>
+  
+  <table class="tbl tbl-striped tbl-modern" style="margin-bottom: 24px;">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Valor</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Objetivo</td>
+        <td th:text="${questionario != null and questionario.objetivo != null ? questionario.objetivo : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Frequência de Treino</td>
+        <td th:text="${questionario != null and questionario.frequenciaTreino != null ? questionario.frequenciaTreino : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Tempo de Treino</td>
+        <td th:text="${questionario != null and questionario.tempoTreino != null ? questionario.tempoTreino : '--'}">--</td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <!-- Saúde -->
+  <h4 style="font-size: 13px; color: #0d9488; margin: 0 0 12px 0;"><i class="fas fa-stethoscope"></i> SAÚDE</h4>
+  
+  <table class="tbl tbl-striped tbl-modern" style="margin-bottom: 24px;">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Valor</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Cirurgias</td>
+        <td th:text="${questionario != null and questionario.cirurgias != null ? questionario.cirurgias : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Doenças</td>
+        <td th:text="${questionario != null and questionario.doencas != null ? questionario.doencas : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Histórico Familiar</td>
+        <td th:text="${questionario != null and questionario.historicoFamiliar != null ? questionario.historicoFamiliar : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Medicamentos</td>
+        <td th:text="${questionario != null and questionario.medicamentos != null ? questionario.medicamentos : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Suplementos</td>
+        <td th:text="${questionario != null and questionario.suplementos != null ? questionario.suplementos : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Uso de Anabolizantes</td>
+        <td th:text="${questionario != null and questionario.usoAnabolizantes != null ? questionario.usoAnabolizantes : '--'}">--</td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <!-- Hábitos -->
+  <h4 style="font-size: 13px; color: #0d9488; margin: 0 0 12px 0;"><i class="fas fa-smoking-ban"></i> HÁBITOS</h4>
+  
+  <table class="tbl tbl-striped tbl-modern" style="margin-bottom: 24px;">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Valor</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Tabagismo</td>
+        <td th:text="${questionario != null ? (questionario.fuma ? 'Sim' : 'Não') : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Consumo de Álcool</td>
+        <td th:text="${questionario != null and questionario.frequenciaAlcool != null ? questionario.frequenciaAlcool : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Funcionamento Intestinal</td>
+        <td th:text="${questionario != null and questionario.funcionamentoIntestino != null ? questionario.funcionamentoIntestino : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Qualidade do Sono</td>
+        <td th:text="${questionario != null and questionario.qualidadeSono != null ? questionario.qualidadeSono : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Ingestão de Água (copos/dia)</td>
+        <td th:text="${questionario != null and questionario.ingestaoAguaDiaria != null ? questionario.ingestaoAguaDiaria : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Pressão Arterial</td>
+        <td th:text="${questionario != null and questionario.pressaoArterial != null ? questionario.pressaoArterial : '--'}">--</td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <!-- Alimentação -->
+  <h4 style="font-size: 13px; color: #0d9488; margin: 0 0 12px 0;"><i class="fas fa-utensils"></i> ALIMENTAÇÃO</h4>
+  
+  <table class="tbl tbl-striped tbl-modern">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Valor</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Alimentos que Não Gosta</td>
+        <td th:text="${questionario != null and questionario.alimentosNaoGosta != null ? questionario.alimentosNaoGosta : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Frutas Preferidas</td>
+        <td th:text="${questionario != null and questionario.frutasPreferidas != null ? questionario.frutasPreferidas : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Refeições Desejadas</td>
+        <td th:text="${questionario != null and questionario.numeroRefeicoesDesejadas != null ? questionario.numeroRefeicoesDesejadas : '--'}">--</td>
+      </tr>
+      <tr>
+        <td>Horário de Maior Fome</td>
+        <td th:text="${questionario != null and questionario.horarioMaiorFome != null ? questionario.horarioMaiorFome : '--'}">--</td>
+      </tr>
+      <tr th:if="${questionario != null and questionario.intolerancias != null and questionario.intolerancias != ''}">
+        <td>Intolerâncias</td>
+        <td th:text="${questionario.intolerancias}">--</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

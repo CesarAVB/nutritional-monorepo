@@ -1,0 +1,75 @@
+<div th:fragment="perimeters(avaliacaoFisica, rcq)"
+     xmlns:th="http://www.thymeleaf.org" class="card">
+  
+  <div class="card-title"><i class="fas fa-tape"></i> Perímetros (em cm)</div>
+
+  <h4 style="font-size: 13px; color: #0d9488; margin: 0 0 12px 0;"><i class="fas fa-ruler"></i> PERÍMETROS (em cm)</h4>
+
+  <table class="tbl tbl-striped tbl-modern">
+    <thead>
+      <tr>
+        <th>Medida</th>
+        <th>Valor (cm)</th>
+        <th>Medida</th>
+        <th>Valor (cm)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Ombro</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.perimetroOmbro : '0.00'}">0.00</td>
+        <td>Antebraço Direito</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.perimetroAntebracoDireito : '0.00'}">0.00</td>
+      </tr>
+      <tr>
+        <td>Tórax</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.perimetroTorax : '0.00'}">0.00</td>
+        <td>Antebraço Esquerdo</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.perimetroAntebracoEsquerdo : '0.00'}">0.00</td>
+      </tr>
+      <tr>
+        <td>Cintura</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.perimetroCintura : '0.00'}">0.00</td>
+        <td>Coxa Direita</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.perimetroCoxaDireita : '0.00'}">0.00</td>
+      </tr>
+      <tr>
+        <td>Abdômen</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.perimetroAbdominal : '0.00'}">0.00</td>
+        <td>Coxa Esquerda</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.perimetroCoxaEsquerda : '0.00'}">0.00</td>
+      </tr>
+      <tr>
+        <td>Quadril</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.perimetroQuadril : '0.00'}">0.00</td>
+        <td>Panturrilha Direita</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.perimetroPanturrilhaDireita : '0.00'}">0.00</td>
+      </tr>
+      <tr>
+        <td>Braço Direito Relaxado</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.perimetroBracoDireitoRelax : '0.00'}">0.00</td>
+        <td>Panturrilha Esquerda</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.perimetroPanturrilhaEsquerda : '0.00'}">0.00</td>
+      </tr>
+      <tr>
+        <td>Braço Direito Contraído</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.perimetroBracoDireitoContr : '0.00'}">0.00</td>
+        <td>&#160;</td>
+        <td>&#160;</td>
+      </tr>
+      <tr>
+        <td>Braço Esquerdo Relaxado</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.perimetroBracoEsquerdoRelax : '0.00'}">0.00</td>
+        <td>&#160;</td>
+        <td>&#160;</td>
+      </tr>
+      <tr>
+        <td>Braço Esquerdo Contraído</td>
+        <td th:text="${avaliacaoFisica != null ? avaliacaoFisica.perimetroBracoEsquerdoContr : '0.00'}">0.00</td>
+        <td>&#160;</td>
+        <td>&#160;</td>
+      </tr>
+    </tbody>
+  </table>
+  
+</div>

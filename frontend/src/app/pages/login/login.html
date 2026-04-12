@@ -1,0 +1,140 @@
+<div class="login-container">
+  <!-- Lado esquerdo - Informações e branding -->
+  <div class="login-left">
+    <div class="brand-section">
+      <div class="logo-wrapper">
+        <img 
+          src="/images/logo.png" 
+          alt="Logo NutriFront" 
+          class="brand-logo"
+        />
+      </div>
+
+      <div class="brand-description">
+        <!--<h2>Sistema de<br>Nutrição e Bem-estar</h2>-->
+        <!--<p>Gerencie pacientes, crie planos alimentares e acompanhe o progresso.</p>-->
+      </div>
+
+      <div class="features-list">
+        @for (feature of features; track feature.title) {
+          <div class="feature-item">
+            <div class="feature-icon"><i [class]="feature.icon"></i></div>
+            <div class="feature-text">
+              <h4>{{ feature.title }}</h4>
+              <p>{{ feature.description }}</p>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="nutrition-elements">
+        <div class="floating-element apple"><i class="fas fa-apple-alt"></i></div>
+        <div class="floating-element carrot"><i class="fas fa-carrot"></i></div>
+        <div class="floating-element broccoli"><i class="fas fa-leaf"></i></div>
+        <div class="floating-element banana"><i class="fas fa-lemon"></i></div>
+        <div class="floating-element orange"><i class="fas fa-lemon"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lado direito - Formulário de login -->
+  <div class="login-right">
+    <div class="login-card">
+      <div class="login-header">
+        <!-- Logo para telas menores -->
+        <div class="mobile-logo">
+          <img src="/images/logo.png" alt="Logo" class="brand-logo-mobile" />
+        </div>
+        <div class="welcome-section">
+          <h2>Seja Bem-vindo!</h2>
+          <p>Entre com seus dados de acesso para continuar.</p>
+        </div>
+      </div>
+
+      <div class="form-container">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+        <div class="form-group">
+          <label for="email">E-mail</label>
+          <div class="input-with-icon">
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              placeholder="nutricionista@email.com"
+              [class.invalid]="emailControl?.invalid && emailControl?.touched"
+            >
+            <i class="fas fa-envelope input-icon"></i>
+          </div>
+          @if (emailControl?.invalid && emailControl?.touched) {
+            <div class="error-message">
+              @if (emailControl?.errors?.['required']) {
+                <span>E-mail é obrigatório</span>
+              }
+              @if (emailControl?.errors?.['email']) {
+                <span>E-mail inválido</span>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="password">Senha</label>
+          <div class="input-with-icon">
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              id="password"
+              formControlName="password"
+              placeholder="••••••••"
+              [class.invalid]="passwordControl?.invalid && passwordControl?.touched"
+            >
+            <i class="fas fa-lock input-icon"></i>
+            <button type="button" class="icon-right" (click)="togglePasswordVisibility()">
+              <i [class]="showPassword() ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+          @if (passwordControl?.invalid && passwordControl?.touched) {
+            <div class="error-message">
+              @if (passwordControl?.errors?.['required']) {
+                <span>Senha é obrigatória</span>
+              }
+              @if (passwordControl?.errors?.['minlength']) {
+                <span>Senha deve ter no mínimo 6 caracteres</span>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="form-group-checkbox">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              formControlName="rememberMe"
+            >
+            <span>Lembrar-me</span>
+          </label>
+        </div>
+
+        <button
+          type="submit"
+          class="btn-login"
+          [disabled]="isLoading()"
+        >
+          @if (isLoading()) {
+            <span class="spinner"></span>
+            <span>Acessando sistema...</span>
+          } @else {
+            <span>ENTRAR</span>
+          }
+        </button>
+      </form>
+        <div class="form-separator" role="separator" aria-hidden="true"></div>
+        <div class="login-footer form-footer" aria-label="Login footer">
+          <div class="footer-info">
+            <p>Desenvolvido por <a href="https://portfolio.cesaraugusto.dev.br/" target="_blank" rel="noopener noreferrer">César Augusto</a></p>
+            <p>© Copyright 2026 - Todos os direitos reservados.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

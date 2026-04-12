@@ -1,0 +1,201 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <div>
+      <h1 class="dashboard-title">{{ greeting() }}!</h1>
+      <p class="dashboard-subtitle">Bem-vindo ao seu painel de controle</p>
+    </div>
+    <button class="btn-refresh" (click)="recarregar()" [disabled]="isLoading()">
+      <fa-icon [icon]="faSyncAlt"></fa-icon>
+      Atualizar
+    </button>
+  </div>
+
+  <!-- Cards de Estatísticas -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-content">
+        <span class="stat-label">Total Pacientes</span>
+        <span class="stat-value">{{ stats()?.totalPacientes || 0 }}</span>
+      </div>
+      <div class="stat-icon stat-icon-primary">
+        <fa-icon [icon]="faUsers"></fa-icon>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <span class="stat-label">Consultas Hoje</span>
+        <span class="stat-value">{{ stats()?.consultasHoje || 0 }}</span>
+      </div>
+      <div class="stat-icon stat-icon-secondary">
+        <fa-icon [icon]="faCalendarDay"></fa-icon>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <span class="stat-label">Este Mês</span>
+        <span class="stat-value">{{ stats()?.consultasMes || 0 }}</span>
+      </div>
+      <div class="stat-icon stat-icon-success">
+        <fa-icon [icon]="faChartBar"></fa-icon>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <span class="stat-label">Próxima Consulta</span>
+        <span class="stat-value">{{ stats()?.proximaConsulta || 'N/A' }}</span>
+      </div>
+      <div class="stat-icon stat-icon-warning">
+        <fa-icon [icon]="faClock"></fa-icon>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ações Rápidas -->
+  <div class="quick-actions">
+    <h2 class="section-title">Ações Rápidas</h2>
+    <div class="actions-grid">
+      <button class="action-card" (click)="novoPaciente()">
+        <div class="action-icon">
+          <fa-icon [icon]="faUserPlus"></fa-icon>
+        </div>
+        <div class="action-content">
+          <h3>Novo Paciente</h3>
+          <p>Cadastrar um novo paciente</p>
+        </div>
+      </button>
+
+      <button class="action-card" (click)="novaConsulta()">
+        <div class="action-icon">
+          <fa-icon [icon]="faCalendarPlus"></fa-icon>
+        </div>
+        <div class="action-content">
+          <h3>Nova Consulta</h3>
+          <p>Agendar uma nova consulta</p>
+        </div>
+      </button>
+
+      <button class="action-card" (click)="verConsultas()">
+        <div class="action-icon">
+          <fa-icon [icon]="faList"></fa-icon>
+        </div>
+        <div class="action-content">
+          <h3>Ver Consultas</h3>
+          <p>Gerenciar consultas agendadas</p>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Grid de Conteúdo -->
+  <div class="content-grid">
+    <!-- Consultas de Hoje -->
+    <div class="content-card">
+      <div class="card-header">
+        <h2 class="card-title">Consultas de Hoje</h2>
+        @if (consultasHoje().length > 0) {
+          <span class="badge badge-primary">
+            {{ consultasHoje().length }} {{ consultasHoje().length === 1 ? 'consulta' : 'consultas' }}
+          </span>
+        }
+      </div>
+      <div class="card-body">
+        @if (loadingConsultas()) {
+          <div class="section-loading">
+            <div class="spinner-small"></div>
+            <p>Carregando consultas...</p>
+          </div>
+        } @else {
+          <div class="consulta-list">
+          @for (consulta of consultasHoje(); track consulta.id) {
+            <div class="consulta-item">
+              <div class="consulta-avatar">
+                <span>{{ consulta.iniciais }}</span>
+              </div>
+              <div class="consulta-info">
+                <h3 class="consulta-nome">{{ consulta.nomePaciente }}</h3>
+                <p class="consulta-tipo">{{ consulta.objetivo || 'Consulta nutricional' }}</p>
+              </div>
+              <div class="consulta-horario">
+                <span>{{ consulta.horario | date: 'HH:mm' }}</span>
+              </div>
+            </div>
+          }
+
+          <!-- Estado Vazio Melhorado -->
+          @if (consultasHoje().length === 0) {
+            <div class="empty-state">
+            <div class="empty-icon">
+              <fa-icon [icon]="faCalendarAlt"></fa-icon>
+            </div>
+            <h3 class="empty-title">Nenhuma consulta agendada</h3>
+            <p class="empty-message">Você não tem consultas agendadas para hoje</p>
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- Pacientes Recentes -->
+    <div class="content-card">
+      <div class="card-header">
+        <h2 class="card-title">Pacientes Recentes</h2>
+        <button class="link-button" (click)="verTodosPacientes()">
+          Ver todos
+          <fa-icon [icon]="faChevronRight"></fa-icon>
+        </button>
+      </div>
+      <div class="card-body">
+        @if (loadingPacientes()) {
+          <div class="section-loading">
+            <div class="spinner-small"></div>
+            <p>Carregando pacientes...</p>
+          </div>
+        } @else {
+          <div class="paciente-list">
+          @for (paciente of pacientesRecentes(); track paciente.id) {
+            <div class="paciente-item" (click)="verDetalhesPaciente(paciente.id!)">
+              <div class="paciente-avatar">
+                <span>{{ getIniciais(paciente.nomeCompleto) }}</span>
+              </div>
+              <div class="paciente-info">
+                <h3 class="paciente-nome">{{ paciente.nomeCompleto }}</h3>
+                <p class="paciente-data">Última visita: {{ formatarData(paciente.ultimaConsulta) }}</p>
+              </div>
+              <button class="icon-button" (click)="ligarPaciente(paciente.telefoneWhatsapp, $event)">
+              <fa-icon [icon]="faPhone"></fa-icon>
+            </button>
+          </div>
+          }
+
+          <!-- Estado Vazio Melhorado -->
+          @if (pacientesRecentes().length === 0) {
+            <div class="empty-state">
+            <div class="empty-icon">
+              <fa-icon [icon]="faUsers"></fa-icon>
+            </div>
+            <h3 class="empty-title">Nenhum paciente cadastrado</h3>
+            <p class="empty-message">Cadastre seu primeiro paciente para começar</p>
+            <button class="btn-primary-sm" (click)="novoPaciente()">
+              <fa-icon [icon]="faPlus"></fa-icon>
+              Cadastrar Paciente
+            </button>
+          </div>
+          }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Carregando dados...</p>
+    </div>
+  }
+</div>

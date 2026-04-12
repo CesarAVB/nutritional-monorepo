@@ -1,0 +1,57 @@
+<div th:fragment="goalsObservations(questionario, pesoMeta, gorduraMeta, prazo, observacoes)"
+     xmlns:th="http://www.thymeleaf.org" style="margin: 0 20px;">
+  
+  <table class="two-cols-layout">
+    <tr>
+      <td>
+        <div class="col-card">
+          <div class="card-title"><i class="fas fa-bullseye icon-circle primary"></i> Objetivos</div>
+          
+          <div class="objetivo-principal">
+            <p class="label">OBJETIVO PRINCIPAL</p>
+            <p class="value" th:text="${questionario != null and questionario.objetivo != null ? questionario.objetivo : '--'}">--</p>
+          </div>
+          
+          <table class="metas-grid">
+            <tr>
+              <td class="meta-box">
+                <p class="label">PESO META</p>
+                <p class="value">
+                  <span th:text="${pesoMeta != null ? pesoMeta : '0'}">0</span> kg
+                </p>
+              </td>
+              <td class="meta-box">
+                <p class="label">% GORDURA META</p>
+                <p class="value">
+                  <span th:text="${gorduraMeta != null ? gorduraMeta : '0'}">0</span>%
+                </p>
+              </td>
+            </tr>
+          </table>
+          
+          <div class="prazo-box">
+            <p class="label">PRAZO</p>
+            <p class="value" th:text="${prazo != null ? prazo : '--'}">--</p>
+          </div>
+        </div>
+      </td>
+      
+      <td>
+        <div class="col-card">
+          <div class="card-title"><i class="fas fa-clipboard-list icon-circle info"></i> Observações Clínicas</div>
+          
+          <div class="observacoes-content">
+            <p th:if="${observacoes == null or observacoes.isEmpty()}">Sem observações registradas.</p>
+            <th:block th:if="${observacoes != null and !observacoes.isEmpty()}">
+              <p th:each="obs : ${observacoes}" th:text="${obs}"></p>
+            </th:block>
+            
+            <!-- Fallback para prontuário do paciente -->
+            <p th:if="${observacoes == null and paciente != null and paciente.prontuario != null}" 
+               th:text="${paciente.prontuario}"></p>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>

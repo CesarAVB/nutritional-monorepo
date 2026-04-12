@@ -1,0 +1,42 @@
+<div th:fragment="mainMetrics(avaliacaoFisica, pesoIdealMin, pesoIdealMax, classificacaoIMC)"
+     xmlns:th="http://www.thymeleaf.org" class="card">
+  
+  <div class="card-title"><i class="fas fa-chart-line icon-circle primary"></i> Medidas Antropométricas</div>
+  
+  <table class="metrics-grid">
+    <tr>
+      <td class="metric-box" style="width:33.333%;">
+        <div class="metric-card metric-weight">
+          <div class="metric-icon"><i class="fas fa-weight-hanging" aria-hidden="true"></i></div>
+          <p class="metric-value">
+            <span th:text="${(avaliacaoFisica != null and avaliacaoFisica.pesoAtual != null) ? avaliacaoFisica.pesoAtual : '0.00'}">0.00</span>
+            <span class="metric-value-small">kg</span>
+          </p>
+          <p class="metric-label">Peso Atual</p>
+        </div>
+      </td>
+
+      <td class="metric-box" style="width:33.333%;">
+        <div class="metric-card metric-height">
+          <div class="metric-icon"><i class="fas fa-ruler-vertical" aria-hidden="true"></i></div>
+          <p class="metric-value">
+            <span th:text="${(avaliacaoFisica != null and avaliacaoFisica.altura != null) ? avaliacaoFisica.altura : '0.00'}">0.00</span>
+            <span class="metric-value-small">cm</span>
+          </p>
+          <p class="metric-label">Altura</p>
+        </div>
+      </td>
+
+      <td class="metric-box" style="width:33.333%;">
+        <div class="metric-card metric-imc">
+          <div class="metric-icon"><i class="fas fa-calculator" aria-hidden="true"></i></div>
+          <p class="metric-value" th:text="${(avaliacaoFisica != null and avaliacaoFisica.imc != null) ? avaliacaoFisica.imc : '0.00'}">0.00</p>
+          <p class="metric-label">IMC (kg/m²)</p>
+          <div style="margin-top:6px;">
+            <!--<span class="metric-badge badge-success" th:text="${(classificacaoIMC != null) ? classificacaoIMC : 'Eutrofia'}">Eutrofia</span>-->
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>

@@ -1,0 +1,127 @@
+<div class="consultas-list-container">
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Consultas</h1>
+      <p class="page-subtitle">Visualize e gerencie todas as consultas do sistema</p>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Carregando consultas...</p>
+    </div>
+  } @else {
+    <div class="search-container">
+      <div class="search-input-wrapper">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <input 
+          type="text" 
+          class="search-input" 
+          placeholder="Buscar por paciente ou ID..."
+          [ngModel]="searchTerm()"
+          (ngModelChange)="onSearchTermChange($event)"
+        >
+      </div>
+    </div>
+
+    @if (consultas().length === 0) {
+      <div class="empty-state">
+        <div class="empty-content">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          <h3>Nenhuma consulta encontrada</h3>
+          <p>Ainda não há consultas cadastradas no sistema.</p>
+        </div>
+      </div>
+    } @else {
+      <div class="table-container">
+        <table class="consultas-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Paciente</th>
+              <th>Data da Consulta</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (consulta of consultasFiltradas(); track consulta.id) {
+              <tr (click)="verDetalhes(consulta.id)" class="table-row">
+                <td>
+                  <span class="consulta-id">{{ getConsultaPrefix(consulta.id) }}</span>
+                </td>
+                <td>
+                  <div class="paciente-info">
+                    <div class="paciente-nome">{{ consulta.nomePaciente }}</div>
+                  </div>
+                </td>
+                <td>{{ formatarData(consulta.dataConsulta) }}</td>
+                <!-- Peso, % Gordura e Objetivo removidos por solicitação -->
+                <td>
+                  <button class="icon-button" (click)="verDetalhes(consulta.id); $event.stopPropagation()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="empty-state">
+                  <div class="empty-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    <h3>Nenhuma consulta encontrada</h3>
+                    <p>Nenhuma consulta corresponde à sua busca.</p>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (totalPaginas() > 0) {
+      <div class="pagination-container">
+        <div class="pagination-info">
+          Página {{ paginaAtual() + 1 }} de {{ totalPaginas() }}
+          <span class="total-items">({{ totalItens() }} registros)</span>
+        </div>
+
+        <div class="pagination-controls">
+          <button class="pagination-button" (click)="paginaAnterior()" [disabled]="paginaAtual() === 0 || isLoading()">
+            Anterior
+          </button>
+
+          @for (pagina of paginasVisiveis(); track pagina) {
+            <button
+              class="pagination-button page-number"
+              [class.active]="pagina === paginaAtual()"
+              (click)="irParaPagina(pagina)"
+              [disabled]="isLoading()"
+            >
+              {{ pagina + 1 }}
+            </button>
+          }
+
+          <button class="pagination-button" (click)="proximaPagina()" [disabled]="paginaAtual() >= totalPaginas() - 1 || isLoading()">
+            Próxima
+          </button>
+        </div>
+      </div>
+    }
+  }
+</div>

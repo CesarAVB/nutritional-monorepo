@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{relatorio/fragments/_head :: head}"></head>
+
+<body>
+  <div class="doc">
+
+    <!-- HEADER (Logo + Nome do Profissional) -->
+    <div th:replace="~{relatorio/fragments/_header :: header(
+        logoUrl=${logoUrl != null ? logoUrl : 'https://minio-s3.cesaravb.com.br/public/logo.png'},
+        clinicName=${clinicName != null ? clinicName : 'André Reis'},
+        clinicSubtitle=${clinicSubtitle != null ? clinicSubtitle : 'Nutrição Clínica e Esportiva'},
+        doctorName=${doctorName},
+        crn=${crn != null ? crn : '22102151'},
+        phone=${phone != null ? phone : '(21) 99929-1477'},
+        instagram=${instagram != null ? instagram : '@personalnutri.andrereis'}
+      )}">
+    </div>
+
+    <div class="report-main-title">Relatório de Avaliação Nutricional</div>
+
+    <!-- DADOS DO PACIENTE -->
+    <div th:replace="~{relatorio/fragments/_patient-info :: patientInfo(
+        paciente=${paciente},
+        idadePaciente=${idadePaciente},
+        dataConsulta=${dataConsultaFormatada},
+        proximaConsulta=${proximaConsultaFormatada}
+      )}">
+    </div>
+
+    <!-- MÉTRICAS PRINCIPAIS (Peso, Altura, IMC, Peso Ideal) -->
+    <div th:replace="~{relatorio/fragments/_main-metrics :: mainMetrics(
+        avaliacaoFisica=${avaliacaoFisica},
+        pesoIdealMin=${pesoIdealMin},
+        pesoIdealMax=${pesoIdealMax},
+        classificacaoIMC=${classificacaoIMC}
+      )}">
+    </div>
+
+    <!-- TABELA DE CLASSIFICAÇÃO DO IMC (OMS) -->
+    <div th:replace="~{relatorio/fragments/_imc-table :: imcTable(
+        classificacaoAtual=${classificacaoIMCEnum}
+      )}">
+    </div>
+
+    <!-- COMPOSIÇÃO CORPORAL -->
+    <div th:replace="~{relatorio/fragments/_body-composition :: bodyComposition(
+        avaliacaoFisica=${avaliacaoFisica}
+      )}">
+    </div>
+
+    <!-- PERÍMETROS -->
+    <div th:replace="~{relatorio/fragments/_perimeters :: perimeters(
+        avaliacaoFisica=${avaliacaoFisica},
+        rcq=${rcq}
+      )}">
+    </div>
+
+    <!-- DOBRAS CUTÂNEAS -->
+    <div th:replace="~{relatorio/fragments/_skinfolds :: skinfolds(
+        avaliacaoFisica=${avaliacaoFisica},
+        soma7Dobras=${soma7Dobras},
+        soma3Dobras=${soma3Dobras},
+        percentualGorduraPollock=${percentualGorduraPollock}
+      )}">
+    </div>
+
+    <!-- TABELAS DE REFERÊNCIA -->
+    <div th:replace="~{relatorio/fragments/_reference-tables :: referenceTables(
+        sexoPaciente=${paciente?.sexo},
+        faixaEtaria=${faixaEtaria}
+      )}">
+    </div>
+
+    <!-- ESTILO DE VIDA E HÁBITOS -->
+    <div th:replace="~{relatorio/fragments/_lifestyle :: lifestyle(
+        questionario=${questionario}
+      )}">
+    </div>
+
+    <!-- REGISTRO FOTOGRÁFICO (Fotos da Consulta) -->
+    <div th:replace="~{relatorio/fragments/_photos :: photos(
+        registroFotografico=${registroFotografico}
+      )}">
+    </div>
+
+    <!-- ASSINATURA E FOOTER -->
+    <div th:replace="~{relatorio/fragments/_signature-footer :: signatureFooter(
+        doctorName=${doctorName != null ? doctorName : 'André Reis'},
+        doctorTitle=${doctorTitle != null ? doctorTitle : 'Nutricionista Clínico e Esportivo'},
+        crn=${crn != null ? crn : '22102151'}
+      )}">
+    </div>
+
+  </div>
+</body>
+</html>

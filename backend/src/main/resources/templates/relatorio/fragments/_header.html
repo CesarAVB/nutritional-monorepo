@@ -1,0 +1,29 @@
+<div th:fragment="header(logoUrl, clinicName, clinicSubtitle, doctorName, crn, phone, instagram)" 
+     xmlns:th="http://www.thymeleaf.org" class="header">
+  <table class="header-table">
+    <tr>
+      <td class="header-left">
+        <table>
+          <tr>
+            <td th:if="${logoUrl != null}" style="padding-right: 15px; vertical-align: middle;">
+              <div class="logo-container">
+                <img th:src="${logoUrl}"
+                     src="https://minio-s3.cesaravb.com.br/public/logo.png"
+                     alt="Logo"
+                     class="clinic-logo" />
+              </div>
+            </td>
+            <td style="vertical-align: middle;">
+            </td>
+          </tr>
+        </table>
+      </td>
+      <td class="header-right">
+        <p class="doctor-name" th:text="${doctorName}">Dr. Nome</p>
+        <p class="crn">CRN: <span th:text="${crn != null ? crn : '22102151'}">22102151</span></p>
+        <p class="crn"><i class="fas fa-phone"></i> <span th:text="${phone != null ? phone : '(21) 99929-1477'}">(21) 99929-1477</span></p>
+        <p class="header-social"><i class="fab fa-instagram"></i> <span th:text="${instagram != null ? instagram : '@personalnutri.andrereis'}">@personalnutri.andrereis</span></p>
+      </td>
+    </tr>
+  </table>
+</div>

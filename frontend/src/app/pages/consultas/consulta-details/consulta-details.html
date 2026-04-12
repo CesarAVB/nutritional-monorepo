@@ -1,0 +1,730 @@
+<div class="details-container">
+  @if (isLoading()) {
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Carregando consulta...</p>
+  </div>
+  }
+
+  @if (error()) {
+  <div class="error-state">
+    <p>{{ error() }}</p>
+    <button class="btn-primary" (click)="voltar()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5"></path>
+        <path d="M12 19l-7-7 7-7"></path>
+      </svg>
+      Voltar
+    </button>
+  </div>
+  }
+
+  @if (consulta()) {
+  <div class="header">
+    <button class="back-button" (click)="voltar()">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+    <div class="header-content">
+      <h1>Consulta - {{ consulta()?.nomePaciente }}</h1>
+      <p>{{ formatarData(consulta()!.dataConsulta) }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-edit" (click)="editarConsulta()">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        Editar Consulta
+      </button>
+      <button class="btn-pdf" (click)="gerarPDF()">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14,2 14,8 20,8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10,9 9,9 8,9"></polyline>
+        </svg>
+        Gerar Relatório
+      </button>
+      <button class="btn-ia" (click)="testeIA()" title="Teste I.A">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 8V4H8"></path>
+          <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+          <path d="M2 14h2"></path>
+          <path d="M20 14h2"></path>
+          <path d="M15 13v2"></path>
+          <path d="M9 13v2"></path>
+        </svg>
+        Teste I.A
+      </button>
+      <button class="btn-danger" (click)="confirmarExclusao()">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path
+            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+          ></path>
+          <line x1="10" y1="11" x2="10" y2="17"></line>
+          <line x1="14" y1="11" x2="14" y2="17"></line>
+        </svg>
+        Excluir Consulta
+      </button>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <!-- Card de Avaliação Física -->
+    @if (consulta()?.avaliacaoFisica) {
+    <div class="info-card">
+      <div class="card-header" [class.expanded]="cardAvaliacaoFisica()" (click)="cardAvaliacaoFisica.set(!cardAvaliacaoFisica())">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 12l2 2 4-4"></path>
+          <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"></path>
+          <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"></path>
+          <path d="M12 3c-1 0-3 1-3 3s2 3 3 3 3-1 3-3-2-3-3-3"></path>
+        </svg>
+        <h2 class="card-title">Avaliação Física</h2>
+        <button class="btn-card-collapse" (click)="$event.stopPropagation(); cardAvaliacaoFisica.set(!cardAvaliacaoFisica())">
+          <svg class="expand-icon" [class.rotated]="cardAvaliacaoFisica()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+      </div>
+      @if (cardAvaliacaoFisica()) {
+      <div class="card-body">
+        <div class="info-row">
+          <span class="info-label">Peso</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.pesoAtual }} kg</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">% Gordura</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.percentualGordura }}%</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">IMC</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.imc }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Massa Magra</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.massaMagra }} kg</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Massa Gorda</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.massaGorda }} kg</span>
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="info-card">
+      <div class="card-header" [class.expanded]="cardPerimetros()" (click)="cardPerimetros.set(!cardPerimetros())">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m16.24-3.76l-4.24 4.24m-6-6L2.76 6.24m16.24 12.52l-4.24-4.24m-6 6L2.76 17.76"></path>
+        </svg>
+        <h2 class="card-title">Perímetros (cm)</h2>
+        <button class="btn-card-collapse" (click)="$event.stopPropagation(); cardPerimetros.set(!cardPerimetros())">
+          <svg class="expand-icon" [class.rotated]="cardPerimetros()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+      </div>
+      @if (cardPerimetros()) {
+      <div class="card-body">
+        <div class="info-row">
+          <span class="info-label">Ombro</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.perimetroOmbro || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Tórax</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.perimetroTorax || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Cintura</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.perimetroCintura || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Abdominal</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.perimetroAbdominal || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Quadril</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.perimetroQuadril || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Braço D (relaxado)</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.perimetroBracoDireitoRelax || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Braço D (contraído)</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.perimetroBracoDireitoContr || '-' }}</span>
+        </div>
+        @if (expandirPerimetros()) {
+        <div class="expandable-section">
+          <div class="info-row">
+            <span class="info-label">Braço E (relaxado)</span>
+            <span class="info-value">{{ consulta()?.avaliacaoFisica?.perimetroBracoEsquerdoRelax || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Braço E (contraído)</span>
+            <span class="info-value">{{ consulta()?.avaliacaoFisica?.perimetroBracoEsquerdoContr || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Antebraço D</span>
+            <span class="info-value">{{ consulta()?.avaliacaoFisica?.perimetroAntebracoDireito || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Antebraço E</span>
+            <span class="info-value">{{ consulta()?.avaliacaoFisica?.perimetroAntebracoEsquerdo || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Coxa D</span>
+            <span class="info-value">{{ consulta()?.avaliacaoFisica?.perimetroCoxaDireita || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Coxa E</span>
+            <span class="info-value">{{ consulta()?.avaliacaoFisica?.perimetroCoxaEsquerda || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Panturrilha D</span>
+            <span class="info-value">{{ consulta()?.avaliacaoFisica?.perimetroPanturrilhaDireita || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Panturrilha E</span>
+            <span class="info-value">{{ consulta()?.avaliacaoFisica?.perimetroPanturrilhaEsquerda || '-' }}</span>
+          </div>
+        </div>
+        }
+        <div class="expandir-footer">
+          <button class="btn-expand" (click)="expandirPerimetros.set(!expandirPerimetros())">
+            <svg class="expand-icon" [class.rotated]="expandirPerimetros()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+            {{ expandirPerimetros() ? 'Ver menos' : 'Ver mais' }}
+          </button>
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="info-card">
+      <div class="card-header" [class.expanded]="cardDobras()" (click)="cardDobras.set(!cardDobras())">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+        </svg>
+        <h2 class="card-title">Dobras Cutâneas (mm)</h2>
+        <button class="btn-card-collapse" (click)="$event.stopPropagation(); cardDobras.set(!cardDobras())">
+          <svg class="expand-icon" [class.rotated]="cardDobras()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+      </div>
+      @if (cardDobras()) {
+      <div class="card-body">
+        <div class="info-row">
+          <span class="info-label">Tríceps</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.dobraTriceps || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Peito</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.dobraPeito || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Subescapular</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.dobraSubescapular || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Abdominal</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.dobraAbdominal || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Supra-ilíaca</span>
+          <span class="info-value">{{ consulta()?.avaliacaoFisica?.dobraSupraIliaca || '-' }}</span>
+        </div>
+        @if (expandirDobras()) {
+        <div class="expandable-section">
+          <div class="info-row">
+            <span class="info-label">Axilar Média</span>
+            <span class="info-value">{{ consulta()?.avaliacaoFisica?.dobraAxilarMedia || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Coxa</span>
+            <span class="info-value">{{ consulta()?.avaliacaoFisica?.dobraCoxa || '-' }}</span>
+          </div>
+        </div>
+        }
+        <div class="expandir-footer">
+          <button class="btn-expand" (click)="expandirDobras.set(!expandirDobras())">
+            <svg class="expand-icon" [class.rotated]="expandirDobras()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+            {{ expandirDobras() ? 'Ver menos' : 'Ver mais' }}
+          </button>
+        </div>
+      </div>
+      }
+    </div>
+    } @else {
+    <div class="info-card empty">
+      <p>Nenhuma avaliação física registrada</p>
+    </div>
+    }
+
+    <!-- Card de Questionário -->
+    @if (consulta()?.questionario) {
+    <div class="info-card">
+      <div class="card-header" [class.expanded]="cardEstiloVida()" (click)="cardEstiloVida.set(!cardEstiloVida())">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <h2 class="card-title">Estilo de Vida</h2>
+        <button class="btn-card-collapse" (click)="$event.stopPropagation(); cardEstiloVida.set(!cardEstiloVida())">
+          <svg class="expand-icon" [class.rotated]="cardEstiloVida()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+      </div>
+      @if (cardEstiloVida()) {
+      <div class="card-body">
+        <div class="info-row">
+          <span class="info-label">Objetivo</span>
+          <span class="info-value">{{ consulta()?.questionario?.objetivo || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Frequência de Treino</span>
+          <span class="info-value">{{ consulta()?.questionario?.frequenciaTreino || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Tempo de Treino</span>
+          <span class="info-value">{{ consulta()?.questionario?.tempoTreino || '-' }}</span>
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="info-card">
+      <div class="card-header" [class.expanded]="cardHabitos()" (click)="cardHabitos.set(!cardHabitos())">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+          <path d="M21 3v5h-5"></path>
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+          <path d="M8 16H3v5"></path>
+        </svg>
+        <h2 class="card-title">Hábitos</h2>
+        <button class="btn-card-collapse" (click)="$event.stopPropagation(); cardHabitos.set(!cardHabitos())">
+          <svg class="expand-icon" [class.rotated]="cardHabitos()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+      </div>
+      @if (cardHabitos()) {
+      <div class="card-body">
+        <div class="info-row">
+          <span class="info-label">Fuma</span>
+          <span class="info-value">{{ consulta()?.questionario?.fuma ? 'Sim' : 'Não' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Álcool</span>
+          <span class="info-value">{{ consulta()?.questionario?.frequenciaAlcool || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Intestino</span>
+          <span class="info-value">{{ consulta()?.questionario?.funcionamentoIntestino || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Sono</span>
+          <span class="info-value">{{ consulta()?.questionario?.qualidadeSono || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Água (L/dia)</span>
+          <span class="info-value">{{ consulta()?.questionario?.ingestaoAguaDiaria || '-' }}</span>
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="info-card">
+      <div class="card-header" [class.expanded]="cardAlimentar()" (click)="cardAlimentar.set(!cardAlimentar())">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
+          <path d="M7 2v20"></path>
+          <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path>
+        </svg>
+        <h2 class="card-title">Preferências Alimentares</h2>
+        <button class="btn-card-collapse" (click)="$event.stopPropagation(); cardAlimentar.set(!cardAlimentar())">
+          <svg class="expand-icon" [class.rotated]="cardAlimentar()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+      </div>
+      @if (cardAlimentar()) {
+      <div class="card-body">
+        <div class="info-row">
+          <span class="info-label">Refeições desejadas</span>
+          <span class="info-value">{{ consulta()?.questionario?.numeroRefeicoesDesejadas || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Horário de maior fome</span>
+          <span class="info-value">{{ consulta()?.questionario?.horarioMaiorFome || '-' }}</span>
+        </div>
+        @if (consulta()?.questionario?.frutasPreferidas) {
+        <div class="info-row full-width">
+          <span class="info-label">Frutas preferidas</span>
+          <p class="info-value">{{ consulta()?.questionario?.frutasPreferidas }}</p>
+        </div>
+        }
+        @if (consulta()?.questionario?.alimentosNaoGosta) {
+        <div class="info-row full-width">
+          <span class="info-label">Alimentos que não gosta</span>
+          <p class="info-value">{{ consulta()?.questionario?.alimentosNaoGosta }}</p>
+        </div>
+        }
+        @if (consulta()?.questionario?.intolerancias) {
+        <div class="info-row full-width">
+          <span class="info-label">Intolerâncias</span>
+          <p class="info-value">{{ consulta()?.questionario?.intolerancias }}</p>
+        </div>
+        }
+      </div>
+      }
+    </div>
+
+    <!-- Card de Saúde e Medicamentos -->
+    <div class="info-card">
+      <div class="card-header" [class.expanded]="cardSaude()" (click)="cardSaude.set(!cardSaude())">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+        </svg>
+        <h2 class="card-title">Saúde e Medicamentos</h2>
+        <button class="btn-card-collapse" (click)="$event.stopPropagation(); cardSaude.set(!cardSaude())">
+          <svg class="expand-icon" [class.rotated]="cardSaude()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+      </div>
+      @if (cardSaude()) {
+      <div class="card-body">
+        <div class="info-row">
+          <span class="info-label">Pressão Arterial</span>
+          <span class="info-value">{{ consulta()?.questionario?.pressaoArterial || '-' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Uso de anabolizantes</span>
+          <span class="info-value">{{ consulta()?.questionario?.usoAnabolizantes || '-' }}</span>
+        </div>
+        @if (consulta()?.questionario?.medicamentos) {
+        <div class="info-row full-width">
+          <span class="info-label">Medicamentos</span>
+          <p class="info-value">{{ consulta()?.questionario?.medicamentos }}</p>
+        </div>
+        }
+        @if (consulta()?.questionario?.suplementos) {
+        <div class="info-row full-width">
+          <span class="info-label">Suplementos</span>
+          <p class="info-value">{{ consulta()?.questionario?.suplementos }}</p>
+        </div>
+        }
+        @if (expandirSaude()) {
+        <div class="expandable-section">
+          @if (consulta()?.questionario?.cirurgias) {
+          <div class="info-row full-width">
+            <span class="info-label">Cirurgias</span>
+            <p class="info-value">{{ consulta()?.questionario?.cirurgias }}</p>
+          </div>
+          }
+          @if (consulta()?.questionario?.doencas) {
+          <div class="info-row full-width">
+            <span class="info-label">Doenças</span>
+            <p class="info-value">{{ consulta()?.questionario?.doencas }}</p>
+          </div>
+          }
+          @if (consulta()?.questionario?.historicoFamiliar) {
+          <div class="info-row full-width">
+            <span class="info-label">Histórico Familiar</span>
+            <p class="info-value">{{ consulta()?.questionario?.historicoFamiliar }}</p>
+          </div>
+          }
+          @if (consulta()?.questionario?.cicloAnabolizantes) {
+          <div class="info-row">
+            <span class="info-label">Ciclo de anabolizantes</span>
+            <span class="info-value">{{ consulta()?.questionario?.cicloAnabolizantes }}</span>
+          </div>
+          }
+          @if (consulta()?.questionario?.duracaoAnabolizantes) {
+          <div class="info-row">
+            <span class="info-label">Duração do uso</span>
+            <span class="info-value">{{ consulta()?.questionario?.duracaoAnabolizantes }}</span>
+          </div>
+          }
+        </div>
+        }
+        <div class="expandir-footer">
+          <button class="btn-expand" (click)="expandirSaude.set(!expandirSaude())">
+            <svg class="expand-icon" [class.rotated]="expandirSaude()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+            {{ expandirSaude() ? 'Ver menos' : 'Ver mais' }}
+          </button>
+        </div>
+      </div>
+      }
+    </div>
+    } @else {
+    <div class="info-card empty">
+      <p>Nenhum questionário registrado</p>
+    </div>
+    }
+
+    <!-- Card de Fotos -->
+    @if (consulta()?.registroFotografico) {
+    <div class="info-card fotos-card">
+      <div class="card-header" [class.expanded]="cardFotos()" (click)="cardFotos.set(!cardFotos())">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <circle cx="9" cy="9" r="2"></circle>
+          <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+        </svg>
+        <h2 class="card-title">Registro Fotográfico</h2>
+        <button class="btn-card-collapse" (click)="$event.stopPropagation(); cardFotos.set(!cardFotos())">
+          <svg class="expand-icon" [class.rotated]="cardFotos()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+      </div>
+      @if (cardFotos()) {
+      <div class="card-body">
+        <div class="fotos-grid">
+        @if (fotos()['ANTERIOR']) {
+        <div class="foto-item">
+          <span>Anterior</span>
+          <img
+            [src]="fotos()['ANTERIOR']"
+            alt="Foto Anterior"
+            class="foto-img"
+            (click)="ampliarFoto(fotos()['ANTERIOR']!, 'Foto Anterior')">
+        </div>
+        }
+        @if (fotos()['POSTERIOR']) {
+        <div class="foto-item">
+          <span>Posterior</span>
+          <img
+            [src]="fotos()['POSTERIOR']"
+            alt="Foto Posterior"
+            class="foto-img"
+            (click)="ampliarFoto(fotos()['POSTERIOR']!, 'Foto Posterior')">
+        </div>
+        }
+        @if (fotos()['LATERAL_ESQUERDA']) {
+        <div class="foto-item">
+          <span>Lateral Esquerda</span>
+          <img
+            [src]="fotos()['LATERAL_ESQUERDA']"
+            alt="Foto Lateral Esquerda"
+            class="foto-img"
+            (click)="ampliarFoto(fotos()['LATERAL_ESQUERDA']!, 'Foto Lateral Esquerda')">
+        </div>
+        }
+        @if (fotos()['LATERAL_DIREITA']) {
+        <div class="foto-item">
+          <span>Lateral Direita</span>
+          <img
+            [src]="fotos()['LATERAL_DIREITA']"
+            alt="Foto Lateral Direita"
+            class="foto-img"
+            (click)="ampliarFoto(fotos()['LATERAL_DIREITA']!, 'Foto Lateral Direita')">
+        </div>
+        }
+        @if (!fotos()['ANTERIOR'] && !fotos()['POSTERIOR'] && !fotos()['LATERAL_ESQUERDA'] && !fotos()['LATERAL_DIREITA']) {
+        <p class="no-photos">Nenhuma foto disponível</p>
+        }
+        </div>
+      </div>
+      }
+    </div>
+    } @else {
+    <div class="info-card empty">
+      <p>Nenhum registro fotográfico</p>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- Modal de confirmação de exclusão -->
+  @if (mostrarModalExclusao()) {
+  <div class="modal-overlay" (click)="cancelarExclusao()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Confirmar Exclusão</h2>
+        <button class="close-button" (click)="cancelarExclusao()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Tem certeza que deseja excluir esta consulta?</p>
+        <p class="warning-text">Esta ação não pode ser desfeita.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="cancelarExclusao()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          Cancelar
+        </button>
+        <button class="btn-danger" (click)="excluirConsulta()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            <line x1="10" y1="11" x2="10" y2="17"></line>
+            <line x1="14" y1="11" x2="14" y2="17"></line>
+          </svg>
+          Excluir Consulta
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Modal de Remarcação -->
+  @if (mostrarModalRemarcar()) {
+  <div class="modal-overlay" (click)="cancelarRemarcar()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Remarcar Consulta</h2>
+        <button class="close-button" (click)="cancelarRemarcar()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="novaData">Nova Data e Hora:</label>
+          <input
+            type="datetime-local"
+            id="novaData"
+            class="form-control"
+            [value]="novaData()"
+            (input)="novaData.set($any($event.target).value)"
+          />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="cancelarRemarcar()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          Cancelar
+        </button>
+        <button class="btn-primary" (click)="remarcarConsulta()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+            <path d="M8 14l2 2 4-4"></path>
+          </svg>
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Modal de Seleção de Template removido — gera sempre relatório detalhado -->
+
+  <!-- Modal de foto ampliada (moved para fora do container principal) -->
+</div>
+
+<!-- Modal de foto ampliada (fora do container principal para ficar fixa na viewport) -->
+@if (fotoAmpliada()) {
+<div class="modal-overlay" (click)="fecharFotoAmpliada()">
+  <div class="modal-foto" (click)="$event.stopPropagation()">
+    <div class="modal-foto-header">
+      <h3>{{ tituloFotoAmpliada() }}</h3>
+      <button class="close-button" (click)="fecharFotoAmpliada()">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-foto-body">
+      <img [src]="fotoAmpliada()!" [alt]="tituloFotoAmpliada()">
+    </div>
+  </div>
+</div>
+}
+
+@if (isGeneratingReport()) {
+<div class="report-overlay">
+  <div class="report-card">
+    <div class="spinner"></div>
+    <p>Gerando relatório detalhado...</p>
+  </div>
+</div>
+}

@@ -1,0 +1,879 @@
+<head th:fragment="head" xmlns:th="http://www.thymeleaf.org">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prontuário de Nutrição - André Reis</title>
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <style>
+    /* ========================================
+       OPENHTMLTOPDF - CONFIGURAÇÃO BASE
+       ======================================== */
+    @page {
+      size: A4;
+      margin: 0mm 0mm 20mm 0mm;
+        @bottom-center {
+        content: "André Reis — Nutrição Clínica e Esportiva  Av. Dr. Mario Guimarães, 318, Sala 1001 — Nova Iguaçu, RJ — CEP 26255-230";
+        font-size: 12px;
+        text-align: center;
+        color: #065f46;
+        margin: 10px;
+      }
+        }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif;
+      font-size: 13px;
+      color: #1e293b;
+      background-color: #ffffff;
+      line-height: 1.5;
+    }
+
+    .doc {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: #ffffff;
+    }
+
+    /* ========================================
+       VARIÁVEIS DE COR (via classes)
+       ======================================== */
+    .bg-primary { background-color: #0d9488; }
+    .bg-primary-light { background-color: #5eead4; }
+    .text-primary { color: #0d9488; }
+    .text-dark { color: #1e293b; }
+    .text-muted { color: #64748b; }
+    .text-label { color: #94a3b8; }
+    .border-color { border-color: #e2e8f0; }
+
+    /* ========================================
+       HEADER
+       ======================================== */
+    .header {
+      background-color: #0d9488;
+      color: #ffffff;
+      padding: 24px;
+      margin: 0;
+      page-break-inside: avoid;
+    }
+
+    .header-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .header-left h1 {
+      margin: 0 0 4px 0;
+      font-size: 24px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .header-left p {
+      margin: 0;
+      font-size: 13px;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .header-right {
+      text-align: right;
+      color: #ffffff;
+    }
+
+    .header-right .doctor-name {
+      font-weight: 600;
+      font-size: 15px;
+      margin: 0;
+    }
+
+    .header-right .crn {
+      font-size: 13px;
+      opacity: 0.9;
+      margin: 0;
+    }
+
+    /* ========================================
+       CARDS
+       ======================================== */
+    .card {
+      background-color: #ffffff;
+      padding: 28px;
+      margin: 0 0 20px 0;
+      border: 1px solid #e2e8f0;
+      border-left: 6px solid #0d9488; /* destaque de cor */
+      page-break-inside: avoid;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0d9488;
+      margin: 0 0 18px 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgba(13,148,136,0.12);
+    }
+
+    .card-title i {
+      margin-right: 10px;
+      font-size: 18px;
+    }
+
+    .icon-circle {
+      display: inline-block;
+      margin-right: 10px;
+      font-size: 18px;
+    }
+
+    .icon-circle.primary {
+      color: #0d9488;
+    }
+
+    .icon-circle.warning {
+      color: #d97706;
+    }
+
+    .icon-circle.info {
+      color: #0369a1;
+    }
+
+    .icon-circle.danger {
+      color: #dc2626;
+    }
+
+    /* ========================================
+       PATIENT INFO GRID
+       ======================================== */
+    .patient-grid {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .patient-grid td {
+      padding: 8px 12px 8px 0;
+      vertical-align: top;
+    }
+
+    .patient-grid tr:nth-child(even) td {
+      background-color: #fbfffe;
+      padding-left: 6px;
+    }
+
+    .patient-grid .info-label {
+      color: #055e52;
+      font-weight: 700;
+    }
+
+    
+
+    .info-value {
+      font-size: 15px;
+      font-weight: 500;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    /* ========================================
+       METRICS GRID
+       ======================================== */
+    .metrics-grid {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 12px 0;
+      margin: 0 -12px;
+      page-break-inside: avoid;
+    }
+
+    .metric-box {
+      background-color: #f0fdfa;
+      padding: 24px;
+      text-align: center;
+      width: 25%;
+      page-break-inside: avoid;
+    }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    .metric-value-small {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .metric-label {
+      font-size: 12px;
+      color: #64748b;
+      margin: 4px 0 0 0;
+    }
+
+    .metric-icon-box {
+      margin-bottom: 10px;
+    }
+
+    .metric-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+
+    .badge-success {
+      background-color: #dcfce7;
+      color: #15803d;
+    }
+
+    .badge-warning {
+      background-color: #fef3c7;
+      color: #b45309;
+    }
+
+    .badge-danger {
+      background-color: #fee2e2;
+      color: #dc2626;
+    }
+
+    .badge-info {
+      background-color: #e0f2fe;
+      color: #0369a1;
+    }
+
+    /* ========================================
+       TABLES
+       ======================================== */
+    .tbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      page-break-inside: avoid;
+    }
+
+    /* Modern table variant compatible with OpenHTMLtoPDF */
+    .tbl-modern {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      page-break-inside: avoid;
+      border: 1px solid #e6f7f2;
+    }
+
+    .tbl-modern th {
+      background-color: #e6fffa;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 700;
+      color: #055e52;
+      border-bottom: 2px solid #cdeee6;
+    }
+
+    .tbl-modern td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #eef6f3;
+      color: #1e293b;
+    }
+
+    .tbl-modern tbody tr:nth-child(even) {
+      background-color: #fbfffe;
+    }
+
+    .tbl-modern .cell-muted {
+      color: #64748b;
+    }
+
+      .tbl th {
+        background-color: #e6fffa;
+        padding: 14px 18px;
+        text-align: left;
+        font-weight: 700;
+        color: #0d9488;
+        border-bottom: 3px solid #0d9488;
+      }
+
+    .tbl td {
+      padding: 14px 18px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #1e293b;
+      transition: background-color 0.2s ease;
+    }
+
+    .tbl tr:last-child td {
+      border-bottom: none;
+    }
+
+    .tbl-striped tr:nth-child(even) {
+      background-color: #f8fafb;
+    }
+
+    .tbl-current {
+      background-color: #f0fdfa;
+    }
+
+    .tbl-current td:first-child {
+      font-weight: 600;
+    }
+
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .text-left { text-align: left; }
+
+    /* ========================================
+       RISK BADGES
+       ======================================== */
+    .risk-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .risk-muito-alto { background-color: #fee2e2; color: #dc2626; }
+    .risk-alto { background-color: #fef3c7; color: #d97706; }
+    .risk-moderado { background-color: #fef9c3; color: #ca8a04; }
+    .risk-normal { background-color: #dcfce7; color: #15803d; }
+    .risk-aumentado { background-color: #ffedd5; color: #ea580c; }
+
+    .current-badge {
+      display: inline-block;
+      background-color: #0d9488;
+      color: #ffffff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    /* ========================================
+       PERIMETERS TABLE
+       ======================================== */
+    .perimetros-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      page-break-inside: avoid;
+    }
+
+    .perimetros-table th {
+      background-color: #f8fafb;
+      padding: 10px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #0d9488;
+    }
+
+    .perimetros-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .perimetros-table td:nth-child(2),
+    .perimetros-table td:nth-child(4) {
+      font-weight: 600;
+      color: #1e293b;
+      text-align: center;
+    }
+
+    .perimetros-table tr:nth-child(even) {
+      background-color: #f8fafb;
+    }
+
+    /* ========================================
+       SUMMARY BOXES
+       ======================================== */
+    .summary-grid {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 12px 0;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .summary-box {
+      background-color: #f8fafb;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      width: 33.33%;
+    }
+
+    .summary-box .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin: 0 0 4px 0;
+    }
+
+    .summary-box .value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0d9488;
+      margin: 0;
+    }
+
+    /* ========================================
+       DOBRAS SUMMARY
+       ======================================== */
+    .dobras-summary {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 12px 0;
+      margin-top: 20px;
+    }
+
+    .dobras-summary-box {
+      background: linear-gradient(135deg, #f0fdfa, #e6fffa);
+      padding: 16px;
+      border-radius: 10px;
+      text-align: center;
+      width: 33.33%;
+    }
+
+    .dobras-summary-box .value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0d9488;
+      margin: 0;
+    }
+
+    .dobras-summary-box .label {
+      font-size: 12px;
+      color: #64748b;
+      margin: 4px 0 0 0;
+    }
+
+    /* ========================================
+       COMPOSIÇÃO CORPORAL
+       ======================================== */
+    .composicao-grid {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 16px 0;
+      page-break-inside: avoid;
+    }
+
+    .composicao-card {
+      background-color: #f8fafb;
+      padding: 24px;
+      text-align: center;
+      width: 25%;
+      page-break-inside: avoid;
+    }
+
+    .composicao-card .icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px auto;
+      text-align: center;
+      padding-top: 10px;
+      font-size: 20px;
+    }
+
+    .icon-gordura { background-color: #fef3c7; }
+    .icon-massa-gorda { background-color: #ffedd5; }
+    .icon-massa-magra { background-color: #d1fae5; }
+    .icon-agua { background-color: #e0f2fe; }
+
+    .composicao-card .value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    .composicao-card .value-primary {
+      color: #0d9488;
+    }
+
+    .composicao-card .label {
+      font-size: 12px;
+      color: #64748b;
+      margin: 4px 0 0 0;
+    }
+
+    /* ========================================
+       INFO ROW
+       ======================================== */
+    .info-row {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 16px 0;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+      page-break-inside: avoid;
+    }
+      .info-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #0d9488;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+      }
+
+    .info-row-item .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin: 0 0 4px 0;
+    }
+
+    .info-row-item .value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    /* ========================================
+       TWO COLUMN LAYOUT
+       ======================================== */
+    .two-cols-layout {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 16px 0;
+      page-break-inside: avoid;
+    }
+
+    .two-cols-layout > tbody > tr > td {
+      width: 50%;
+      vertical-align: top;
+    }
+
+    .col-card {
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid #e2e8f0;
+      height: 100%;
+      page-break-inside: avoid;
+    }
+
+    /* ========================================
+       OBJETIVOS
+       ======================================== */
+    .objetivo-principal {
+      margin-bottom: 16px;
+    }
+
+    .objetivo-principal .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin: 0 0 4px 0;
+    }
+
+    .objetivo-principal .value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    .metas-grid {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 12px 0;
+      margin-bottom: 16px;
+    }
+
+    .meta-box {
+      background-color: #f8fafb;
+      padding: 12px;
+      border-radius: 8px;
+      width: 50%;
+    }
+
+    .meta-box .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin: 0;
+    }
+
+    .meta-box .value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0d9488;
+      margin: 0;
+    }
+
+    .prazo-box {
+      background-color: #f8fafb;
+      padding: 12px;
+      border-radius: 8px;
+    }
+
+    .prazo-box .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin: 0;
+    }
+
+    .prazo-box .value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    /* ========================================
+       OBSERVAÇÕES
+       ======================================== */
+    .observacoes-content {
+      font-size: 14px;
+      line-height: 1.7;
+      color: #1e293b;
+    }
+
+    .observacoes-content p {
+      margin: 0 0 8px 0;
+    }
+
+    .observacoes-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* ========================================
+       LIFESTYLE / ESTILO DE VIDA
+       ======================================== */
+    .lifestyle-grid {
+      width: 100%;
+      border-collapse: collapse;
+      page-break-inside: avoid;
+    }
+
+    .lifestyle-grid td {
+      padding: 8px;
+      vertical-align: top;
+      width: 33.33%;
+    }
+
+    .lifestyle-item {
+      background-color: #f7fffc;
+      padding: 12px;
+      border-radius: 4px;
+      border-left: 3px solid #059669;
+    }
+
+    .lifestyle-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      margin: 0 0 4px 0;
+      font-weight: 600;
+    }
+
+    .lifestyle-value {
+      font-size: 13px;
+      color: #1e293b;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    /* ========================================
+       FOOTER
+       ======================================== */
+    .footer {
+      margin: 24px 0 0 0;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      page-break-inside: avoid;
+    }
+
+    .footer-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .footer-left {
+      vertical-align: top;
+    }
+
+    .footer-right {
+      text-align: right;
+      vertical-align: top;
+    }
+
+    .footer-left p,
+    .footer-right p {
+      margin: 0;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .footer-right .name {
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    /* ========================================
+       SIGNATURE
+       ======================================== */
+    .signature-section {
+      margin: 0;
+      padding: 16px;
+      background-color: #f8fafb;
+      border: 1px solid #e2e8f0;
+      page-break-inside: avoid;
+    }
+
+    .signature-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 25px;
+    }
+
+    .signature-left {
+      width: 60%;
+      vertical-align: top;
+    }
+
+    .signature-right {
+      width: 40%;
+      vertical-align: top;
+      text-align: right;
+    }
+
+    .signature-line {
+      width: 250px;
+      border-top: 2px solid #1e293b;
+      margin-bottom: 10px;
+    }
+
+    .signature-name {
+      margin: 0 0 3px 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .signature-title {
+      margin: 0 0 3px 0;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .next-appointment {
+      margin: 0 0 3px 0;
+      font-size: 13px;
+      color: #1e293b;
+    }
+
+    .footer-divider {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 20px;
+    }
+
+    .footer-info {
+      margin: 0;
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    .footer-disclaimer {
+      margin: 10px 0 0 0;
+      font-size: 10px;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+    /* ========================================
+       UTILITIES
+       ======================================== */
+    .mt-0 { margin-top: 0; }
+    .mt-6 { margin-top: 6px; }
+    .mt-10 { margin-top: 10px; }
+    .mt-14 { margin-top: 14px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-20 { margin-top: 20px; }
+    .mt-24 { margin-top: 24px; }
+
+    .mb-0 { margin-bottom: 0; }
+    .mb-6 { margin-bottom: 6px; }
+    .mb-10 { margin-bottom: 10px; }
+    .mb-16 { margin-bottom: 16px; }
+    .mb-20 { margin-bottom: 20px; }
+
+    .avoid-break { page-break-inside: avoid; }
+    .page-break { page-break-before: always; }
+
+    /* ========================================
+       PHOTOS SECTION
+       ======================================== */
+    .photos-grid {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 12px 0;
+      page-break-inside: avoid;
+    }
+
+    .photo-cell {
+      width: 25%;
+      text-align: center;
+      vertical-align: top;
+    }
+
+    .photo-container {
+      width: 100%;
+      aspect-ratio: 3/4;
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: #f8fafb;
+      border: 1px solid #e2e8f0;
+    }
+
+    .photo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-placeholder {
+      width: 100%;
+      aspect-ratio: 3/4;
+      background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .photo-icon {
+      font-size: 32px;
+      opacity: 0.5;
+    }
+
+    .photo-label {
+      margin: 8px 0 0 0;
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 500;
+    }
+  </style>
+</head>

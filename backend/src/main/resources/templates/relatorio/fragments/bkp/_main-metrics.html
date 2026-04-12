@@ -1,0 +1,41 @@
+<div th:fragment="mainMetrics(avaliacaoFisica, pesoIdealMin, pesoIdealMax, classificacaoIMC)"
+     xmlns:th="http://www.thymeleaf.org" class="card">
+  
+  <div class="card-title"><i class="fas fa-chart-line icon-circle primary"></i> Medidas Antropométricas</div>
+  
+  <table class="metrics-grid">
+    <tr>
+      <td class="metric-box">
+        <div class="metric-icon-box"><i class="fas fa-weight-hanging" style="font-size: 24px; color: #0d9488;"></i></div>
+        <p class="metric-value">
+          <span th:text="${avaliacaoFisica != null and avaliacaoFisica.pesoAtual != null ? avaliacaoFisica.pesoAtual : '0.00'}">0.00</span>
+          <span class="metric-value-small">kg</span>
+        </p>
+        <p class="metric-label">Peso Atual</p>
+      </td>
+      <td class="metric-box">
+        <div class="metric-icon-box"><i class="fas fa-ruler-vertical" style="font-size: 24px; color: #0d9488;"></i></div>
+        <p class="metric-value">
+          <span th:text="${avaliacaoFisica != null and avaliacaoFisica.altura != null ? avaliacaoFisica.altura : '0.00'}">0.00</span>
+          <span class="metric-value-small">cm</span>
+        </p>
+        <p class="metric-label">Altura</p>
+      </td>
+      <td class="metric-box">
+        <div class="metric-icon-box"><i class="fas fa-calculator" style="font-size: 24px; color: #0d9488;"></i></div>
+        <p class="metric-value" th:text="${avaliacaoFisica != null and avaliacaoFisica.imc != null ? avaliacaoFisica.imc : '0.00'}">0.00</p>
+        <p class="metric-label">IMC (kg/m²)</p>
+        <span class="metric-badge badge-success" 
+      </td>
+      <td class="metric-box">
+        <div class="metric-icon-box"><i class="fas fa-bullseye" style="font-size: 24px; color: #0d9488;"></i></div>
+        <p class="metric-value">
+          <span th:text="${pesoIdealMin != null ? pesoIdealMin : '0.0'}">0.0</span> - 
+          <span th:text="${pesoIdealMax != null ? pesoIdealMax : '0.0'}">0.0</span>
+          <span class="metric-value-small">kg</span>
+        </p>
+        <p class="metric-label">Peso Ideal</p>
+      </td>
+    </tr>
+  </table>
+</div>

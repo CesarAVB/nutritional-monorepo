@@ -1,0 +1,54 @@
+<div th:fragment="signatureFooter(doctorName, doctorTitle, crn, proximaConsulta, horarioConsulta, clinicName, clinicAddress)"
+     xmlns:th="http://www.thymeleaf.org" style="margin-top:20px;border-top:2px solid #0d9488;padding-top:16px;">
+
+  <!-- Seção de Assinatura -->
+  <div style="background:#f0fdfa;padding:12px 16px;border-radius:6px;margin-bottom:12px;">
+    <table style="width:100%;border-collapse:collapse;">
+      <tr>
+        <td style="width:60%;vertical-align:top;">
+          <div style="border-bottom:1px solid #0d9488;width:80%;margin-bottom:8px;"></div>
+          <p style="margin:0;font-size:14px;font-weight:600;color:#063f3a;">
+            <i class="fas fa-user-md" style="color:#0d9488;margin-right:6px;"></i>
+            <span th:text="${doctorName != null ? doctorName : 'André Reis'}">André Reis</span>
+          </p>
+          <p style="margin:4px 0 0 0;font-size:12px;color:#065f46;">
+            <i class="fas fa-stethoscope" style="color:#0d9488;margin-right:4px;"></i>
+            <span th:text="${doctorTitle != null ? doctorTitle : 'Nutricionista Clínico e Esportivo'}">Nutricionista Clínico e Esportivo</span>
+          </p>
+          <p style="margin:2px 0 0 0;font-size:12px;color:#065f46;">
+            <i class="fas fa-id-badge" style="color:#0d9488;margin-right:4px;"></i>
+            CRN: <span th:text="${crn != null ? crn : '22102151'}">22102151</span>
+          </p>
+        </td>
+        <td style="width:40%;vertical-align:top;text-align:right;">
+          <div th:if="${proximaConsulta != null}" style="margin-bottom:6px;">
+            <p style="margin:0;font-size:12px;color:#063f3a;">
+              <i class="fas fa-calendar-alt" style="color:#0d9488;margin-right:4px;"></i>
+              Próxima Consulta: <strong th:text="${proximaConsulta}" style="color:#0d9488;">--</strong>
+            </p>
+          </div>
+          <div th:if="${horarioConsulta != null}">
+            <p style="margin:0;font-size:12px;color:#063f3a;">
+              <i class="fas fa-clock" style="color:#0d9488;margin-right:4px;"></i>
+              Horário: <strong th:text="${horarioConsulta}" style="color:#0d9488;">--</strong>
+            </p>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Informações da Clínica -->
+  <div style="text-align:center;padding:10px 16px;border-radius:4px;margin-bottom:12px;font-size:12px;color:#065f46;">
+    André Reis — Nutrição Clínica e Esportiva  Av. Dr. Mario Guimarães, 318, Sala 1001 — Nova Iguaçu, RJ — CEP 26255-230
+  </div>
+
+  <!-- Disclaimer -->
+  <div style="text-align:center;padding:8px;background:#f9fafb;border-radius:4px;">
+    <p style="margin:0;font-size:11px;color:#6b7280;">
+      <i class="fas fa-lock" style="color:#0d9488;margin-right:4px;"></i>
+      Este documento é de uso pessoal e intransferível. Válido apenas com assinatura do profissional responsável.
+    </p>
+  </div>
+
+</div>

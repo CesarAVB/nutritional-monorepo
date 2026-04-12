@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000" # S3 API
+      - "9001:9001" # Console
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      retries: 5
+
+  # Optional: run the Spring Boot app inside docker-compose (uncomment if you want to run app in compose)
+  # app:
+  #   build: .
+  #   container_name: nutritional-app
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: local
+  #     # Database
+  #     MYSQLHOST: mysql
+  #     MYSQLPORT: 3306
+  #     MYSQLDATABASE: ${MYSQL_DATABASE}
+  #     MYSQLUSER: ${MYSQL_USER}
+  #     MYSQLPASSWORD: ${MYSQL_PASSWORD}
+  #     # MinIO
+  #     MINIO_ENDPOINT: http://minio:9000
+  #     MINIO_ACCESSKEY: ${MINIO_ROOT_USER}
+  #     MINIO_SECRETKEY: ${MINIO_ROOT_PASSWORD}
+  #     MINIO_BUCKETNAME: ${MINIO_BUCKETNAME}
+  #     MINIO_REGION: ${MINIO_REGION}
+  #     # Rabbit
+  #     RABBITMQ_HOST: rabbitmq
+  #     RABBITMQ_PORT: 5672
+  #     RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER}
+  #     RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
+  #   depends_on:
+  #     - minio
+  #     - mysql
+  #     - rabbitmq
+
+volumes:
+  minio-data:
+  mysql-data:
+  rabbitmq-data:

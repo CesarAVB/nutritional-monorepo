@@ -1,0 +1,34 @@
+<configuration>
+
+  <!-- Appender que escreve no console -->
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Configuração para profile de produção -->
+  <springProfile name="prod">
+    <!-- Nível raiz em INFO (mostra log.info) -->
+    <root level="INFO">
+      <appender-ref ref="CONSOLE" />
+    </root>
+
+    <!-- Logger do pacote da aplicação (pode ser DEBUG para mais detalhes) -->
+    <logger name="br.com.sistema" level="DEBUG" additivity="false">
+      <appender-ref ref="CONSOLE" />
+    </logger>
+  </springProfile>
+
+  <!-- Configuração padrão (aplica para demais profiles, ex: local) -->
+  <springProfile name="!prod">
+    <root level="DEBUG">
+      <appender-ref ref="CONSOLE" />
+    </root>
+
+    <logger name="br.com.sistema" level="DEBUG" additivity="false">
+      <appender-ref ref="CONSOLE" />
+    </logger>
+  </springProfile>
+
+</configuration>
