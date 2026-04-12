@@ -18,6 +18,7 @@ FROM eclipse-temurin:21-jre
 
 # Instala todas as dependências necessárias para Playwright/Chromium
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    chromium \
     fonts-liberation \
     libnss3 \
     libnspr4 \
@@ -45,8 +46,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
-# Deixa o Playwright gerenciar o Chromium automaticamente
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=false
+# Usa Chromium do sistema e evita download de browsers em runtime
+ENV CHROMIUM_PATH=/usr/bin/chromium
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=true
 
 WORKDIR /app
 
