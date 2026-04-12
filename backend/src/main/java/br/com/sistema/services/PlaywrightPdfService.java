@@ -1,5 +1,7 @@
 package br.com.sistema.services;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -57,12 +59,13 @@ public class PlaywrightPdfService {
                             "--disable-dev-shm-usage"
                     ));
 
-            // Em Docker/Linux: CHROMIUM_PATH=/usr/bin/chromium
-            // Em Windows local: Playwright baixa automaticamente
             String chromiumPath = System.getenv("CHROMIUM_PATH");
-            if (chromiumPath != null && !chromiumPath.isBlank()) {
-                options.setExecutablePath(Paths.get(chromiumPath));
-                log.info("Playwright usando Chromium do sistema: {}", chromiumPath);
+            Path chromiumExecutable = resolveChromiumExecutable(chromiumPath);
+            if (chromiumExecutable != null) {
+                options.setExecutablePath(chromiumExecutable);
+                log.info("Playwright usando Chromium do sistema: {}", chromiumExecutable);
+            } else if (chromiumPath != null && !chromiumPath.isBlank()) {
+                log.warn("CHROMIUM_PATH configurado, mas arquivo nao encontrado em {}. Tentando launcher padrao do Playwright.", chromiumPath);
             }
 
             browser = playwright.chromium().launch(options);
@@ -70,15 +73,19 @@ public class PlaywrightPdfService {
             log.info("Playwright Chromium pronto.");
         } catch (Exception e) {
             available = false;
-            log.error("Falha ao inicializar Playwright: {}", e.getMessage(), e);
-            log.warn("Playwright desabilitado; o sistema seguirá com fallback de PDF.");
+            if (e.getMessage() != null && e.getMessage().contains("executable doesn't exist")) {
+                log.warn("Playwright indisponivel por falta de executavel Chromium: {}", e.getMessage());
+            } else {
+                log.error("Falha ao inicializar Playwright: {}", e.getMessage(), e);
+            }
+            closeResources();
+            log.warn("Playwright desabilitado; o sistema seguira com fallback de PDF.");
         }
     }
 
     @PreDestroy
     public void destroy() {
-        if (browser != null)     { try { browser.close();     } catch (Exception ignored) {} }
-        if (playwright != null)  { try { playwright.close();  } catch (Exception ignored) {} }
+        closeResources();
         available = false;
         log.info("Playwright encerrado.");
     }
@@ -133,6 +140,48 @@ public class PlaywrightPdfService {
 
         } finally {
             ctx.close();
+        }
+    }
+
+    private Path resolveChromiumExecutable(String configuredPath) {
+        if (configuredPath != null && !configuredPath.isBlank()) {
+            Path configured = Paths.get(configuredPath);
+            if (Files.isExecutable(configured)) {
+                return configured;
+            }
+        }
+
+        List<String> candidates = List.of(
+                "/usr/bin/chromium",
+                "/usr/bin/chromium-browser",
+                "/snap/bin/chromium"
+        );
+
+        for (String candidate : candidates) {
+            Path path = Paths.get(candidate);
+            if (Files.isExecutable(path)) {
+                return path;
+            }
+        }
+        return null;
+    }
+
+    private void closeResources() {
+        if (browser != null) {
+            try {
+                browser.close();
+            } catch (Exception ignored) {
+            } finally {
+                browser = null;
+            }
+        }
+        if (playwright != null) {
+            try {
+                playwright.close();
+            } catch (Exception ignored) {
+            } finally {
+                playwright = null;
+            }
         }
     }
 }

@@ -44,6 +44,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxdamage1 \
     libasound2t64 \
     ca-certificates \
+ && CHROME_BIN="$(command -v chromium || command -v chromium-browser || true)" \
+ && [ -n "$CHROME_BIN" ] \
+ && ln -sf "$CHROME_BIN" /usr/bin/chromium \
  && rm -rf /var/lib/apt/lists/*
 
 # Usa Chromium do sistema e evita download de browsers em runtime
