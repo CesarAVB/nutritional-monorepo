@@ -1,3 +1,9 @@
+## [1.1.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.0.0...v1.1.0) (2026-04-12)
+
+### Features
+
+* garantir instalação do Chromium no Playwright para evitar downloads desnecessários ([b4f809f](https://github.com/CesarAVB/nutritional-monorepo/commit/b4f809fe213de4af7a5115ff0c1192930489af42))
+
 ## 1.0.0 (2026-04-12)
 
 ### Features
