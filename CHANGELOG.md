@@ -1,3 +1,9 @@
+## [1.5.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.4.0...v1.5.0) (2026-04-12)
+
+### Features
+
+* atualizar Dockerfile para usar imagem do Playwright e simplificar a instalação do Chromium ([d871cc6](https://github.com/CesarAVB/nutritional-monorepo/commit/d871cc6061f23d6dc40e7539b03e05be4e5517c1))
+
 ## [1.4.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.3.0...v1.4.0) (2026-04-12)
 
 ### Features
