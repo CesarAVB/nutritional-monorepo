@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.BrowserType;
+import com.microsoft.playwright.CLI;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.options.Margin;
@@ -44,6 +45,11 @@ public class PlaywrightPdfService {
     public void init() {
         try {
             log.info("Inicializando Playwright Chromium...");
+
+            // Garante que apenas o Chromium será instalado/atualizado quando necessário.
+            // Assim evitamos download de Firefox/WebKit no backend.
+            ensureChromiumInstalled();
+
             playwright = Playwright.create();
 
             BrowserType.LaunchOptions options = new BrowserType.LaunchOptions()
@@ -68,6 +74,14 @@ public class PlaywrightPdfService {
         } catch (Exception e) {
             log.error("Falha ao inicializar Playwright: {}", e.getMessage(), e);
             throw new RuntimeException("Não foi possível inicializar o Playwright/Chromium", e);
+        }
+    }
+
+    private void ensureChromiumInstalled() {
+        try {
+            CLI.main(new String[] { "install", "chromium" });
+        } catch (Exception e) {
+            log.warn("Não foi possível executar 'playwright install chromium': {}", e.getMessage());
         }
     }
 
