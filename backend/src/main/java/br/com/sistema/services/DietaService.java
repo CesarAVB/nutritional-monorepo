@@ -41,6 +41,7 @@ public class DietaService {
     // # buscarContextoPaciente
     // # Retorna objetivo e nº de refeições da última consulta com questionário
     // ==============================================
+    @Transactional(readOnly = true)
     public DietaContextoPacienteDTO buscarContextoPaciente(Long pacienteId) {
         pacienteRepository.findById(pacienteId)
             .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
@@ -55,6 +56,7 @@ public class DietaService {
     // # listarPorPaciente
     // # Lista resumo de todas as dietas de um paciente
     // ==============================================
+    @Transactional(readOnly = true)
     public List<DietaResumoResponse> listarPorPaciente(Long pacienteId) {
         pacienteRepository.findById(pacienteId)
             .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
@@ -69,6 +71,7 @@ public class DietaService {
     // # buscarPorId
     // # Retorna dieta completa com refeições e suplementos
     // ==============================================
+    @Transactional(readOnly = true)
     public DietaResponse buscarPorId(Long id) {
         Dieta dieta = dietaRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Dieta não encontrada"));

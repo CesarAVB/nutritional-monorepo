@@ -47,13 +47,13 @@ public class Dieta {
 
     private Integer kcalTotal;
 
-    @Column(precision = 8, scale = 2)
+    @Column(name = "proteinas_g", precision = 8, scale = 2)
     private BigDecimal proteinasG;
 
-    @Column(precision = 8, scale = 2)
+    @Column(name = "carboidratos_g", precision = 8, scale = 2)
     private BigDecimal carboidratosG;
 
-    @Column(precision = 8, scale = 2)
+    @Column(name = "gorduras_g", precision = 8, scale = 2)
     private BigDecimal gordurasG;
 
     @Column(precision = 4, scale = 2)
