@@ -20,27 +20,35 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.sistema.dtos.RelatorioRequestDTO;
 import br.com.sistema.services.RelatorioService;
 
+/**
+ * Controlador responsavel por orquestrar a geracao de relatorios nutricionais em PDF.
+ * Coordena busca de dados do paciente, montagem de contexto e conversao para PDF,
+ * alem de integrar com webhook n8n para automacao de envio.
+ *
+ * <p>Prioriza Playwright para relatorios comparativos (suporta CSS moderno e graficos),
+ * enquanto relatorios individuais usam OpenHTMLtoPDF para otimizar performance.</p>
+ */
 @RestController
 @RequestMapping("/api/v1/relatorio")
 public class RelatorioController {
 
-	private static final Logger log = LoggerFactory.getLogger(RelatorioController.class);
-	
+    private static final Logger log = LoggerFactory.getLogger(RelatorioController.class);
+    
     @Autowired
     private RelatorioService relatorioService;
 
-    // ==============================================
-    // # Método - gerarRelatorio (POST)
-    // # Recebe dados do request, gera o PDF e retorna como InputStreamResource
-    // ==============================================
+    /**
+     * Gera relatorio nutricional individual em PDF.
+     * Busca todos os dados da consulta (paciente, avaliacao, questionario, fotos)
+     * e renderiza via template Thymeleaf com fallback para Playwright.
+     *
+     * @param request Dados da consulta (pacienteId, consultaId, templateType)
+     * @return PDF do relatorio nutricional
+     * @throws Exception Se a geracao falhar
+     */
     @PostMapping(value = "", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<InputStreamResource> gerarRelatorio(@RequestBody RelatorioRequestDTO request) throws Exception {
-
-    	System.err.println("Gerando relatório nutricional...");
-        log.info("Iniciando geração de relatório para o paciente ID: {}", request.getPacienteId());
-        // Imprime no console o corpo recebido do frontend
-        System.out.println("[FRONTEND] gerarRelatorio request -> pacienteId=" + request.getPacienteId() + ", consultaId=" + request.getConsultaId() + ", templateType=" + request.getTemplateType());
-    	
+        log.info("Iniciando geracao de relatorio para o paciente ID: {}", request.getPacienteId());
         byte[] pdfBytes = relatorioService.gerarRelatorioEmPDFPriorizandoPlaywright(request);
         InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(pdfBytes));
         HttpHeaders headers = new HttpHeaders();
@@ -48,32 +56,35 @@ public class RelatorioController {
         return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF).body(resource);
     }
 
-    // ==============================================
-    // # Método - testeComN8n
-    // # Chama o serviço que gera o JSON do relatório e o envia para o webhook do n8n
-    // ==============================================
+    /**
+     * Envia dados do relatorio para webhook n8n como JSON.
+     * Usado para automacao de envio de relatorios via plataforma n8n.
+     *
+     * @param request Dados da consulta para serializar
+     * @return Resposta do webhook (status e body)
+     * @throws Exception Se o envio falhar
+     */
     @PostMapping(value = "/testeComN8n", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> testeComN8n(@RequestBody RelatorioRequestDTO request) throws Exception {
-        log.info("Invocando envio de relatório via n8n webhook para o paciente ID: {}", request.getPacienteId());
-        // Imprime no console o corpo recebido do frontend
-        System.out.println("[FRONTEND] testeComN8n request -> pacienteId=" + request.getPacienteId() + ", consultaId=" + request.getConsultaId());
-        System.out.println("Invocando envio de relatório via n8n webhook...");
+        log.info("Invocando envio de relatorio via n8n webhook para o paciente ID: {}", request.getPacienteId());
         String webhookUrl = "https://n8nwebhook.redelognet.com.br/webhook/springboot/nutrition-help";
         var response = relatorioService.enviarRelatorioJson(request, webhookUrl);
         return ResponseEntity.status(response.statusCode()).body(response.body());
     }
 
-    // ==============================================
-    // # Método - gerarRelatorioComparativo (POST)
-    // # Gera um PDF comparativo com o histórico evolutivo de TODAS as consultas do paciente
-    // ==============================================
+    /**
+     * Gera relatorio comparativo evolutivo com todas as consultas do paciente.
+     * Inclui graficos de evolucao de peso, medidas e indicadores ao longo do tempo.
+     * Usa Playwright para renderizar Chart.js e CSS moderno.
+     *
+     * @param pacienteId ID do paciente
+     * @return PDF do relatorio comparativo
+     * @throws Exception Se a geracao falhar
+     */
     @PostMapping(value = "/comparativo/{pacienteId}", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<InputStreamResource> gerarRelatorioComparativo(
             @PathVariable Long pacienteId) throws Exception {
-
-        log.info("Gerando relatório comparativo para pacienteId={}", pacienteId);
-        System.out.println("[FRONTEND] gerarRelatorioComparativo -> pacienteId=" + pacienteId);
-
+        log.info("Gerando relatorio comparativo para pacienteId={}", pacienteId);
         byte[] pdfBytes = relatorioService.gerarRelatorioComparativoEmPDF(pacienteId);
         InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(pdfBytes));
         HttpHeaders headers = new HttpHeaders();
@@ -81,17 +92,17 @@ public class RelatorioController {
         return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF).body(resource);
     }
 
-    // ==============================================
-    // # Método - handle GET (fallback explicito)
-    // # Por padrão, se um cliente fizer GET neste caminho, o ResourceHttpRequestHandler pode tentar
-    // # servir um recurso estático e lançar NoResourceFoundException se não existir. Para evitar isso
-    // # e retornar uma resposta clara ao cliente, definimos explicitamente um handler GET que retorna 405.
-    // ==============================================
+    /**
+     * Handler explicito para metodos GET na raiz do recurso.
+     * Retorna 405 Method Not Allowed para orientar o cliente a usar POST.
+     *
+     * @return Erro 405 com header Allow: POST
+     */
     @GetMapping("")
     public ResponseEntity<String> handleGet() {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Allow", "POST");
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).headers(headers)
-                .body("Método não permitido. Use POST para gerar o relatório.");
+                .body("Metodo nao permitido. Use POST para gerar o relatorio.");
     }
 }

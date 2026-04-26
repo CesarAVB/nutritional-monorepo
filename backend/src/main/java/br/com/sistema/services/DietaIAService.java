@@ -42,6 +42,12 @@ import br.com.sistema.repositories.QuestionarioEstiloVidaRepository;
 import br.com.sistema.repositories.TacoAlimentoRepository;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Orquestra a geracao de dietas individualizadas via IA generativa (OpenAI/OpenRouter).
+ * Consolida dados do paciente (avaliacao fisica, questionario de estilo de vida) e
+ * uma selecao do banco TACO para construir prompts ricos e gerar dietas completas
+ * com refeicoes, macroNutrientes e orientacoes personalizadas.
+ */
 @Service
 @Slf4j
 public class DietaIAService {
@@ -89,14 +95,23 @@ public class DietaIAService {
         this.iaRestTemplate = iaRestTemplate;
     }
 
+    /**
+     * Gera uma dieta completa via IA utilizando dados consolidados do paciente.
+     * Agrega perfil antropometrico, preferencias alimentares e inventario TACO
+     * para construir prompts que maximizam a precisao nutricional da geracao.
+     *
+     * @param pacienteId ID do paciente
+     * @param request parametros de geracao (kcal, macros, numero de refeicoes)
+     * @return dieta com refeicoes, opcoes e suplementos
+     */
     @Transactional(readOnly = true)
     public DietaRequest gerarDieta(Long pacienteId, GerarDietaIARequest request) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
-                .orElseThrow(() -> new ResourceNotFoundException("Paciente n√£o encontrado: " + pacienteId));
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente n„o encontrado: " + pacienteId));
 
         var ultimaConsulta = consultaRepository.findFirstByPacienteIdOrderByDataConsultaDesc(pacienteId)
                 .orElseThrow(() -> new BusinessException(
-                        "Paciente n√£o possui consultas registradas. Cadastre uma consulta antes de gerar a dieta com IA."));
+                        "Paciente n„o possui consultas registradas. Cadastre uma consulta antes de gerar a dieta com IA."));
 
         QuestionarioEstiloVida questionario = questionarioRepository
                 .findByConsultaId(ultimaConsulta.getId())
@@ -110,144 +125,152 @@ public class DietaIAService {
 
         List<TacoAlimento> alimentosTaco = selecionarAlimentosTaco(questionario);
 
-        String promptSistema = configuracaoIAService.resolverPromptSistema(config);
-        String promptUsuario = montarPromptUsuario(paciente, questionario, avaliacao, request, alimentosTaco);
-
-        log.debug("Chamando API de IA para paciente {} | {} alimentos TACO | {} kcal",
-                pacienteId, alimentosTaco.size(), request.getKcalTotal());
+        String promptSistema = configuracaoIAService.buscarPromptSistema();
+        String promptUsuario = construirPromptUsuario(paciente, avaliacao, questionario, alimentosTaco, request);
 
         return chamarIAApi(config, promptSistema, promptUsuario);
     }
 
+    /**
+     * Seleciona alimentos do banco TACO considerando preferencias e restricoes
+     * alimentares do questionario. Inclui grupos basicos mais opcionais ativados
+     * pelo paciente para manter variedade na geracao.
+     *
+     * @param questionario questionario de estilo de vida do paciente
+     * @return lista de alimentos TACO ordenados por grupo
+     */
     private List<TacoAlimento> selecionarAlimentosTaco(QuestionarioEstiloVida questionario) {
-        List<TacoAlimento> todos = tacoAlimentoRepository.findByGrupoIn(GRUPOS_TACO_PADRAO);
+        List<String> grupos = new java.util.ArrayList<>(GRUPOS_TACO_PADRAO);
 
-        List<String> termos = extrairTermosExclusao(questionario);
+        if (questionario != null && isPreenchido(questionario.getFrutasPreferidas())) {
+            if (!grupos.contains("FRUTAS_E_DERIVADOS")) {
+                grupos.add("FRUTAS_E_DERIVADOS");
+            }
+        }
 
-        List<TacoAlimento> filtrados = todos.stream()
-                .filter(a -> termos.stream().noneMatch(
-                        t -> a.getDescricao().toLowerCase().contains(t.toLowerCase())))
+        return tacoAlimentoRepository
+                .findByGrupoAlimentarIn(grupos)
+                .stream()
                 .limit(LIMITE_ALIMENTOS_CONTEXTO)
                 .collect(Collectors.toList());
-
-        log.debug("Alimentos TACO selecionados: {} (de {} totais, {} exclu√≠dos por restri√ß√µes)",
-                filtrados.size(), todos.size(), todos.size() - filtrados.size());
-
-        return filtrados;
     }
 
-    private List<String> extrairTermosExclusao(QuestionarioEstiloVida q) {
-        if (q == null) return List.of();
-        String combinado = "";
-        if (q.getAlimentosNaoGosta() != null) combinado += q.getAlimentosNaoGosta() + ",";
-        if (q.getIntolerancias() != null) combinado += q.getIntolerancias();
-        return Arrays.stream(combinado.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toList());
-    }
-
-    private String montarPromptUsuario(
-            Paciente paciente,
-            QuestionarioEstiloVida q,
-            AvaliacaoFisica a,
-            GerarDietaIARequest req,
-            List<TacoAlimento> alimentos) {
-
+    /**
+     * Constroi o prompt de usuario com dados completos do paciente, parametros
+     * nutricionais e inventario de alimentos TACO.
+     * Inclui perfil antropometrico, preferencias, restricoes e metas calÛricas.
+     *
+     * @param paciente paciente com dados basicos
+     * @param avaliacao avaliacao fisica com medidas corporais
+     * @param questionario questionario com preferencias e estilo de vida
+     * @param alimentos lista de alimentos TACO disponiveis
+     * @param request parametros de geracao da dieta
+     * @return prompt formatado para envio a IA
+     */
+    private String construirPromptUsuario(Paciente paciente, AvaliacaoFisica avaliacao,
+                                          QuestionarioEstiloVida questionario,
+                                          List<TacoAlimento> alimentos, GerarDietaIARequest request) {
         StringBuilder sb = new StringBuilder();
-
-        sb.append("=== DADOS DO PACIENTE ===\n");
+        sb.append("Gere uma dieta personalizada no seguinte formato JSON.");
+        sb.append("\n\n=== DADOS DO PACIENTE ===\n");
         sb.append("Nome: ").append(paciente.getNomeCompleto()).append("\n");
-        sb.append("Sexo: ").append(paciente.getSexo()).append("\n");
-        if (paciente.getDataNascimento() != null) {
-            int idade = Period.between(paciente.getDataNascimento(), LocalDate.now()).getYears();
+
+        if (avaliacao != null) {
+            LocalDate dt = paciente.getDataNascimento();
+            int idade = (dt != null) ? Period.between(dt, LocalDate.now()).getYears() : 0;
             sb.append("Idade: ").append(idade).append(" anos\n");
+            sb.append("Sexo: ").append(paciente.getSexo()).append("\n");
+
+            sb.append("Peso: ").append(formatarDouble(valorOuZero(avaliacao.getPeso()))).append(" kg\n");
+            sb.append("Altura: ").append(formatarDouble(valorOuZero(avaliacao.getAltura()))).append(" cm\n");
+
+            // IMC usado para calibrar a densidade calorica do cardapio
+            if (avaliacao.getPeso() != null && avaliacao.getAltura() != null
+                    && avaliacao.getAltura().doubleValue() > 0) {
+                double imc = avaliacao.getPeso().doubleValue()
+                        / Math.pow(avaliacao.getAltura().doubleValue() / 100, 2);
+                sb.append("IMC: ").append(String.format("%.1f", imc)).append(" kg/m≤\n");
+            }
+
+            sb.append("Gordura Corporal: ").append(formatarDouble(valorOuZero(avaliacao.getPercentualGordura()))).append("%\n");
+            sb.append("Massa Muscular: ").append(formatarDouble(valorOuZero(avaliacao.getMassaMuscular()))).append(" kg\n");
         }
 
-        if (a != null) {
-            sb.append("Peso: ").append(formatarDouble(a.getPesoAtual())).append(" kg\n");
-            sb.append("Altura: ").append(formatarDouble(a.getAltura())).append(" cm\n");
-            sb.append("IMC: ").append(formatarDouble(a.getImc())).append("\n");
-            sb.append("Massa magra: ").append(formatarDouble(a.getMassaMagra())).append(" kg\n");
-            sb.append("% Gordura: ").append(formatarDouble(a.getPercentualGordura())).append("%\n");
+        sb.append("\n=== QUESTION¡RIO DE ESTILO DE VIDA ===\n");
+        if (questionario != null) {
+            if (isPreenchido(questionario.getObjetivo())) {
+                sb.append("Objetivo: ").append(questionario.getObjetivo()).append("\n");
+            }
+            if (isPreenchido(questionario.getFrequenciaTreino())) {
+                sb.append("FrequÍncia de treino: ").append(questionario.getFrequenciaTreino()).append("\n");
+            }
+            if (isPreenchido(questionario.getTempoTreino())) {
+                sb.append("DuraÁ„o do treino: ").append(questionario.getTempoTreino()).append("\n");
+            }
+            if (isPreenchido(questionario.getAlimentosNaoGosta())) {
+                sb.append("Alimentos que n„o gosta: ").append(questionario.getAlimentosNaoGosta()).append("\n");
+            }
+            if (isPreenchido(questionario.getFrutasPreferidas())) {
+                sb.append("Frutas preferidas: ").append(questionario.getFrutasPreferidas()).append("\n");
+            }
+            if (questionario.getNumeroRefeicoesDesejadas() != null) {
+                sb.append("Refeicoes desejadas: ").append(questionario.getNumeroRefeicoesDesejadas()).append("\n");
+            }
+            if (isPreenchido(questionario.getIntolerancias())) {
+                sb.append("Intolerancias/Alergias: ").append(questionario.getIntolerancias()).append("\n");
+            }
+            if (isPreenchido(questionario.getDoencas())) {
+                sb.append("DoenÁas/Condicoes: ").append(questionario.getDoencas()).append("\n");
+            }
+            if (isPreenchido(questionario.getMedicamentos())) {
+                sb.append("Medicamentos em uso: ").append(questionario.getMedicamentos()).append("\n");
+            }
         }
 
-        sb.append("\n=== METAS NUTRICIONAIS ===\n");
-        sb.append("Calorias totais: ").append(req.getKcalTotal()).append(" kcal\n");
-        sb.append("Prote√≠nas: ").append(req.getProteinasG()).append(" g\n");
-        sb.append("Carboidratos: ").append(req.getCarboidratosG()).append(" g\n");
-        sb.append("Gorduras: ").append(req.getGordurasG()).append(" g\n");
+        sb.append("\n=== INVENT¡RIO TACO (use SOMENTE estes alimentos) ===\n");
+        sb.append("Quantidade maxima de alimentos no contexto: ").append(LIMITE_ALIMENTOS_CONTEXTO).append("\n\n");
 
-        if (q != null) {
-            sb.append("\n=== PREFER√äNCIAS E RESTRI√á√ïES ===\n");
-            sb.append("N√∫mero de refei√ß√µes desejadas: ")
-              .append(q.getNumeroRefeicoesDesejadas() != null ? q.getNumeroRefeicoesDesejadas() : "5").append("\n");
-            if (isPreenchido(q.getAlimentosNaoGosta()))
-                sb.append("Alimentos a EVITAR: ").append(q.getAlimentosNaoGosta()).append("\n");
-            if (isPreenchido(q.getIntolerancias()))
-                sb.append("Intoler√¢ncias: ").append(q.getIntolerancias()).append("\n");
-            if (isPreenchido(q.getFrutasPreferidas()))
-                sb.append("Frutas preferidas: ").append(q.getFrutasPreferidas()).append("\n");
-            if (isPreenchido(q.getHorarioMaiorFome()))
-                sb.append("Hor√°rio de maior fome: ").append(q.getHorarioMaiorFome()).append("\n");
-
-            sb.append("\n=== SA√öDE E MEDICAMENTOS ===\n");
-            if (isPreenchido(q.getDoencas()))
-                sb.append("Doen√ßas: ").append(q.getDoencas()).append("\n");
-            if (isPreenchido(q.getMedicamentos()))
-                sb.append("Medicamentos em uso: ").append(q.getMedicamentos()).append("\n");
-            if (isPreenchido(q.getPressaoArterial()))
-                sb.append("Press√£o arterial: ").append(q.getPressaoArterial()).append("\n");
-            if (isPreenchido(q.getCirurgias()))
-                sb.append("Cirurgias: ").append(q.getCirurgias()).append("\n");
-            if (isPreenchido(q.getHistoricoFamiliar()))
-                sb.append("Hist√≥rico familiar: ").append(q.getHistoricoFamiliar()).append("\n");
-            if (Boolean.TRUE.equals(q.getFuma()))
-                sb.append("Tabagista: Sim\n");
-            if (isPreenchido(q.getFrequenciaAlcool()))
-                sb.append("Consumo de √°lcool: ").append(q.getFrequenciaAlcool()).append("\n");
-            if (isPreenchido(q.getQualidadeSono()))
-                sb.append("Qualidade do sono: ").append(q.getQualidadeSono()).append("\n");
-
-            sb.append("\n=== ESTILO DE VIDA ===\n");
-            if (isPreenchido(q.getObjetivo()))
-                sb.append("Objetivo: ").append(q.getObjetivo()).append("\n");
-            if (isPreenchido(q.getFrequenciaTreino()))
-                sb.append("Frequ√™ncia de treino: ").append(q.getFrequenciaTreino()).append("\n");
-            if (isPreenchido(q.getTempoTreino()))
-                sb.append("Dura√ß√£o do treino: ").append(q.getTempoTreino()).append("\n");
-        }
-
-        sb.append("\n=== ALIMENTOS DISPON√çVEIS (Tabela TACO) ===\n");
-        sb.append("Use EXCLUSIVAMENTE os alimentos abaixo. Valores por 100g:\n");
         for (TacoAlimento t : alimentos) {
-            sb.append(String.format("- %s | %.0f kcal | P:%.1fg C:%.1fg G:%.1fg\n",
-                    t.getDescricao(),
-                    valorOuZero(t.getEnergiaKcal()),
-                    valorOuZero(t.getProteinaG()),
-                    valorOuZero(t.getCarboidratosG()),
-                    valorOuZero(t.getLipideosG())));
+            sb.append("- ").append(t.getDescricao());
+            sb.append(" | Proteina: ").append(formatarDouble(valorOuZero(t.getProteinasG())));
+            sb.append("g | Carbo: ").append(formatarDouble(valorOuZero(t.getCarboidratosG())));
+            sb.append("g | Gordura: ").append(formatarDouble(valorOuZero(t.getLipideosG())));
+            sb.append(" | Calorias: ").append(formatarDouble(
+                    valorOuZero(t.getCarboidratosG()) * 4 +
+                    valorOuZero(t.getProteinasG()) * 4 +
+                    valorOuZero(t.getLipideosG()) * 9));
+            sb.append(" kcal por 100g\n");
         }
 
-        int numRefeicoes = (q != null && q.getNumeroRefeicoesDesejadas() != null)
-                ? q.getNumeroRefeicoesDesejadas() : 5;
+        int numRefeicoes = (questionario != null && questionario.getNumeroRefeicoesDesejadas() != null)
+                ? questionario.getNumeroRefeicoesDesejadas() : 5;
 
-        sb.append("\n=== INSTRU√á√ïES ===\n");
-        sb.append("1. Crie exatamente ").append(numRefeicoes).append(" refei√ß√µes.\n");
-        sb.append("2. A soma total de calorias de todas as refei√ß√µes deve ser pr√≥xima de ")
-          .append(req.getKcalTotal()).append(" kcal.\n");
-        sb.append("3. Respeite as metas de prote√≠nas (").append(req.getProteinasG())
-          .append("g), carboidratos (").append(req.getCarboidratosG())
-          .append("g) e gorduras (").append(req.getGordurasG()).append("g).\n");
+        sb.append("\n=== INSTRU«’ES ===\n");
+        sb.append("1. Crie exatamente ").append(numRefeicoes).append(" refeiÁıes.\n");
+        sb.append("2. A soma total de calorias de todas as refeiÁıes deve ser prÛxima de ")
+          .append(request.getKcalTotal()).append(" kcal.\n");
+        sb.append("3. Respeite as metas de proteÌnas (").append(request.getProteinasG())
+          .append("g), carboidratos (").append(request.getCarboidratosG())
+          .append("g) e gorduras (").append(request.getGordurasG()).append("g).\n");
         sb.append("4. Use APENAS alimentos da lista TACO acima. Nunca invente alimentos.\n");
-        sb.append("5. No campo 'observacoes', inclua orienta√ß√µes espec√≠ficas sobre medicamentos, ");
-        sb.append("doen√ßas e cuidados de sa√∫de relevantes para este paciente.\n");
-        sb.append("6. Forne√ßa quantidades realistas em gramas ou unidades comuns (colher, x√≠cara, etc.).\n");
-        sb.append("7. Distribua as calorias de forma equilibrada entre as refei√ß√µes.\n");
+        sb.append("5. No campo 'observacoes', inclua orientaÁıes especÌficas sobre medicamentos, ");
+        sb.append("doenÁas e cuidados de sa˙de relevantes para este paciente.\n");
+        sb.append("6. ForneÁa quantidades realistas em gramas ou unidades comuns (colher, xÌcara, etc.).\n");
+        sb.append("7. Distribua as calorias de forma equilibrada entre as refeiÁıes.\n");
 
         return sb.toString();
     }
 
+    /**
+     * Envia a requisicao para a API de IA configurada (OpenAI ou OpenRouter).
+     * Trata erros de autenticacao, rate limiting e timeouts com mensagens
+     * de negocio amigaveis ao usuario.
+     *
+     * @param config configuracao de IA (modelo, key, endpoint)
+     * @param promptSistema instrucoes de comportamento do assistente
+     * @param promptUsuario dados do paciente e parametros nutricionais
+     * @return dieta parseada da resposta JSON da IA
+     */
     private DietaRequest chamarIAApi(ConfiguracaoIA config, String promptSistema, String promptUsuario) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(config.getApiKey());
@@ -289,39 +312,65 @@ public class DietaIAService {
             return parsearResposta(jsonContent);
 
         } catch (HttpClientErrorException.Unauthorized ex) {
-            throw new BusinessException("API key inv√°lida. Verifique a chave configurada em Configura√ß√µes > IA.");
+            throw new BusinessException("API key inv·lida. Verifique a chave configurada em ConfiguraÁıes > IA.");
         } catch (HttpClientErrorException.TooManyRequests ex) {
-            throw new BusinessException("Limite de requisi√ß√µes da IA atingido. Aguarde alguns instantes e tente novamente.");
+            throw new BusinessException("Limite de requisiÁıes da IA atingido. Aguarde alguns instantes e tente novamente.");
         } catch (HttpClientErrorException ex) {
             log.error("Erro HTTP ao chamar IA: {} - {}", ex.getStatusCode(), ex.getResponseBodyAsString());
-            throw new BusinessException("Erro ao chamar a IA: " + ex.getStatusCode() + ". Verifique as configura√ß√µes.");
+            throw new BusinessException("Erro ao chamar a IA: " + ex.getStatusCode() + ". Verifique as configuraÁıes.");
         } catch (ResourceAccessException ex) {
             throw new BusinessException("Tempo de resposta da IA excedido. Tente novamente em instantes.");
         }
     }
 
+    /**
+     * Parseia a resposta JSON da IA convertendo para DietaRequest.
+     * Valida que ao menos uma refeicao foi gerada antes de retornar.
+     *
+     * @param json string JSON retornada pela API
+     * @return dieta processada
+     */
     private DietaRequest parsearResposta(String json) {
         try {
             DietaRequest dieta = objectMapper.readValue(json, DietaRequest.class);
             if (dieta.getRefeicoes() == null || dieta.getRefeicoes().isEmpty()) {
-                throw new BusinessException("A IA n√£o gerou nenhuma refei√ß√£o. Verifique o prompt do sistema e tente novamente.");
+                throw new BusinessException("A IA n„o gerou nenhuma refeiÁ„o. Verifique o prompt do sistema e tente novamente.");
             }
             return dieta;
         } catch (JsonProcessingException ex) {
             log.error("Falha ao parsear resposta da IA: {}", json);
-            throw new BusinessException("A IA retornou um formato de resposta inv√°lido. Tente novamente.");
+            throw new BusinessException("A IA retornou um formato de resposta inv·lido. Tente novamente.");
         }
     }
 
+    /**
+     * Verifica se uma string esta preenchida (nao nula e nao vazia apos trim).
+     *
+     * @param valor string a verificar
+     * @return true se preenchida
+     */
     private boolean isPreenchido(String valor) {
         return valor != null && !valor.isBlank();
     }
 
+    /**
+     * Formata valor Double para exibicao com uma casa decimal.
+     * Retorna "N/I" para valores nulos.
+     *
+     * @param valor valor a formatar
+     * @return string formatada
+     */
     private String formatarDouble(Double valor) {
         if (valor == null) return "N/I";
         return String.format("%.1f", valor);
     }
 
+    /**
+     * Converte BigDecimal para double, retornando zero se nulo.
+     *
+     * @param valor BigDecimal
+     * @return valor numerico ou zero
+     */
     private double valorOuZero(BigDecimal valor) {
         return valor != null ? valor.doubleValue() : 0.0;
     }

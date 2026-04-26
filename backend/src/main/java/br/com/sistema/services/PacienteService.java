@@ -20,6 +20,12 @@ import br.com.sistema.repositories.ConsultaRepository;
 import br.com.sistema.repositories.PacienteRepository;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Gerencia o cadastro e consulta de pacientes.
+ * Opera sobre a entidade Paciente oferecendo CRUD completo, buscas por
+ * nome/CPF, listagens ordenadas e paginadas. Inclui calculo de campos
+ * derivados como total de consultas e data da ultima consulta.
+ */
 @Service
 @RequiredArgsConstructor
 public class PacienteService {
@@ -27,19 +33,21 @@ public class PacienteService {
     private final PacienteRepository pacienteRepository;
     private final ConsultaRepository consultaRepository;
     
-    // ==============================================
-    // # Método - cadastrarPaciente
-    // # Cadastra um novo paciente garantindo unicidade de CPF
-    // ==============================================
+    /**
+     * Cadastra novo paciente validando unicidade de CPF e obrigatoriedade
+     * do sexo (constraint do banco). Campos nao informados permanecem nulos.
+     *
+     * @param dto dados do paciente a cadastrar
+     * @return paciente criado com ID gerado
+     */
     @Transactional
     public PacienteDTO cadastrarPaciente(PacienteDTO dto) {
         if (pacienteRepository.existsByCpf(dto.getCpf())) {
-            throw new BusinessException("CPF já cadastrado no sistema");
+            throw new BusinessException("CPF j� cadastrado no sistema");
         }
         
-        // Validar sexo na criação (regras de banco: coluna NOT NULL)
         if (dto.getSexo() == null) {
-            throw new BusinessException("Sexo é obrigatório");
+            throw new BusinessException("Sexo � obrigat�rio");
         }
         
         Paciente paciente = new Paciente();
@@ -54,41 +62,51 @@ public class PacienteService {
         return converterParaDTO(saved);
     }
     
-    // ==============================================
-    // # Método - buscarPorId
-    // # Busca paciente por ID
-    // ==============================================
+    /**
+     * Busca paciente por ID retornando DTO com campos calculados
+     * (total de consultas e ultima consulta).
+     *
+     * @param id ID do paciente
+     * @return dados do paciente
+     */
     @Transactional(readOnly = true)
     public PacienteDTO buscarPorId(Long id) {
-        Paciente paciente = pacienteRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+        Paciente paciente = pacienteRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Paciente n�o encontrado"));
         return converterParaDTO(paciente);
     }
     
-    // ==============================================
-    // # Método - buscarPorCpf
-    // # Busca paciente por CPF
-    // ==============================================
+    /**
+     * Busca paciente por CPF para operacoes de lookup rapido
+     * (login, identificacao em tela de consulta).
+     *
+     * @param cpf CPF do paciente
+     * @return dados do paciente
+     */
     @Transactional(readOnly = true)
     public PacienteDTO buscarPorCpf(String cpf) {
-        Paciente paciente = pacienteRepository.findByCpf(cpf).orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+        Paciente paciente = pacienteRepository.findByCpf(cpf).orElseThrow(() -> new ResourceNotFoundException("Paciente n�o encontrado"));
         return converterParaDTO(paciente);
     }
     
-    // ==============================================
-    // # Método - listarTodos
-    // # Lista todos os pacientes
-    // ==============================================
+    /**
+     * Lista todos os pacientes ordenados por ID decrescente (mais
+     * recentes primeiro). Utiliza ordenacao em memoria para evitar
+     * impacto em tabelas grandes; preferrir listarPaginado.
+     *
+     * @return lista de pacientes
+     */
     @Transactional(readOnly = true)
     public List<PacienteDTO> listarTodos() {
-        // return pacienteRepository.findAll().stream().map(this::converterParaDTO).toList(); 									// Ordenação por ID decrescente para mostrar os mais recentes primeiro
-    	return pacienteRepository.findAll(Sort.by(Sort.Direction.DESC, "id")).stream().map(this::converterParaDTO).toList(); 	// Ordenação por ID decrescente para mostrar os mais recentes primeiro
-
+        return pacienteRepository.findAll(Sort.by(Sort.Direction.DESC, "id")).stream().map(this::converterParaDTO).toList();
     }
-    
-    // ==============================================
-    // # Metodo - listarTodosPaginado
-    // # Lista pacientes de forma paginada
-    // ==============================================
+
+    /**
+     * Lista pacientes de forma paginada com summary de consultas
+     * carregado em batch para evitar N+1 queries.
+     *
+     * @param pageable configuracao de pagina e ordenacao
+     * @return pagina de pacientes com total e ultima consulta
+     */
     @Transactional(readOnly = true)
     public Page<PacienteDTO> listarTodosPaginado(Pageable pageable) {
         Page<Paciente> page = pacienteRepository.findAll(pageable);
@@ -97,19 +115,26 @@ public class PacienteService {
         return page.map(p -> converterParaDTOComSummary(p, summaryMap));
     }
 
-    // ==============================================
-    // # Metodo - buscarPorNome
-    // # Busca pacientes por nome
-    // ==============================================
+    /**
+     * Busca pacientes por nome utilizando busca case-insensitive
+     * (LIKE %nome%). Ordenado por ID decrescente.
+     *
+     * @param nome fragmento do nome a buscar
+     * @return pacientes que contem o nome
+     */
     @Transactional(readOnly = true)
     public List<PacienteDTO> buscarPorNome(String nome) {
         return pacienteRepository.findByNomeCompletoContainingIgnoreCase(nome).stream().map(this::converterParaDTO).toList();
     }
 
-    // ==============================================
-    // # Metodo - buscarPorNomePaginado
-    // # Busca pacientes por nome de forma paginada
-    // ==============================================
+    /**
+     * Busca pacientes por nome de forma paginada carregando summary
+     * de consultas em batch para otimizar performance.
+     *
+     * @param nome fragmento do nome a buscar
+     * @param pageable configuracao de pagina
+     * @return pagina de pacientes
+     */
     @Transactional(readOnly = true)
     public Page<PacienteDTO> buscarPorNomePaginado(String nome, Pageable pageable) {
         Page<Paciente> page = pacienteRepository.findByNomeCompletoContainingIgnoreCase(nome, pageable);
@@ -118,17 +143,21 @@ public class PacienteService {
         return page.map(p -> converterParaDTOComSummary(p, summaryMap));
     }
     
-    // ==============================================
-    // # Método - atualizarPaciente
-    // # Atualiza informações do paciente (parcialmente)
-    // ==============================================
+    /**
+     * Atualiza campos do paciente de forma parcial (updates condicionais).
+     * Sexo e prontuario sao atualizados apenas quando o DTO fornece
+     * valor, evitando sobrescrever com null.
+     *
+     * @param id ID do paciente
+     * @param dto novos valores (campos nulos sao ignorados)
+     * @return paciente atualizado
+     */
     @Transactional
     public PacienteDTO atualizarPaciente(Long id, PacienteDTO dto) {
-        Paciente paciente = pacienteRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+        Paciente paciente = pacienteRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Paciente n�o encontrado"));
         paciente.setNomeCompleto(dto.getNomeCompleto());
         paciente.setTelefoneWhatsapp(dto.getTelefoneWhatsapp());
         paciente.setEmail(dto.getEmail());
-        // Atualiza sexo apenas se o DTO fornecer o valor (suporta atualizações parciais sem sobrescrever)
         if (dto.getSexo() != null) {
             paciente.setSexo(dto.getSexo());
         }
@@ -139,23 +168,28 @@ public class PacienteService {
         return converterParaDTO(updated);
     }
     
-    // ==============================================
-    // # Método - deletarPaciente
-    // # Remove um paciente por ID
-    // ==============================================
+    /**
+     * Remove paciente por ID. Lanca excecao se nao existir.
+     *
+     * @param id ID do paciente a remover
+     */
     @Transactional
     public void deletarPaciente(Long id) {
         if (!pacienteRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Paciente não encontrado");
+            throw new ResourceNotFoundException("Paciente n�o encontrado");
         }
         pacienteRepository.deleteById(id);
     }
     
-    // ==============================================
-    // # Método - converterParaDTO
-    // # Converte entidade Paciente para PacienteDTO adicionando campos calculados
-    // # Usado em operações de entidade única (buscarPorId, cadastrar, atualizar)
-    // ==============================================
+    /**
+     * Converte entidade Paciente para DTO com campos calculados
+     * (total de consultas e ultima consulta via consultas individuais).
+     * Usado em operacoes de entidade unica onde performance de
+     * queries extras eh aceitavel.
+     *
+     * @param paciente entidade
+     * @return DTO com informacoes basicas e derivadas
+     */
     public PacienteDTO converterParaDTO(Paciente paciente) {
         PacienteDTO dto = new PacienteDTO();
         dto.setId(paciente.getId());
@@ -176,10 +210,13 @@ public class PacienteService {
         return dto;
     }
 
-    // ==============================================
-    // # Método - buildConsultaSummaryMap
-    // # Carrega count + última consulta para uma lista de pacientes em uma única query
-    // ==============================================
+    /**
+     * Carrega summary de consultas (count + ultima data) para uma lista
+     * de pacientes em uma unica query usando batch query.
+     *
+     * @param pacienteIds lista de IDs de pacientes
+     * @return mapa de pacienteId para [pacienteId, totalConsultas, ultimaData]
+     */
     private Map<Long, Object[]> buildConsultaSummaryMap(List<Long> pacienteIds) {
         Map<Long, Object[]> map = new HashMap<>();
         if (!pacienteIds.isEmpty()) {
@@ -189,10 +226,14 @@ public class PacienteService {
         return map;
     }
 
-    // ==============================================
-    // # Método - converterParaDTOComSummary
-    // # Converte Paciente para DTO usando dados pré-carregados em batch
-    // ==============================================
+    /**
+     * Converte Paciente para DTO usando dados de summary pre-carregados
+     * em batch para evitar N+1 queries em listagens.
+     *
+     * @param paciente entidade
+     * @param summaryMap mapa com total e ultima consulta por pacienteId
+     * @return DTO com informacoes basicas e derivadas do batch
+     */
     private PacienteDTO converterParaDTOComSummary(Paciente paciente, Map<Long, Object[]> summaryMap) {
         PacienteDTO dto = new PacienteDTO();
         dto.setId(paciente.getId());

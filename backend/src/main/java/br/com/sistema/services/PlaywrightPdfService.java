@@ -22,28 +22,35 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 
 /**
- * Serviço de geração de PDF usando Playwright (Chromium headless).
- * Usado exclusivamente para o relatório comparativo evolutivo, que exige
- * CSS moderno (flexbox/grid) e JavaScript (Chart.js) para os gráficos.
+ * Gera PDFs usando Playwright (Chromium headless) para reportes que exigem
+ * CSS moderno (flexbox/grid) e JavaScript (Chart.js para graficos).
+ * Utilizado exclusivamente pelo relatorio comparativo evolutivo.
  *
- * Os demais relatórios continuam usando OpenHTMLtoPDF via RelatorioService.
+ * Os demais relatorios continuam usando OpenHTMLtoPDF via RelatorioService.
+ * Em Docker/Linux: defina CHROMIUM_PATH=/usr/bin/chromium para evitar
+ * download automatico de ~300MB. Em Windows: o browser eh baixado na
+ * primeira execucao e cacheado em %USERPROFILE%\AppData\Local\ms-playwright\.
  *
- * Em Docker/Linux: defina a variável de ambiente CHROMIUM_PATH=/usr/bin/chromium
- * para usar o Chromium do sistema (evita o download automático de ~300MB).
- * Em Windows local: o browser é baixado automaticamente pelo Playwright na
- * primeira execução e cacheado em %USERPROFILE%\AppData\Local\ms-playwright\.
+ * Se o Chromium nao estiver disponivel, o servico marca isAvailable()=false
+ * e permite fallback graceful para o chamador.
  */
 @Service
 public class PlaywrightPdfService {
 
     private static final Logger log = LoggerFactory.getLogger(PlaywrightPdfService.class);
-        private static final String DEFAULT_RUNNING_FOOTER =
+    private static final String DEFAULT_RUNNING_FOOTER =
             "Andre Reis | Nutricao Clinica e Esportiva | Av. Dr. Mario Guimaraes, 318, Sala 1001 | Nova Iguacu, RJ | CEP 26255-230";
 
     private Playwright playwright;
     private Browser browser;
     private volatile boolean available;
 
+    /**
+     * Inicializa Playwright e Chromium em modo headless.
+     * Tenta usar Chromium do sistema (via CHROMIUM_PATH ou caminhos comuns)
+     * antes do binario gerenciado pelo Playwright. Trata gracefully falhas
+     * de executavel indisponivel ou wrapper snap nao funcional.
+     */
     @PostConstruct
     public void init() {
         try {
@@ -89,6 +96,9 @@ public class PlaywrightPdfService {
         }
     }
 
+    /**
+     * Libera recursos do browser e playwright.
+     */
     @PreDestroy
     public void destroy() {
         closeResources();
@@ -96,15 +106,21 @@ public class PlaywrightPdfService {
         log.info("Playwright encerrado.");
     }
 
+    /**
+     * Indica se o servico esta operacional e pode gerar PDFs.
+     *
+     * @return true se Chromium foi inicializado com sucesso
+     */
     public boolean isAvailable() {
         return available && browser != null;
     }
 
     /**
-     * Gera um PDF a partir do HTML fornecido usando Chromium headless.
-     * O HTML pode conter CSS moderno, JavaScript e bibliotecas como Chart.js.
+     * Gera PDF a partir de HTML completo usando Chromium headless.
+     * Aguarda sinal JavaScript de que Chart.js terminou de renderizar
+     * antes de converter (timeout de 12s; gera mesmo assim se CDN offline).
      *
-     * @param html conteúdo HTML completo da página
+     * @param html conteudo HTML completo da pagina
      * @return bytes do PDF gerado em formato A4
      */
     public byte[] generatePdf(String html) {
@@ -115,18 +131,16 @@ public class PlaywrightPdfService {
         try {
             Page page = ctx.newPage();
 
-            // Carrega o HTML; NETWORKIDLE aguarda Chart.js CDN ser baixado
+            // Aguarda Chart.js CDN ser baixado
             page.setContent(html, new Page.SetContentOptions()
                     .setWaitUntil(WaitUntilState.NETWORKIDLE));
 
-            // Aguarda o sinal JS de que todos os gráficos terminaram de renderizar.
-            // O template seta window.__chartsReady = true após todos os charts.
-            // Timeout de 12s; se expirar (ex: CDN offline), gera o PDF mesmo assim.
+            // Sinal de que todos os charts terminou de renderizar
             try {
                 page.waitForFunction("() => window.__chartsReady === true",
                         new Page.WaitForFunctionOptions().setTimeout(12_000));
             } catch (Exception e) {
-                log.warn("Timeout aguardando charts — PDF será gerado sem alguns gráficos: {}", e.getMessage());
+                log.warn("Timeout aguardando charts - PDF sera gerado sem alguns graficos: {}", e.getMessage());
             }
 
             return page.pdf(new Page.PdfOptions()
@@ -149,6 +163,13 @@ public class PlaywrightPdfService {
         }
     }
 
+    /**
+     * Resolve caminho do executavel Chromium considerando variavel
+     * de ambiente e caminhos comuns no Linux.
+     *
+     * @param configuredPath valor de CHROMIUM_PATH
+     * @return Path do executavel valido ou null
+     */
     private Path resolveChromiumExecutable(String configuredPath) {
         if (configuredPath != null && !configuredPath.isBlank()) {
             Path configured = Paths.get(configuredPath);
@@ -172,6 +193,12 @@ public class PlaywrightPdfService {
         return null;
     }
 
+    /**
+     * Constroi opcoes de launch para Chromium headless com args
+     * de seguranca para ambientes containerizados.
+     *
+     * @return configuracao de launch
+     */
     private BrowserType.LaunchOptions buildLaunchOptions() {
         return new BrowserType.LaunchOptions()
                 .setHeadless(true)
@@ -183,6 +210,13 @@ public class PlaywrightPdfService {
                 ));
     }
 
+    /**
+     * Verifica se o executavel Chromium funciona realmente (executa
+     * --version e checa exit code e saida).
+     *
+     * @param executable path do executavel
+     * @return true se executavel responde corretamente
+     */
     private boolean isUsableChromiumExecutable(Path executable) {
         try {
             Process process = new ProcessBuilder(executable.toString(), "--version")
@@ -200,14 +234,30 @@ public class PlaywrightPdfService {
         }
     }
 
+    /**
+     * Detecta erro por falta de arquivo executavel.
+     *
+     * @param e excecao
+     * @return true se for erro de executavel ausente
+     */
     private boolean isMissingExecutableFailure(Exception e) {
         return e.getMessage() != null && e.getMessage().contains("executable doesn't exist");
     }
 
+    /**
+     * Detecta erro de Chromium snap wrapper nao funcional.
+     *
+     * @param e excecao
+     * @return true se for erro de snap
+     */
     private boolean isSnapChromiumFailure(Exception e) {
         return e.getMessage() != null && e.getMessage().toLowerCase().contains("requires the chromium snap");
     }
 
+    /**
+     * Fecha browser e playwright com tratamento de excecoes
+     * para garantir cleanup mesmo em falhas parciais.
+     */
     private void closeResources() {
         if (browser != null) {
             try {

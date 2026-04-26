@@ -28,6 +28,13 @@ import br.com.sistema.repositories.PacienteRepository;
 import br.com.sistema.repositories.QuestionarioEstiloVidaRepository;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Gerencia o ciclo de vida completo de dietas nutricionais.
+ * Opera sobre as entidades Dieta, Refeicao, RefeicaoOpcao e SuplementoDieta,
+ * permitindo CRUD, listagem por paciente e conversao para DTOs de resposta.
+ * Fornece contexto de dieta (objetivo, refeicoes desejadas) extraido do
+ * questionario de estilo de vida da ultima consulta do paciente.
+ */
 @Service
 @RequiredArgsConstructor
 public class DietaService {
@@ -37,14 +44,17 @@ public class DietaService {
     private final ConsultaRepository consultaRepository;
     private final QuestionarioEstiloVidaRepository questionarioRepository;
 
-    // ==============================================
-    // # buscarContextoPaciente
-    // # Retorna objetivo e nº de refeições da última consulta com questionário
-    // ==============================================
+    /**
+     * Retorna objetivo e numero de refeicoes desejadas extraidos do
+     * questionario da ultima consulta do paciente.
+     *
+     * @param pacienteId ID do paciente
+     * @return contexto com objetivo e preferences de refeicoes
+     */
     @Transactional(readOnly = true)
     public DietaContextoPacienteDTO buscarContextoPaciente(Long pacienteId) {
         pacienteRepository.findById(pacienteId)
-            .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+            .orElseThrow(() -> new ResourceNotFoundException("Paciente n�o encontrado"));
 
         return consultaRepository.findFirstByPacienteIdOrderByDataConsultaDesc(pacienteId)
             .flatMap(c -> questionarioRepository.findByConsultaId(c.getId()))
@@ -52,14 +62,17 @@ public class DietaService {
             .orElse(new DietaContextoPacienteDTO(null, null));
     }
 
-    // ==============================================
-    // # listarPorPaciente
-    // # Lista resumo de todas as dietas de um paciente
-    // ==============================================
+    /**
+     * Lista todas as dietas de um paciente ordenadas por data de criacao.
+     * Retorna apenas informacoes resumidas (id, titulo, data, kcal, numero de refeicoes).
+     *
+     * @param pacienteId ID do paciente
+     * @return lista de resumos de dietas
+     */
     @Transactional(readOnly = true)
     public List<DietaResumoResponse> listarPorPaciente(Long pacienteId) {
         pacienteRepository.findById(pacienteId)
-            .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+            .orElseThrow(() -> new ResourceNotFoundException("Paciente n�o encontrado"));
 
         return dietaRepository.findByPacienteIdOrderByDataCriacaoDesc(pacienteId)
             .stream()
@@ -67,25 +80,33 @@ public class DietaService {
             .collect(Collectors.toList());
     }
 
-    // ==============================================
-    // # buscarPorId
-    // # Retorna dieta completa com refeições e suplementos
-    // ==============================================
+    /**
+     * Busca dieta completa por ID incluindo todas as refeicoes, opcoes
+     * e suplementos asociados.
+     *
+     * @param id ID da dieta
+     * @return dieta com estrutura hierarquica completa
+     */
     @Transactional(readOnly = true)
     public DietaResponse buscarPorId(Long id) {
         Dieta dieta = dietaRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Dieta não encontrada"));
+            .orElseThrow(() -> new ResourceNotFoundException("Dieta n�o encontrada"));
         return toResponse(dieta);
     }
 
-    // ==============================================
-    // # criar
-    // # Cria nova dieta vinculada ao paciente
-    // ==============================================
+    /**
+     * Cria uma nova dieta vinculada ao paciente. Inicializa a data de
+     * criacao com a data atual e persiste refeicoes e suplementos
+     * associados ao request.
+     *
+     * @param pacienteId ID do paciente
+     * @param request dados da dieta (titulo, macros, refeicoes, suplementos)
+     * @return dieta criada com IDs gerados
+     */
     @Transactional
     public DietaResponse criar(Long pacienteId, DietaRequest request) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
-            .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+            .orElseThrow(() -> new ResourceNotFoundException("Paciente n�o encontrado"));
 
         Dieta dieta = new Dieta();
         dieta.setPaciente(paciente);
@@ -95,14 +116,19 @@ public class DietaService {
         return toResponse(dietaRepository.save(dieta));
     }
 
-    // ==============================================
-    // # atualizar
-    // # Atualiza todos os campos de uma dieta existente
-    // ==============================================
+    /**
+     * Atualiza dieta existente substituindo refeicoes e suplementos
+     * completamente. Limpa colecoes antes de aplicar novo conteudo
+     * para evitar orphan records.
+     *
+     * @param id ID da dieta
+     * @param request novos dados da dieta
+     * @return dieta atualizada com refeicoes e suplementos substituidos
+     */
     @Transactional
     public DietaResponse atualizar(Long id, DietaRequest request) {
         Dieta dieta = dietaRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Dieta não encontrada"));
+            .orElseThrow(() -> new ResourceNotFoundException("Dieta n�o encontrada"));
 
         dieta.getRefeicoes().clear();
         dieta.getSuplementos().clear();
@@ -111,21 +137,28 @@ public class DietaService {
         return toResponse(dietaRepository.save(dieta));
     }
 
-    // ==============================================
-    // # deletar
-    // # Remove uma dieta pelo ID
-    // ==============================================
+    /**
+     * Remove dieta e todas as refeicoes e suplementos associados
+     * via cascade defined no mapeamento JPA.
+     *
+     * @param id ID da dieta a remover
+     */
     @Transactional
     public void deletar(Long id) {
         Dieta dieta = dietaRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Dieta não encontrada"));
+            .orElseThrow(() -> new ResourceNotFoundException("Dieta n�o encontrada"));
         dietaRepository.delete(dieta);
     }
 
-    // ==============================================
-    // # Métodos privados de mapeamento
-    // ==============================================
-
+    /**
+     * Aplica campos do DTO Request a entidade Dieta e reconstr�i
+     * hierarquia de refeicoes, opcoes, alimentos e suplementos.
+     * Trata nulos preservando valores existentes quando orden
+     * nao eh informada.
+     *
+     * @param dieta entidade a atualizar
+     * @param req request com dados novos
+     */
     private void aplicarRequest(Dieta dieta, DietaRequest req) {
         dieta.setTitulo(req.getTitulo());
         dieta.setObjetivo(req.getObjetivo());
@@ -180,6 +213,12 @@ public class DietaService {
         }
     }
 
+    /**
+     * Converte entidade Dieta para DTO de resumo (usado em listagens).
+     *
+     * @param dieta entidade
+     * @return DTO resumido com informacoes essenciais
+     */
     private DietaResumoResponse toResumo(Dieta dieta) {
         return new DietaResumoResponse(
             dieta.getId(),
@@ -191,6 +230,13 @@ public class DietaService {
         );
     }
 
+    /**
+     * Converte entidade Dieta para DTO de resposta completa com hierarquia
+     * de refeicoes, opcoes, alimentos e suplementos.
+     *
+     * @param dieta entidade
+     * @return DTO completo para resposta da API
+     */
     private DietaResponse toResponse(Dieta dieta) {
         DietaResponse resp = new DietaResponse();
         resp.setId(dieta.getId());

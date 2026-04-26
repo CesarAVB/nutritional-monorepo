@@ -19,14 +19,19 @@ import br.com.sistema.repositories.ConfiguracaoIARepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Gerencia configuracoes de integracao com provedores de IA (OpenAI, OpenRouter).
+ * Fornece busca, persistencia, validacao de conexao e resolucao de prompt de sistema.
+ * A API key eh mascarada na resposta para protecao de dados sensiveis.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ConfiguracaoIAService {
 
     private static final String PROMPT_SISTEMA_DEFAULT = """
-            Você é um nutricionista especialista. Responda APENAS com JSON válido, sem markdown, sem blocos de código, sem texto adicional.
-            Estrutura obrigatória do JSON:
+            Voce e um nutricionista especialista. Responda APENAS com JSON valido, sem markdown, sem blocos de codigo, sem texto adicional.
+            Estrutura obrigatoria do JSON:
             {
               "titulo": "string",
               "objetivo": "string",
@@ -47,20 +52,33 @@ public class ConfiguracaoIAService {
               ],
               "suplementos": []
             }
-            Tipos válidos para refeição: AO_ACORDAR, DESJEJUM, ALMOCO, LANCHE_DA_TARDE, JANTAR, CEIA.
+            Tipos validos para refeicao: AO_ACORDAR, DESJEJUM, ALMOCO, LANCHE_DA_TARDE, JANTAR, CEIA.
             Use SOMENTE alimentos da lista TACO fornecida. Nunca inclua alimentos fora dessa lista.
-            A soma total de calorias de todas as refeições deve ser próxima do valor de Kcal Total definido.
+            A soma total de calorias de todas as refeicoes deve ser proxima do valor de Kcal Total definido.
             """;
 
     private final ConfiguracaoIARepository repository;
 
+    /**
+     * Busca a configuracao de IA ativa no sistema.
+     * Lanca excecao se nenhuma configuracao estiver cadastrada.
+     *
+     * @return Configuracao atual com API key mascarada
+     */
     @Transactional(readOnly = true)
     public ConfiguracaoIAResponse buscar() {
         ConfiguracaoIA config = repository.findFirstByOrderByIdAsc()
-                .orElseThrow(() -> new BusinessException("Nenhuma configuração de IA encontrada."));
+                .orElseThrow(() -> new BusinessException("Nenhuma configuracao de IA encontrada."));
         return toResponse(config);
     }
 
+    /**
+     * Salva ou atualiza a configuracao de IA.
+     * Se a API key enviada contiver placeholder (...), mantem a key existente.
+     *
+     * @param request Dados da configuracao
+     * @return Configuracao salva com API key mascarada
+     */
     @Transactional
     public ConfiguracaoIAResponse salvar(ConfiguracaoIARequest request) {
         ConfiguracaoIA config = repository.findFirstByOrderByIdAsc()
@@ -72,7 +90,6 @@ public class ConfiguracaoIAService {
         config.setPromptSistema(request.getPromptSistema());
         config.setTemperaturaModelo(request.getTemperaturaModelo());
 
-        // Só atualiza a apiKey se não for placeholder (evitar sobrescrever com valor mascarado)
         if (!request.getApiKey().contains("...")) {
             config.setApiKey(request.getApiKey());
         }
@@ -80,18 +97,31 @@ public class ConfiguracaoIAService {
         return toResponse(repository.save(config));
     }
 
+    /**
+     * Busca configuracao validada para uso interno pelos servicos de geracao de dietas.
+     * Lanca BusinessException se a API key nao estiver configurada.
+     *
+     * @return Configuracao de IA pronta para uso
+     */
     @Transactional(readOnly = true)
     public ConfiguracaoIA buscarParaUso() {
         ConfiguracaoIA config = repository.findFirstByOrderByIdAsc()
-                .orElseThrow(() -> new BusinessException("Nenhuma configuração de IA encontrada. Configure em Configurações > IA."));
+                .orElseThrow(() -> new BusinessException("Nenhuma configuracao de IA encontrada. Configure em Configuracoes > IA."));
 
         if ("CONFIGURAR".equals(config.getApiKey())) {
-            throw new BusinessException("API key não configurada. Acesse Configurações e informe sua chave de API.");
+            throw new BusinessException("API key nao configurada. Acesse Configuracoes e informe sua chave de API.");
         }
 
         return config;
     }
 
+    /**
+     * Valida a conexao com o provedor de IA enviando uma requisicao de teste.
+     * Retorna status de sucesso ou mensagem de erro amigavel ao usuario.
+     * Adiciona headers especificos para provedores OpenRouter.
+     *
+     * @return Mapa com resultado do teste (sucesso, modelo, provedor ou erro)
+     */
     public Map<String, Object> testarConexao() {
         Map<String, Object> resultado = new HashMap<>();
         try {
@@ -123,13 +153,17 @@ public class ConfiguracaoIAService {
             resultado.put("sucesso", false);
             resultado.put("erro", ex.getMessage());
         } catch (Exception ex) {
-            log.warn("Teste de conexão com IA falhou: {}", ex.getMessage());
+            log.warn("Teste de conexao com IA falhou: {}", ex.getMessage());
             resultado.put("sucesso", false);
-            resultado.put("erro", "Falha na conexão: " + ex.getMessage());
+            resultado.put("erro", "Falha na conexao: " + ex.getMessage());
         }
         return resultado;
     }
 
+    /**
+     * Retorna o prompt de sistema a ser enviado com cada requisicao.
+     * Usa o valor personalizado do banco ou o template padrao se vazio.
+     */
     public String resolverPromptSistema(ConfiguracaoIA config) {
         String prompt = config.getPromptSistema();
         if (prompt == null || prompt.isBlank()) {
@@ -138,6 +172,10 @@ public class ConfiguracaoIAService {
         return prompt;
     }
 
+    /**
+     * Converte entidade ConfiguracaoIA para resposta com API key mascarada.
+     * Protege credenciais em ambientes de exibicao.
+     */
     private ConfiguracaoIAResponse toResponse(ConfiguracaoIA config) {
         return new ConfiguracaoIAResponse(
                 config.getId(),
@@ -150,6 +188,10 @@ public class ConfiguracaoIAService {
         );
     }
 
+    /**
+     * Mascara API key mostrando apenas os 6 primeiros e 4 ultimos caracteres.
+     * Retorna null ou placeholder inalterados para configuracoes pendentes.
+     */
     private String mascarar(String apiKey) {
         if (apiKey == null || apiKey.length() <= 4 || "CONFIGURAR".equals(apiKey)) {
             return apiKey;

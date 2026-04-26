@@ -18,44 +18,73 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Controlador responsavel por gerenciar as avaliacoes fisicas vinculadas as consultas.
+ * Cada consulta pode conter uma unica avaliacao fisica com anotacoes corporais, medidas
+ * e indicadores de saude que permitem o acompanhamento longitudinal do paciente.
+ *
+ * <p>Todas as operacoes sao sincronas e acessam diretamente a entidade Consulta para
+ * associar ou recuperar a avaliacao fisica correspondente.</p>
+ */
 @RestController
 @RequestMapping("/api/v1/avaliacoes")
 @RequiredArgsConstructor
-@Tag(name = "Avaliações Físicas", description = "Endpoints para gestão de avaliações físicas")
+@Tag(name = "Avaliacoes Fisicas", description = "Endpoints para gestao de avaliacoes fisicas")
 public class AvaliacaoFisicaController {
     
     private final AvaliacaoFisicaService avaliacaoFisicaService;
-    
-    // ## Criar nova avaliação física para uma consulta ##
+
+    /**
+     * Cria uma nova avaliacao fisica vinculada a uma consulta existente.
+     *
+     * @param consultaId identificador da consulta que recebera a avaliacao
+     * @param dto dados da avaliacao fisica com anotacoes, medidas e indicadores
+     * @return avaliacao fisica salva com identificador gerado
+     */
     @PostMapping("/consulta/{consultaId}")
-    @Operation(summary = "Salvar avaliação física", description = "Cria uma nova avaliação física para a consulta")
+    @Operation(summary = "Salvar avaliacao fisica", description = "Cria uma nova avaliacao fisica para a consulta")
     public ResponseEntity<AvaliacaoFisicaDTO> salvar(@PathVariable Long consultaId, @Valid @RequestBody AvaliacaoFisicaDTO dto) {
         System.out.println("Recebido salvar Avaliacao DTO: " + dto);
         AvaliacaoFisicaDTO saved = avaliacaoFisicaService.salvarAvaliacao(consultaId, dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
-    
-    
-    // ## Buscar avaliação física por consulta ##
+
+    /**
+     * Recupera a avaliacao fisica associada a uma consulta especifica.
+     *
+     * @param consultaId identificador da consulta
+     * @return avaliacao fisica encontrada ou erro caso nao exista
+     */
     @GetMapping("/consulta/{consultaId}")
-    @Operation(summary = "Buscar avaliação física", description = "Busca a avaliação física de uma consulta")
+    @Operation(summary = "Buscar avaliacao fisica", description = "Busca a avaliacao fisica de uma consulta")
     public ResponseEntity<AvaliacaoFisicaDTO> buscar(@PathVariable Long consultaId) {
         AvaliacaoFisicaDTO avaliacao = avaliacaoFisicaService.buscarPorConsulta(consultaId);
         return ResponseEntity.ok(avaliacao);
     }
-    
-    // ## Atualizar avaliação física ##
+
+    /**
+     * Atualiza os dados da avaliacao fisica de uma consulta existente.
+     *
+     * @param consultaId identificador da consulta
+     * @param dados novos valores para a avaliacao fisica
+     * @return avaliacao fisica atualizada com todas as modificacoes aplicadas
+     */
     @PutMapping("/consulta/{consultaId}")
-    @Operation(summary = "Atualizar avaliação física", description = "Atualiza a avaliação física de uma consulta")
+    @Operation(summary = "Atualizar avaliacao fisica", description = "Atualiza a avaliacao fisica de uma consulta")
     public ResponseEntity<AvaliacaoFisicaDTO> atualizar(@PathVariable Long consultaId, @Valid @RequestBody AvaliacaoFisicaDTO dados) {
-    	System.out.println("Atualizando avaliação física para consulta ID: " + consultaId + "; DTO recebido: " + dados);
+    	System.out.println("Atualizando avaliacao fisica para consulta ID: " + consultaId + "; DTO recebido: " + dados);
         AvaliacaoFisicaDTO updated = avaliacaoFisicaService.atualizarAvaliacao(consultaId, dados);
         return ResponseEntity.ok(updated);
     }
-    
-    // ## Deletar avaliação física ##
+
+    /**
+     * Remove a avaliacao fisica vinculada a uma consulta.
+     *
+     * @param consultaId identificador da consulta
+     * @return resposta vazia com status 204 em caso de sucesso
+     */
     @DeleteMapping("/consulta/{consultaId}")
-    @Operation(summary = "Deletar avaliação física", description = "Remove a avaliação física de uma consulta")
+    @Operation(summary = "Deletar avaliacao fisica", description = "Remove a avaliacao fisica de uma consulta")
     public ResponseEntity<Void> deletar(@PathVariable Long consultaId) {
         avaliacaoFisicaService.deletarAvaliacao(consultaId);
         return ResponseEntity.noContent().build();

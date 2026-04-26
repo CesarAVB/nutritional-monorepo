@@ -16,6 +16,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Controlador responsavel por fornecer dados de sntese para o painel de controle.
+ * Centraliza metricas globais do sistema, consultas do dia e pacientes recentes,
+ * permitindo que o dashboard exiba uma visao consolidada sem multiplas requisicoes.
+ *
+ * <p>Todos os dados sao obtidos em tempo real atraves de consultas agregadas
+ * ao banco de dados.</p>
+ */
 @RestController
 @RequestMapping("/api/v1/dashboard")
 @RequiredArgsConstructor
@@ -24,21 +32,26 @@ public class DashboardController {
     
     private final DashboardService dashboardService;
 
-    // ==============================================
-    // # Método - obterEstatisticas
-    // # Retorna estatísticas gerais do sistema para o dashboard
-    // ==============================================
+    /**
+     * Recupera metricas gerais do sistema incluindo total de pacientes,
+     * quantidade de consultas do dia e do mes, alem de outros indicadores
+     * relevantes para acompanhamento operacional.
+     *
+     * @return objeto com estatisticas consolidadas do sistema
+     */
     @GetMapping("/stats")
-    @Operation(summary = "Obter estatísticas", description = "Retorna estatísticas gerais: total de pacientes, consultas hoje, consultas do mês, etc")
+    @Operation(summary = "Obter estatisticas", description = "Retorna estatisticas gerais: total de pacientes, consultas hoje, consultas do mes, etc")
     public ResponseEntity<DashboardStatsDTO> obterEstatisticas() {
         DashboardStatsDTO stats = dashboardService.buscarEstatisticas();
         return ResponseEntity.ok(stats);
     }
 
-    // ==============================================
-    // # Método - consultasHoje
-    // # Lista as consultas agendadas para hoje
-    // ==============================================
+    /**
+     * Lista todas as consultas agendadas para a data atual.
+     * Utilizado para exibir a agenda do dia no painel de controle.
+     *
+     * @return lista de consultas com pacientes ehorarios do dia
+     */
     @GetMapping("/consultas-hoje")
     @Operation(summary = "Listar consultas de hoje", description = "Retorna todas as consultas agendadas para hoje")
     public ResponseEntity<List<ConsultaHojeDTO>> consultasHoje() {
@@ -46,10 +59,13 @@ public class DashboardController {
         return ResponseEntity.ok(consultas);
     }
 
-    // ==============================================
-    // # Método - pacientesRecentes
-    // # Retorna os pacientes cadastrados recentemente
-    // ==============================================
+    /**
+     * Recupera os pacientes que foram cadastrados mais recentemente.
+     * Ordenados por data de criacao de forma decrescente.
+     *
+     * @param limite quantidade maxima de pacientes a retornar (padrao 5)
+     * @return lista de pacientes recentes com dados resumidos
+     */
     @GetMapping("/pacientes-recentes")
     @Operation(summary = "Listar pacientes recentes", description = "Retorna os pacientes cadastrados recentemente")
     public ResponseEntity<List<PacienteDTO>> pacientesRecentes(

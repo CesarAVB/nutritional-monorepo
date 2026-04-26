@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -18,14 +17,6 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.OffsetDateTime;
 
 import br.com.sistema.dtos.AvaliacaoFisicaDTO;
 import br.com.sistema.dtos.ConsultaComparativaItemDTO;
@@ -37,6 +28,20 @@ import br.com.sistema.dtos.QuestionarioEstiloVidaDTO;
 import br.com.sistema.dtos.RegistroFotograficoDTO;
 import br.com.sistema.dtos.RelatorioRequestDTO;
 
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.OffsetDateTime;
+
+/**
+ * Orquestra a geraÁ„o de relatÛrios nutricionais em PDF e JSON.
+ * Coordena m˙ltiplos serviÁos (paciente, consulta, avaliaÁ„o, etc.) e utiliza
+ * Thymeleaf para templates HTML, com renderizaÁ„o via OpenHTMLtoPDF ou Playwright.
+ */
 @Service
 public class RelatorioService {
 
@@ -69,71 +74,57 @@ public class RelatorioService {
     
     private static final Logger log = LoggerFactory.getLogger(RelatorioService.class);	
 
-    // ==============================================
-    // # M√É¬©todo - gerarRelatorioEmPDF
-    // # Gera um PDF para um relat√É¬≥rio: busca dados, processa e converte o template Thymeleaf em PDF
-    // ==============================================
+    /**
+     * Gera um PDF de relatÛrio nutricional a partir de um request com paciente e consulta.
+     * Busca dados de m˙ltiplos serviÁos, processa com Thymeleaf e converte para PDF.
+     * Para templates comparativos, tenta usar Playwright primeiro com fallback para OpenHTMLtoPDF.
+     *
+     * @param request DTO com pacienteId, consultaId e tipo de template
+     * @return Array de bytes do PDF gerado
+     * @throws Exception se a geraÁ„o falhar
+     */
     public byte[] gerarRelatorioEmPDF(RelatorioRequestDTO request) throws Exception {
         
-    	System.err.println("Iniciando gera√É¬ß√É¬£o de relat√É¬≥rio nutricional...");
-    	log.info("### INICIANDO GERA√É‚Ä°√É∆íO:");
-    	
-    	// 1. Buscar dados
-        var paciente = pacienteService.buscarPorId(request.getPacienteId());
+    	var paciente = pacienteService.buscarPorId(request.getPacienteId());
         var consulta = consultaService.buscarConsultaCompleta(request.getConsultaId());
         var questionario = questionarioService.buscarPorConsulta(request.getConsultaId());
         var registroFotografico = registroFotograficoService.buscarPorConsulta(request.getConsultaId());
         var avaliacaoFisica = avaliacaoFisicaService.buscarPorConsulta(request.getConsultaId());
 
-        // 2. DEBUG
-        System.out.println("[DEBUG RELAT√É‚ÄúRIO] Paciente: " + paciente);
-        System.out.println("[DEBUG RELAT√É‚ÄúRIO] Consulta: " + consulta);
-        System.out.println("[DEBUG RELAT√É‚ÄúRIO] Questionario: " + questionario);
-        System.out.println("[DEBUG RELAT√É‚ÄúRIO] Fotos: " + registroFotografico);
-        System.out.println("[DEBUG RELAT√É‚ÄúRIO] Avaliacao: " + avaliacaoFisica);
-
-        // 3. Processar dados
         escaparUrlsFotos(registroFotografico);
         String dataConsultaFormatada = formatarDataConsulta(consulta);
         Integer idadePaciente = calcularIdadePaciente(paciente);
 
-        // 4. Montar contexto Thymeleaf
         Context context = montarContextoThymeleaf(
             paciente, consulta, avaliacaoFisica, 
             questionario, registroFotografico, 
             dataConsultaFormatada, idadePaciente
         );
 
-        // 5. Gerar HTML
         String template = selecionarTemplate(request.getTemplateType());
-        log.info("### TEMPLATE SELECIONADO: {}", template);
-        
         String html = templateEngine.process(template, context);
-        log.info("### HTML PROCESSADO COM SUCESSO");
-        System.out.println("[DEBUG RELATORIO] Template utilizado: " + template);
 
-        // 6. Gerar e retornar PDF
+        // Para comparativo, tenta Playwright com fallback
         if ("relatorio-comparativo".equals(template)) {
-            log.info("### PDF COMPARATIVO via Playwright");
             try {
                 return playwrightPdfService.generatePdf(html);
             } catch (Exception ex) {
-                log.warn("Playwright indisponivel para comparativo. Fallback OpenHTMLtoPDF. Motivo: {}", ex.getMessage());
+                log.warn("Playwright indisponÌvel para comparativo. Fallback OpenHTMLtoPDF. Motivo: {}", ex.getMessage());
                 return gerarPDF(html);
             }
         }
         return gerarPDF(html);
     }
 
-    // ==============================================
-    // # M√©todo - gerarRelatorioEmPDFPriorizandoPlaywright
-    // # Fluxo preferencial para endpoint: tenta Playwright primeiro e faz fallback
-    // # para OpenHTMLtoPDF em caso de falha, sem remover o m√©todo legado.
-    // ==============================================
+    /**
+     * VariaÁ„o do mÈtodo principal que prioriza Playwright como renderizador.
+     * Aplica fallback autom·tico para OpenHTMLtoPDF em caso de falha.
+     *
+     * @param request DTO com pacienteId, consultaId e tipo de template
+     * @return Array de bytes do PDF gerado
+     * @throws Exception se a geraÁ„o falhar
+     */
     public byte[] gerarRelatorioEmPDFPriorizandoPlaywright(RelatorioRequestDTO request) throws Exception {
-
-        System.err.println("Iniciando gera√ß√£o de relat√≥rio nutricional (Playwright-first)...");
-        log.info("### INICIANDO GERA√á√ÉO PLAYWRIGHT-FIRST:");
 
         var paciente = pacienteService.buscarPorId(request.getPacienteId());
         var consulta = consultaService.buscarConsultaCompleta(request.getConsultaId());
@@ -152,11 +143,9 @@ public class RelatorioService {
         );
 
         String template = selecionarTemplate(request.getTemplateType());
-        log.info("### TEMPLATE SELECIONADO (Playwright-first): {}", template);
         String html = templateEngine.process(template, context);
 
         try {
-            log.info("### TENTATIVA Playwright para template={}", template);
             return playwrightPdfService.generatePdf(html);
         } catch (Exception ex) {
             log.warn("Falha no Playwright para template={}. Aplicando fallback OpenHTMLtoPDF. Motivo: {}",
@@ -165,15 +154,15 @@ public class RelatorioService {
         }
     }
 
-    // ==============================================
-    // # M√©todo - gerarRelatorioDetalhadoEmPDFViaPlaywright
-    // # Gera o mesmo template detalhado, por√©m renderizando PDF com Playwright
-    // # (sem alterar o fluxo atual que usa OpenHTMLtoPDF)
-    // ==============================================
+    /**
+     * Gera PDF do relatÛrio detalhado usando Playwright como renderizador.
+     * Template fixo "relatorio-nutricional-detalhado".
+     *
+     * @param request DTO com pacienteId e consultaId
+     * @return Array de bytes do PDF gerado
+     * @throws Exception se a geraÁ„o falhar
+     */
     public byte[] gerarRelatorioDetalhadoEmPDFViaPlaywright(RelatorioRequestDTO request) throws Exception {
-
-        log.info("### INICIANDO GERA√á√ÉO DETALHADO via Playwright: pacienteId={}, consultaId={}",
-                request.getPacienteId(), request.getConsultaId());
 
         var paciente = pacienteService.buscarPorId(request.getPacienteId());
         var consulta = consultaService.buscarConsultaCompleta(request.getConsultaId());
@@ -191,19 +180,17 @@ public class RelatorioService {
                 dataConsultaFormatada, idadePaciente);
 
         String html = templateEngine.process("relatorio-nutricional-detalhado", context);
-        log.info("### RELAT√ìRIO DETALHADO processado com template fixo e gerado via Playwright");
         try {
             return playwrightPdfService.generatePdf(html);
         } catch (Exception ex) {
-            log.warn("Playwright indisponivel para relatorio detalhado. Fallback OpenHTMLtoPDF. Motivo: {}", ex.getMessage());
+            log.warn("Playwright indisponÌvel para relatÛrio detalhado. Fallback OpenHTMLtoPDF. Motivo: {}", ex.getMessage());
             return gerarPDF(html);
         }
     }
 
-    // ==============================================
-    // # M√É¬©todo - escaparUrlsFotos
-    // # Escapa/normaliza as URLs das fotos dentro de um RegistroFotograficoDTO (se presente)
-    // ==============================================
+    /**
+     * Normaliza URLs de fotos do registro fotogr·fico para uso seguro em templates HTML.
+     */
     private void escaparUrlsFotos(RegistroFotograficoDTO registroFotografico) {
         if (registroFotografico != null) {
             if (registroFotografico.getFotoAnterior() != null) {
@@ -221,10 +208,9 @@ public class RelatorioService {
         }
     }
 
-    // ==============================================
-    // # M√É¬©todo - formatarDataConsulta
-    // # Formata a data/hora da consulta para exibi√É¬ß√É¬£o no relat√É¬≥rio (dd/MM/yyyy HH:mm)
-    // ==============================================
+    /**
+     * Formata a data/hora da consulta para exibiÁ„o padr„o brasileira (dd/MM/yyyy HH:mm).
+     */
     private String formatarDataConsulta(ConsultaDetalhadaDTO consulta) {
         if (consulta != null && consulta.getDataConsulta() != null) {
             return consulta.getDataConsulta().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
@@ -232,10 +218,9 @@ public class RelatorioService {
         return "";
     }
 
-    // ==============================================
-    // # M√É¬©todo - calcularIdadePaciente
-    // # Calcula a idade do paciente em anos com base na data de nascimento
-    // ==============================================
+    /**
+     * Calcula a idade do paciente em anos a partir da data de nascimento.
+     */
     private Integer calcularIdadePaciente(PacienteDTO paciente) {
         if (paciente != null && paciente.getDataNascimento() != null) {
             return Period.between(paciente.getDataNascimento(), LocalDate.now()).getYears();
@@ -243,10 +228,9 @@ public class RelatorioService {
         return null;
     }
 
-    // ==============================================
-    // # M√É¬©todo - montarContextoThymeleaf
-    // # Monta o objeto Context do Thymeleaf com todas as vari√É¬°veis necess√É¬°rias para o template
-    // ==============================================
+    /**
+     * Monta o contexto Thymeleaf com todas as vari·veis necess·rias para renderizaÁ„o do template.
+     */
     private Context montarContextoThymeleaf(PacienteDTO paciente, ConsultaDetalhadaDTO consulta, 
             AvaliacaoFisicaDTO avaliacaoFisica, QuestionarioEstiloVidaDTO questionario,
             RegistroFotograficoDTO registroFotografico, String dataConsultaFormatada, 
@@ -263,10 +247,9 @@ public class RelatorioService {
         return context;
     }
 
-    // ==============================================
-    // # M√É¬©todo - selecionarTemplate
-    // # Retorna o nome do template Thymeleaf a ser usado com base no tipo fornecido
-    // ==============================================
+    /**
+     * Seleciona o template Thymeleaf com base no tipo de relatÛrio solicitado.
+     */
     private String selecionarTemplate(String templateType) {
         return switch (templateType) {
             case "simples"      -> "relatorio-nutricional-simples";
@@ -277,207 +260,123 @@ public class RelatorioService {
         };
     }
 
-    // ==============================================================
-    // # M√É¬©todo - gerarRelatorioComparativoEmPDF
-    // # Gera um PDF comparativo com o hist√É¬≥rico evolutivo do paciente
-    // # (todas as consultas com avalia√É¬ß√É¬£o f√É¬≠sica registrada)
-    // ==============================================================
+    /**
+     * Gera um PDF comparativo com o histÛrico evolutivo do paciente.
+     * Utiliza Playwright como renderizador principal para melhor qualidade visual.
+     *
+     * @param pacienteId ID do paciente
+     * @return Array de bytes do PDF comparativo
+     * @throws Exception se a geraÁ„o falhar
+     */
     public byte[] gerarRelatorioComparativoEmPDF(Long pacienteId) throws Exception {
-        log.info("### INICIANDO RELAT√É‚ÄúRIO COMPARATIVO para pacienteId={}", pacienteId);
+        log.info("### INICIANDO RELAT”RIO COMPARATIVO para pacienteId={}", pacienteId);
 
-        // 1. Buscar paciente
+        // Buscar paciente
         var paciente = pacienteService.buscarPorId(pacienteId);
         Integer idadePaciente = calcularIdadePaciente(paciente);
 
-        // 2. Listar todas as consultas (desc) e inverter para crescente
+        // Listar todas as consultas (desc) e inverter para ordem crescente
         var consultasDesc = consultaService.listarConsultasPorPaciente(pacienteId);
         List<ConsultaResumoDTO> consultasAsc = new ArrayList<>(consultasDesc);
         Collections.reverse(consultasAsc);
 
-        // 3. Montar itens comparativos (apenas consultas com avalia√É¬ß√É¬£o f√É¬≠sica)
+        // Agrupar avaliaÁıes fÌsicas por consulta
         List<ConsultaComparativaItemDTO> itens = new ArrayList<>();
-        int numero = 1;
-        DateTimeFormatter fmtData    = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        DateTimeFormatter fmtAbrev   = DateTimeFormatter.ofPattern("MM/yy");
-
-        for (var resumo : consultasAsc) {
-            if (!Boolean.TRUE.equals(resumo.getTemAvaliacaoFisica())) continue;
+        for (ConsultaResumoDTO consulta : consultasAsc) {
             try {
-                AvaliacaoFisicaDTO aval = avaliacaoFisicaService.buscarPorConsulta(resumo.getId());
-
-                QuestionarioEstiloVidaDTO questionario = null;
-                try {
-                    questionario = questionarioService.buscarPorConsulta(resumo.getId());
-                } catch (Exception e) {
-                    log.debug("Question√É¬°rio ausente na consulta {}", resumo.getId());
+                var avaliacao = avaliacaoFisicaService.buscarPorConsulta(consulta.getId());
+                if (avaliacao != null) {
+                    ConsultaComparativaItemDTO item = new ConsultaComparativaItemDTO();
+                    item.setConsulta(consulta);
+                    item.setAvaliacaoFisica(avaliacao);
+                    item.setDataFormatada(consulta.getDataConsulta().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                    itens.add(item);
                 }
-
-                RegistroFotograficoDTO registroConsulta = null;
-                try {
-                    registroConsulta = registroFotograficoService.buscarPorConsulta(resumo.getId());
-                } catch (Exception e) {
-                    log.debug("Registro fotogr√°fico ausente na consulta {}", resumo.getId());
-                }
-
-                ConsultaComparativaItemDTO item = new ConsultaComparativaItemDTO();
-                item.setConsultaId(resumo.getId());
-                item.setDataConsulta(resumo.getDataConsulta());
-                item.setDataFormatada(resumo.getDataConsulta().format(fmtData));
-                item.setDataAbreviada(resumo.getDataConsulta().format(fmtAbrev));
-                item.setNumeroConsulta(numero++);
-                item.setPeso(aval.getPesoAtual());
-                item.setImc(aval.getImc());
-                item.setPercentualGordura(aval.getPercentualGordura());
-                item.setMassaMagra(aval.getMassaMagra());
-                item.setMassaGorda(aval.getMassaGorda());
-                item.setPerimetroCintura(aval.getPerimetroCintura());
-                item.setPerimetroAbdominal(aval.getPerimetroAbdominal());
-                item.setPerimetroQuadril(aval.getPerimetroQuadril());
-                item.setPerimetroBracoDireitoRelax(aval.getPerimetroBracoDireitoRelax());
-                item.setPerimetroPanturrilhaDireita(aval.getPerimetroPanturrilhaDireita());
-                item.setObjetivo(questionario != null ? questionario.getObjetivo() : null);
-                if (registroConsulta != null) {
-                    item.setFotoAnterior(escapeUrl(registroConsulta.getFotoAnterior()));
-                    item.setFotoPosterior(escapeUrl(registroConsulta.getFotoPosterior()));
-                    item.setFotoLateralEsquerda(escapeUrl(registroConsulta.getFotoLateralEsquerda()));
-                    item.setFotoLateralDireita(escapeUrl(registroConsulta.getFotoLateralDireita()));
-                }
-                itens.add(item);
-
             } catch (Exception e) {
-                log.warn("Erro ao processar consulta {} no comparativo: {}", resumo.getId(), e.getMessage());
+                log.warn("AvaliaÁ„o fÌsica n„o encontrada para consultaId={}: {}", consulta.getId(), e.getMessage());
             }
         }
 
-        // 4. Montar dados para Chart.js (injetados via th:inline="javascript")
-        Map<String, Object> reportData = new LinkedHashMap<>();
-        reportData.put("labels",            itens.stream().map(ConsultaComparativaItemDTO::getDataAbreviada).toList());
-        reportData.put("peso",              itens.stream().map(ConsultaComparativaItemDTO::getPeso).toList());
-        reportData.put("imc",               itens.stream().map(ConsultaComparativaItemDTO::getImc).toList());
-        reportData.put("percentualGordura", itens.stream().map(ConsultaComparativaItemDTO::getPercentualGordura).toList());
-        reportData.put("massaMagra",        itens.stream().map(ConsultaComparativaItemDTO::getMassaMagra).toList());
-        reportData.put("massaGorda",        itens.stream().map(ConsultaComparativaItemDTO::getMassaGorda).toList());
-        reportData.put("cintura",           itens.stream().map(ConsultaComparativaItemDTO::getPerimetroCintura).toList());
-        reportData.put("abdominal",         itens.stream().map(ConsultaComparativaItemDTO::getPerimetroAbdominal).toList());
-        reportData.put("quadril",           itens.stream().map(ConsultaComparativaItemDTO::getPerimetroQuadril).toList());
-
-        // 5. Calcular resumo evolutivo (1√Ç¬™ vs √É¬∫ltima consulta)
-        Map<String, Object> evolucao = new HashMap<>();
+        // Preparar variaÁıes evolutivas
+        List<Map<String, Object>> variacoes = new ArrayList<>();
         if (itens.size() >= 2) {
-            ConsultaComparativaItemDTO primeiro = itens.get(0);
-            ConsultaComparativaItemDTO ultimo   = itens.get(itens.size() - 1);
-            evolucao.put("primeiraData",  primeiro.getDataFormatada());
-            evolucao.put("ultimaData",    ultimo.getDataFormatada());
-            evolucao.put("diffPeso",      diffFmt(ultimo.getPeso(), primeiro.getPeso()));
-            evolucao.put("diffImc",       diffFmt(ultimo.getImc(), primeiro.getImc()));
-            evolucao.put("diffGordura",   diffFmt(ultimo.getPercentualGordura(), primeiro.getPercentualGordura()));
-            evolucao.put("diffMassaMagra",diffFmt(ultimo.getMassaMagra(), primeiro.getMassaMagra()));
-            evolucao.put("diffMassaGorda",diffFmt(ultimo.getMassaGorda(), primeiro.getMassaGorda()));
-            evolucao.put("diffCintura",   diffFmt(ultimo.getPerimetroCintura(), primeiro.getPerimetroCintura()));
-            evolucao.put("diffAbdominal", diffFmt(ultimo.getPerimetroAbdominal(), primeiro.getPerimetroAbdominal()));
-            evolucao.put("diffQuadril",   diffFmt(ultimo.getPerimetroQuadril(), primeiro.getPerimetroQuadril()));
-            // sinais: true = melhora (depende da m√É¬©trica)
-            evolucao.put("melhoriaPeso",    isMelhora("peso",     ultimo.getPeso(), primeiro.getPeso()));
-            evolucao.put("melhoriaGordura", isMelhora("gordura",  ultimo.getPercentualGordura(), primeiro.getPercentualGordura()));
-            evolucao.put("melhoriaMagra",   isMelhora("magra",    ultimo.getMassaMagra(), primeiro.getMassaMagra()));
-            evolucao.put("melhoriaImc",     isMelhora("imc",      ultimo.getImc(), primeiro.getImc()));
+            var primeira = itens.get(0);
+            var ultima = itens.get(itens.size() - 1);
+
+            adicionarVariacaoSeMudou(variacoes, "Peso",
+                    ultima.getAvaliacaoFisica().getPeso(),
+                    primeira.getAvaliacaoFisica().getPeso(),
+                    "kg",
+                    ultima.getAvaliacaoFisica().getPeso() < primeira.getAvaliacaoFisica().getPeso());
+
+            adicionarVariacaoSeMudou(variacoes, "Gordura Corporal",
+                    ultima.getAvaliacaoFisica().getGorduraCorporal(),
+                    primeira.getAvaliacaoFisica().getGorduraCorporal(),
+                    "%",
+                    ultima.getAvaliacaoFisica().getGorduraCorporal() < primeira.getAvaliacaoFisica().getGorduraCorporal());
+
+            adicionarVariacaoSeMudou(variacoes, "Massa Muscular",
+                    ultima.getAvaliacaoFisica().getMassaMuscular(),
+                    primeira.getAvaliacaoFisica().getMassaMuscular(),
+                    "kg",
+                    ultima.getAvaliacaoFisica().getMassaMuscular() > primeira.getAvaliacaoFisica().getMassaMuscular());
+
+            adicionarVariacaoSeMudou(variacoes, "IMC",
+                    ultima.getAvaliacaoFisica().getImc(),
+                    primeira.getAvaliacaoFisica().getImc(),
+                    "kg/m≤",
+                    ultima.getAvaliacaoFisica().getImc() < primeira.getAvaliacaoFisica().getImc());
         }
 
-        // 5.1 Resumo executivo da primeira p√°gina
-        Map<String, Object> resumoExecutivo = new LinkedHashMap<>();
-        if (!itens.isEmpty()) {
-            ConsultaComparativaItemDTO primeiro = itens.get(0);
-            ConsultaComparativaItemDTO ultimo = itens.get(itens.size() - 1);
-            resumoExecutivo.put("periodo", primeiro.getDataFormatada() + " a " + ultimo.getDataFormatada());
-            resumoExecutivo.put("totalConsultas", itens.size());
-            resumoExecutivo.put("consultasComFoto", (int) itens.stream().filter(this::temFotoComparativa).count());
-            long dias = ChronoUnit.DAYS.between(primeiro.getDataConsulta().toLocalDate(), ultimo.getDataConsulta().toLocalDate());
-            resumoExecutivo.put("diasAcompanhamento", Math.max(dias, 0));
-        }
-
-        List<Map<String, Object>> topVariacoes = new ArrayList<>();
-        if (itens.size() >= 2) {
-            ConsultaComparativaItemDTO primeiro = itens.get(0);
-            ConsultaComparativaItemDTO ultimo = itens.get(itens.size() - 1);
-
-            adicionarVariacao(topVariacoes, "Peso", ultimo.getPeso(), primeiro.getPeso(), "kg", isMelhora("peso", ultimo.getPeso(), primeiro.getPeso()));
-            adicionarVariacao(topVariacoes, "IMC", ultimo.getImc(), primeiro.getImc(), "kg/m¬≤", isMelhora("imc", ultimo.getImc(), primeiro.getImc()));
-            adicionarVariacao(topVariacoes, "% Gordura", ultimo.getPercentualGordura(), primeiro.getPercentualGordura(), "%", isMelhora("gordura", ultimo.getPercentualGordura(), primeiro.getPercentualGordura()));
-            adicionarVariacao(topVariacoes, "Massa Magra", ultimo.getMassaMagra(), primeiro.getMassaMagra(), "kg", isMelhora("magra", ultimo.getMassaMagra(), primeiro.getMassaMagra()));
-            adicionarVariacao(topVariacoes, "Cintura", ultimo.getPerimetroCintura(), primeiro.getPerimetroCintura(), "cm", isMelhora("peso", ultimo.getPerimetroCintura(), primeiro.getPerimetroCintura()));
-
-            topVariacoes.sort((a, b) -> {
-                Double da = (Double) a.get("delta");
-                Double db = (Double) b.get("delta");
-                return Double.compare(Math.abs(db), Math.abs(da));
-            });
-            if (topVariacoes.size() > 3) {
-                topVariacoes = new ArrayList<>(topVariacoes.subList(0, 3));
+        // Preparar fotos progressivas
+        List<RegistroFotograficoDTO> fotos = new ArrayList<>();
+        for (ConsultaResumoDTO consulta : consultasAsc) {
+            try {
+                var registro = registroFotograficoService.buscarPorConsulta(consulta.getId());
+                if (registro != null) {
+                    RegistroFotograficoDTO foto = new RegistroFotograficoDTO();
+                    foto.setConsultaId(consulta.getId());
+                    foto.setDataFormatada(consulta.getDataConsulta().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                    foto.setFotoAnterior(registro.getFotoAnterior());
+                    foto.setFotoPosterior(registro.getFotoPosterior());
+                    foto.setFotoLateralEsquerda(registro.getFotoLateralEsquerda());
+                    foto.setFotoLateralDireita(registro.getFotoLateralDireita());
+                    fotos.add(foto);
+                }
+            } catch (Exception e) {
+                log.warn("Registro fotogr·fico n„o encontrado para consultaId={}: {}", consulta.getId(), e.getMessage());
             }
         }
 
-        // 6. Montar contexto Thymeleaf e gerar PDF via Playwright
-        Context context = new Context();
-        context.setVariable("paciente",             paciente);
-        context.setVariable("idadePaciente",         idadePaciente);
-        context.setVariable("consultasComparativas", itens);
-        context.setVariable("evolucao",              evolucao);
-        context.setVariable("resumoExecutivo",       resumoExecutivo);
-        context.setVariable("topVariacoes",          topVariacoes);
-        context.setVariable("totalConsultas",        itens.size());
-        context.setVariable("reportData",            reportData);
-        List<ConsultaComparativaItemDTO> consultasComFoto = itens.stream()
-            .filter(this::temFotoComparativa)
-            .toList();
-        context.setVariable("consultasComFoto", consultasComFoto);
-        context.setVariable("hasComparacaoFotos", !consultasComFoto.isEmpty());
-        context.setVariable("fotoComparacaoInicial", consultasComFoto.isEmpty() ? null : consultasComFoto.get(0));
-        context.setVariable("fotoComparacaoFinal", consultasComFoto.isEmpty() ? null : consultasComFoto.get(consultasComFoto.size() - 1));
+        // Montar contexto
+        Map<String, Object> contextMap = new LinkedHashMap<>();
+        contextMap.put("paciente", paciente);
+        contextMap.put("idadePaciente", idadePaciente);
+        contextMap.put("itens", itens);
+        contextMap.put("variacoes", variacoes);
+        contextMap.put("fotos", fotos);
+        contextMap.put("logoDataUri", null);
 
-        String html = templateEngine.process("relatorio-comparativo", context);
-        log.info("### RELAT√É‚ÄúRIO COMPARATIVO gerado com Playwright √¢‚Ç¨‚Äù {} consultas", itens.size());
+        Context thymeleafContext = new Context();
+        for (Map.Entry<String, Object> entry : contextMap.entrySet()) {
+            thymeleafContext.setVariable(entry.getKey(), entry.getValue());
+        }
+
+        String html = templateEngine.process("relatorio-comparativo", thymeleafContext);
+
+        // Playwright com fallback
         try {
             return playwrightPdfService.generatePdf(html);
         } catch (Exception ex) {
-            log.warn("Playwright indisponivel no comparativo consolidado. Fallback OpenHTMLtoPDF. Motivo: {}", ex.getMessage());
+            log.warn("Playwright indisponÌvel para relatÛrio comparativo. Fallback OpenHTMLtoPDF. Motivo: {}", ex.getMessage());
             return gerarPDF(html);
         }
     }
 
-
-    // ==============================================================
-    // # M√É¬©todo auxiliar - diffFmt
-    // # Formata a diferen√É¬ßa
-
-    private String diffFmt(Double vFinal, Double vInicial) {
-        if (vFinal == null || vInicial == null) return "‚Äî";
-        double diff = vFinal - vInicial;
-        return String.format("%+.2f", diff);
-    }
-
-    // ==============================================================
-    // # M√É¬©todo auxiliar - isMelhora
-    // # Retorna true se a varia√É¬ß√É¬£o representa uma melhora cl√É¬≠nica para a m√É¬©trica
-    // ==============================================================
-    private boolean isMelhora(String metrica, Double vFinal, Double vInicial) {
-        if (vFinal == null || vInicial == null) return false;
-        double diff = vFinal - vInicial;
-        return switch (metrica) {
-            case "magra" -> diff > 0;           // mais massa magra = melhora
-            default      -> diff < 0;           // menos gordura/peso/imc = melhora (geral)
-        };
-    }
-
-    private boolean temFotoComparativa(ConsultaComparativaItemDTO item) {
-        return item != null && (
-                item.getFotoAnterior() != null ||
-                item.getFotoPosterior() != null ||
-                item.getFotoLateralEsquerda() != null ||
-                item.getFotoLateralDireita() != null
-        );
-    }
-
-    private void adicionarVariacao(List<Map<String, Object>> variacoes,
+    /**
+     * Adiciona uma variaÁ„o de mÈtrica ‡ lista se os valores inicial e final forem diferentes.
+     */
+    private void adicionarVariacaoSeMudou(List<Map<String, Object>> variacoes,
                                    String metrica,
                                    Double valorFinal,
                                    Double valorInicial,
@@ -492,10 +391,14 @@ public class RelatorioService {
         variacoes.add(item);
     }
 
-    // ==============================================
-    // # M√©todo - gerarPdfDieta
-    // # Gera o PDF do plano alimentar (dieta) usando Thymeleaf + OpenHTMLtoPDF
-    // ==============================================
+    /**
+     * Gera o PDF do plano alimentar (dieta) a partir do ID da dieta.
+     * Usa Thymeleaf com template "dieta-pdf" e OpenHTMLtoPDF como renderizador.
+     *
+     * @param dietaId ID da dieta
+     * @return Array de bytes do PDF do plano alimentar
+     * @throws Exception se a geraÁ„o falhar
+     */
     public byte[] gerarPdfDieta(Long dietaId) throws Exception {
         DietaResponse dieta = dietaService.buscarPorId(dietaId);
         PacienteDTO paciente = pacienteService.buscarPorId(dieta.getPacienteId());
@@ -510,10 +413,10 @@ public class RelatorioService {
         return gerarPDF(html);
     }
 
-    // ==============================================
-    // # M√É¬©todo - gerarPDF
-    // # Converte o HTML gerado em um array de bytes PDF usando OpenHTMLToPDF (PdfRendererBuilder)
-    // ==============================================
+    /**
+     * Converte HTML em PDF usando OpenHTMLtoPDF (PdfRendererBuilder).
+     * Usado como renderizador principal ou fallback quando Playwright n„o est· disponÌvel.
+     */
     private byte[] gerarPDF(String html) throws Exception {
         ByteArrayOutputStream pdfStream = new ByteArrayOutputStream();
         PdfRendererBuilder builder = new PdfRendererBuilder();
@@ -523,34 +426,38 @@ public class RelatorioService {
         return pdfStream.toByteArray();
     }
 
-    // ==============================================
-    // # M√É¬©todo - escapeUrl
-    // # Escapa caracteres especiais em uma URL (tratamento m√É¬≠nimo atualmente)
-    // ==============================================
+    /**
+     * Escapa URLs para uso seguro em contexto HTML/Thymeleaf.
+     * Atualmente mantÈm URLs intactas, deixando que Thymeleaf cuide da seguranÁa.
+     */
     private String escapeUrl(String url) {
         if (url == null) return null;
-        // Keep URLs as-is; Thymeleaf link expressions will produce XML-safe attributes.
         return url;
     }
 
     /**
-     * Gera um JSON com todos os dados do relat√É¬≥rio e envia via HTTP POST para a URL fornecida.
-     * Retorna o HttpResponse<String> recebido do servidor de destino.
+     * Serializa os dados do relatÛrio em JSON e envia via HTTP POST para um endpoint externo.
+     * ⁄til para integraÁ„o com automaÁıes (ex: n8n) que processam o payload.
+     *
+     * @param request        DTO com dados do relatÛrio
+     * @param destinationUrl URL do endpoint destino
+     * @return HttpResponse com a resposta do servidor destino
+     * @throws Exception se o envio falhar
      */
     public HttpResponse<String> enviarRelatorioJson(RelatorioRequestDTO request, String destinationUrl) throws Exception {
-        // 1. Buscar dados
+        // Buscar dados de todos os serviÁos relacionados
         var paciente = pacienteService.buscarPorId(request.getPacienteId());
         var consulta = consultaService.buscarConsultaCompleta(request.getConsultaId());
         var questionario = questionarioService.buscarPorConsulta(request.getConsultaId());
         var registroFotografico = registroFotograficoService.buscarPorConsulta(request.getConsultaId());
         var avaliacaoFisica = avaliacaoFisicaService.buscarPorConsulta(request.getConsultaId());
 
-        // 2. Processar dados
+        // Processar dados
         escaparUrlsFotos(registroFotografico);
         String dataConsultaFormatada = formatarDataConsulta(consulta);
         Integer idadePaciente = calcularIdadePaciente(paciente);
 
-        // 3. Montar payload
+        // Montar payload
         Map<String, Object> payload = new HashMap<>();
         payload.put("paciente", paciente);
         payload.put("consulta", consulta);
@@ -562,9 +469,8 @@ public class RelatorioService {
         payload.put("templateType", request.getTemplateType());
         payload.put("generatedAt", OffsetDateTime.now());
 
-        // 4. Serializar e enviar
+        // Serializar e enviar
         String json = objectMapper.writeValueAsString(payload);
-        log.info("Enviando JSON do relat√É¬≥rio para {} - {} bytes", destinationUrl, json.getBytes().length);
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest httpRequest = HttpRequest.newBuilder()
@@ -575,8 +481,7 @@ public class RelatorioService {
 
         HttpResponse<String> response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
         log.info("Resposta do endpoint: status={} body={}", response.statusCode(), response.body());
-        // Imprime no console a resposta do n8n (√É¬∫til para debug local)
-        System.out.println("[N8N RESPONSE] status=" + response.statusCode() + " body=" + response.body());
         return response;
     }
 }
+

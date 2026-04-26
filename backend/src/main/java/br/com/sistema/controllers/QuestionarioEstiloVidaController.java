@@ -18,55 +18,75 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Controlador responsavel pelo gerenciamento do questionario de estilo de vida.
+ * Captura habitos, historial medico e preferencias alimentares do paciente
+ * para fundamentar o plano nutricional e acompanhamento clinico.
+ *
+ * <p>Cada consulta possui exatamente um questionario. A constraint de unicidade
+ * e garantida pelo servico para evitar duplicidade.</p>
+ */
 @RestController
 @RequestMapping("/api/v1/questionario")
 @RequiredArgsConstructor
-@Tag(name = "Questionário de Estilo de Vida", description = "Endpoints para gestão de questionários")
+@Tag(name = "Questionario de Estilo de Vida", description = "Endpoints para gestao de questionarios")
 public class QuestionarioEstiloVidaController {
     
     private final QuestionarioEstiloVidaService questionarioService;
     
-    // ==============================================
-    // # Método - salvar
-    // # Cria um novo questionário de estilo de vida para a consulta
-    // ==============================================
+    /**
+     * Cria novo questionario de estilo de vida vinculado a uma consulta.
+     * Valida que ainda nao existe questionario para esta consulta.
+     *
+     * @param consultaId ID da consulta
+     * @param dados Dados do questionario (objetivo, habitos, historial)
+     * @return Questionario criado com status HTTP 201
+     */
     @PostMapping("/consulta/{consultaId}")
-    @Operation(summary = "Salvar questionário de estilo de vida", description = "Cria um novo questionário para a consulta")
+    @Operation(summary = "Salvar questionario de estilo de vida", description = "Cria um novo questionario para a consulta")
     public ResponseEntity<QuestionarioEstiloVidaDTO> salvar(@PathVariable Long consultaId, @Valid @RequestBody QuestionarioEstiloVidaDTO dados) {
-    	System.out.println("Recebido salvar Questionario DTO: " + dados);
-    	QuestionarioEstiloVidaDTO saved = questionarioService.salvarQuestionario(consultaId, dados);
+        QuestionarioEstiloVidaDTO saved = questionarioService.salvarQuestionario(consultaId, dados);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
     
-    // ==============================================
-    // # Método - buscar
-    // # Busca o questionário de estilo de vida de uma consulta
-    // ==============================================
+    /**
+     * Busca questionario de estilo de vida existente de uma consulta.
+     *
+     * @param consultaId ID da consulta
+     * @return Dados completos do questionario
+     * @throws ResourceNotFoundException Se nao existir questionario
+     */
     @GetMapping("/consulta/{consultaId}")
-    @Operation(summary = "Buscar questionário de estilo de vida", description = "Busca o questionário de uma consulta")
+    @Operation(summary = "Buscar questionario de estilo de vida", description = "Busca o questionario de uma consulta")
     public ResponseEntity<QuestionarioEstiloVidaDTO> buscar(@PathVariable Long consultaId) {
         QuestionarioEstiloVidaDTO questionario = questionarioService.buscarPorConsulta(consultaId);
         return ResponseEntity.ok(questionario);
     }
     
-    // ==============================================
-    // # Método - atualizar
-    // # Atualiza o questionário de estilo de vida de uma consulta
-    // ==============================================
+    /**
+     * Atualiza questionario de estilo de vida existente.
+     * Mantem campos nao preenchidos no request inalterados.
+     *
+     * @param consultaId ID da consulta
+     * @param dados Novos dados do questionario
+     * @return Questionario atualizado com todos os campos
+     */
     @PutMapping("/consulta/{consultaId}")
-    @Operation(summary = "Atualizar questionário de estilo de vida", description = "Atualiza o questionário de uma consulta")
+    @Operation(summary = "Atualizar questionario de estilo de vida", description = "Atualiza o questionario de uma consulta")
     public ResponseEntity<QuestionarioEstiloVidaDTO> atualizar(@PathVariable Long consultaId, @Valid @RequestBody QuestionarioEstiloVidaDTO dados) {
-    	System.out.println("Atualizando questionário de estilo de vida para consulta ID: " + consultaId + "; DTO recebido: " + dados);
         QuestionarioEstiloVidaDTO updated = questionarioService.atualizarQuestionario(consultaId, dados);
         return ResponseEntity.ok(updated);
     }
     
-    // ==============================================
-    // # Método - deletar
-    // # Remove o questionário de estilo de vida de uma consulta
-    // ==============================================
+    /**
+     * Remove questionario de estilo de vida de uma consulta.
+     * Operacao irreversivel.
+     *
+     * @param consultaId ID da consulta
+     * @return HTTP 204 sem conteudo
+     */
     @DeleteMapping("/consulta/{consultaId}")
-    @Operation(summary = "Deletar questionário de estilo de vida", description = "Remove o questionário de uma consulta")
+    @Operation(summary = "Deletar questionario de estilo de vida", description = "Remove o questionario de uma consulta")
     public ResponseEntity<Void> deletar(@PathVariable Long consultaId) {
         questionarioService.deletarQuestionario(consultaId);
         return ResponseEntity.noContent().build();

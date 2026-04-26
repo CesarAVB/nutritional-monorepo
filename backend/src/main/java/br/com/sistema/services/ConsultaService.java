@@ -36,470 +36,390 @@ import br.com.sistema.repositories.QuestionarioEstiloVidaRepository;
 import br.com.sistema.repositories.RegistroFotograficoRepository;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Orquestra operacoes de consulta nutrologica: criacao, listagem, detalhamento, atualizacao e remocao.
+ * Coordena avaliacao fisica, questionario de estilo de vida e registro fotografico vinculados a cada consulta.
+ */
 @Service
 @RequiredArgsConstructor
 public class ConsultaService {
 
-	private final ConsultaRepository consultaRepository;
-	private final PacienteRepository pacienteRepository;
-	private final AvaliacaoFisicaRepository avaliacaoFisicaRepository;
-	private final QuestionarioEstiloVidaRepository questionarioRepository;
-	private final RegistroFotograficoRepository registroFotograficoRepository;
+    private final ConsultaRepository consultaRepository;
+    private final PacienteRepository pacienteRepository;
+    private final AvaliacaoFisicaRepository avaliacaoFisicaRepository;
+    private final QuestionarioEstiloVidaRepository questionarioRepository;
+    private final RegistroFotograficoRepository registroFotograficoRepository;
 
-	
-	// ==============================================
-	// # Método - criarConsulta
-	// # Cria uma nova consulta vinculada a um paciente
-	// ==============================================
-	@Transactional
-	public ConsultaResumoDTO criarConsulta(Long pacienteId) {
-		Paciente paciente = pacienteRepository.findById(pacienteId).orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+    /**
+     * Cria uma nova consulta vinculada a um paciente existente.
+     * Inicializa a data da consulta com o momento atual.
+     *
+     * @param pacienteId ID do paciente
+     * @return Resumo da consulta criada
+     */
+    @Transactional
+    public ConsultaResumoDTO criarConsulta(Long pacienteId) {
+        Paciente paciente = pacienteRepository.findById(pacienteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente nao encontrado"));
 
-		Consulta consulta = new Consulta();
-		consulta.setPaciente(paciente);
-		consulta.setDataConsulta(LocalDateTime.now());
+        Consulta consulta = new Consulta();
+        consulta.setPaciente(paciente);
+        consulta.setDataConsulta(LocalDateTime.now());
 
-		Consulta saved = consultaRepository.save(consulta);
+        Consulta saved = consultaRepository.save(consulta);
 
-		// Início da conversão manual para DTO
-		ConsultaResumoDTO dto = new ConsultaResumoDTO();
-		dto.setId(saved.getId());
-		dto.setPacienteId(saved.getPaciente().getId());
-		dto.setNomePaciente(saved.getPaciente().getNomeCompleto());
-		dto.setDataConsulta(saved.getDataConsulta());
+        ConsultaResumoDTO dto = new ConsultaResumoDTO();
+        dto.setId(saved.getId());
+        dto.setPacienteId(saved.getPaciente().getId());
+        dto.setNomePaciente(saved.getPaciente().getNomeCompleto());
+        dto.setDataConsulta(saved.getDataConsulta());
+        dto.setTemAvaliacaoFisica(false);
+        dto.setTemQuestionario(false);
+        dto.setTemFotos(false);
 
-		// Como a consulta acabou de ser criada, os campos abaixo
-		// serão naturalmente falsos/nulos, mas mantemos a lógica por consistência:
-		dto.setTemAvaliacaoFisica(false);
-		dto.setTemQuestionario(false);
-		dto.setTemFotos(false);
+        return dto;
+    }
 
-		return dto;
-	}
+    /**
+     * Lista o historico de consultas de um paciente em ordem cronologica decrescente.
+     * Inclui flags indicando existencia de avaliacao fisica, questionario e fotos.
+     *
+     * @param pacienteId ID do paciente
+     * @return Lista de resumos de consultas
+     */
+    @Transactional(readOnly = true)
+    public List<ConsultaResumoDTO> listarConsultasPorPaciente(Long pacienteId) {
+        List<Consulta> consultas = consultaRepository.findByPacienteIdOrderByDataConsultaDesc(pacienteId);
+        if (consultas.isEmpty()) return List.of();
 
-	// ==============================================
-	// # Método - listarConsultasPorPaciente
-	// # Lista o histórico de consultas de um paciente
-	// ==============================================
-	@Transactional(readOnly = true)
-	public List<ConsultaResumoDTO> listarConsultasPorPaciente(Long pacienteId) {
-		List<Consulta> consultas = consultaRepository.findByPacienteIdOrderByDataConsultaDesc(pacienteId);
-		if (consultas.isEmpty()) return List.of();
+        List<Long> ids = consultas.stream().map(Consulta::getId).toList();
+        Set<Long> comAvaliacao = new HashSet<>(avaliacaoFisicaRepository.findConsultaIdsComAvaliacao(ids));
+        Set<Long> comQuestionario = new HashSet<>(questionarioRepository.findConsultaIdsComQuestionario(ids));
+        Set<Long> comFotos = new HashSet<>(registroFotograficoRepository.findConsultaIdsComFotos(ids));
 
-		List<Long> ids = consultas.stream().map(Consulta::getId).toList();
-		Set<Long> comAvaliacao = new HashSet<>(avaliacaoFisicaRepository.findConsultaIdsComAvaliacao(ids));
-		Set<Long> comQuestionario = new HashSet<>(questionarioRepository.findConsultaIdsComQuestionario(ids));
-		Set<Long> comFotos = new HashSet<>(registroFotograficoRepository.findConsultaIdsComFotos(ids));
+        return consultas.stream().map(consulta -> {
+            ConsultaResumoDTO dto = new ConsultaResumoDTO();
+            dto.setId(consulta.getId());
+            dto.setPacienteId(consulta.getPaciente().getId());
+            dto.setNomePaciente(consulta.getPaciente().getNomeCompleto());
+            dto.setDataConsulta(consulta.getDataConsulta());
+            dto.setTemAvaliacaoFisica(comAvaliacao.contains(consulta.getId()));
+            dto.setTemQuestionario(comQuestionario.contains(consulta.getId()));
+            dto.setTemFotos(comFotos.contains(consulta.getId()));
+            return dto;
+        }).toList();
+    }
 
-		return consultas.stream().map(consulta -> {
-			ConsultaResumoDTO dto = new ConsultaResumoDTO();
-			dto.setId(consulta.getId());
-			dto.setPacienteId(consulta.getPaciente().getId());
-			dto.setNomePaciente(consulta.getPaciente().getNomeCompleto());
-			dto.setDataConsulta(consulta.getDataConsulta());
-			dto.setTemAvaliacaoFisica(comAvaliacao.contains(consulta.getId()));
-			dto.setTemQuestionario(comQuestionario.contains(consulta.getId()));
-			dto.setTemFotos(comFotos.contains(consulta.getId()));
-			return dto;
-		}).toList();
-	}
+    /**
+     * Busca a ultima consulta de um paciente para pre-preenchimento de nova consulta.
+     * Copia avaliacao fisica, questionario e registro fotografico para o novo rascunho.
+     * Limpa IDs para evitar duplicacao de dados.
+     *
+     * @param pacienteId ID do paciente
+     * @return DTO detalhado com dados da ultima consulta
+     */
+    @Transactional(readOnly = true)
+    public Optional<ConsultaDetalhadaDTO> buscarRascunhoNovaConsulta(Long pacienteId) {
+        if (!pacienteRepository.existsById(pacienteId)) {
+            throw new ResourceNotFoundException("Paciente nao encontrado");
+        }
 
-	// ==============================================
-	// # Método - buscarRascunhoNovaConsulta
-	// # Retorna os dados da última consulta para pré-preenchimento da nova
-	// ==============================================
-	@Transactional(readOnly = true)
-	public Optional<ConsultaDetalhadaDTO> buscarRascunhoNovaConsulta(Long pacienteId) {
-		if (!pacienteRepository.existsById(pacienteId)) {
-			throw new ResourceNotFoundException("Paciente não encontrado");
-		}
+        List<Consulta> consultas = consultaRepository.findByPacienteIdOrderByDataConsultaDesc(pacienteId);
+        if (consultas.isEmpty()) {
+            return Optional.empty();
+        }
 
-		return consultaRepository.findFirstByPacienteIdOrderByDataConsultaDesc(pacienteId)
-				.map(this::converterParaDetalhadaDTO)
-				.map(this::limparIdsParaRascunho);
-	}
+        Optional<Consulta> ultimaOpt = consultas.stream()
+                .filter(c -> c.getAvaliacaoFisica() != null || c.getQuestionarioEstiloVida() != null || c.getRegistroFotografico() != null)
+                .findFirst();
 
-	// ==============================================
-	// # Método - listarConsultasPorPacientePaginado
-	// # Lista consultas de um paciente de forma paginada
-	// ==============================================
-	@Transactional(readOnly = true)
-	public Page<ConsultaResumoDTO> listarConsultasPorPacientePaginado(Long pacienteId, Pageable pageable) {
-		Page<Consulta> page = consultaRepository.findByPacienteIdWithPacientePaginado(pacienteId, pageable);
-		if (page.isEmpty()) return page.map(c -> new ConsultaResumoDTO());
+        if (ultimaOpt.isEmpty()) {
+            return Optional.empty();
+        }
 
-		List<Long> ids = page.getContent().stream().map(Consulta::getId).toList();
-		Set<Long> comAvaliacao = new HashSet<>(avaliacaoFisicaRepository.findConsultaIdsComAvaliacao(ids));
-		Set<Long> comQuestionario = new HashSet<>(questionarioRepository.findConsultaIdsComQuestionario(ids));
-		Set<Long> comFotos = new HashSet<>(registroFotograficoRepository.findConsultaIdsComFotos(ids));
+        Consulta ultima = ultimaOpt.get();
+        ConsultaDetalhadaDTO dto = new ConsultaDetalhadaDTO();
 
-		return page.map(consulta -> {
-			ConsultaResumoDTO dto = new ConsultaResumoDTO();
-			dto.setId(consulta.getId());
-			dto.setPacienteId(consulta.getPaciente().getId());
-			dto.setNomePaciente(consulta.getPaciente().getNomeCompleto());
-			dto.setDataConsulta(consulta.getDataConsulta());
-			dto.setTemAvaliacaoFisica(comAvaliacao.contains(consulta.getId()));
-			dto.setTemQuestionario(comQuestionario.contains(consulta.getId()));
-			dto.setTemFotos(comFotos.contains(consulta.getId()));
-			return dto;
-		});
-	}
-	
-	// ==============================================
-	// # Método - buscarConsultaCompleta
-	// # Retorna todos os detalhes relacionados a uma consulta
-	// ==============================================
-	@Transactional(readOnly = true)
-	public ConsultaDetalhadaDTO buscarConsultaCompleta(Long consultaId) {
-		Consulta consulta = consultaRepository.findById(consultaId).orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada"));
-		return converterParaDetalhadaDTO(consulta);
-	}
+        if (ultima.getAvaliacaoFisica() != null) {
+            AvaliacaoFisicaDTO avaliacaoDTO = converterAvaliacaoParaDTO(ultima.getAvaliacaoFisica());
+            avaliacaoDTO.setId(null);
+            avaliacaoDTO.setConsultaId(null);
+            dto.setAvaliacaoFisica(avaliacaoDTO);
+        }
 
-	// ==============================================
-	// # Método - compararConsultas
-	// # Compara duas consultas e retorna diferenças entre avaliações
-	// ==============================================
-	@Transactional(readOnly = true)
-	public ComparativoConsultasDTO compararConsultas(Long pacienteId, Long consultaInicialId, Long consultaFinalId) {
-		Consulta consultaInicial = consultaRepository.findById(consultaInicialId).orElseThrow(() -> new ResourceNotFoundException("Consulta inicial não encontrada"));
+        if (ultima.getQuestionarioEstiloVida() != null) {
+            QuestionarioEstiloVidaDTO questionarioDTO = converterQuestionarioParaDTO(ultima.getQuestionarioEstiloVida());
+            questionarioDTO.setId(null);
+            questionarioDTO.setConsultaId(null);
+            dto.setQuestionarioEstiloVida(questionarioDTO);
+        }
 
-		Consulta consultaFinal = consultaRepository.findById(consultaFinalId).orElseThrow(() -> new ResourceNotFoundException("Consulta final não encontrada"));
+        if (ultima.getRegistroFotografico() != null) {
+            RegistroFotograficoDTO registroDTO = converterRegistroParaDTO(ultima.getRegistroFotografico());
+            registroDTO.setId(null);
+            registroDTO.setConsultaId(null);
+            dto.setRegistroFotografico(registroDTO);
+        }
 
-		if (!consultaInicial.getPaciente().getId().equals(pacienteId)
-				|| !consultaFinal.getPaciente().getId().equals(pacienteId)) {
-			throw new BusinessException("Consultas não pertencem ao mesmo paciente");
-		}
+        return Optional.of(dto);
+    }
 
-		ComparativoConsultasDTO comparativo = new ComparativoConsultasDTO();
-		comparativo.setConsultaInicial(converterParaDetalhadaDTO(consultaInicial));
-		comparativo.setConsultaFinal(converterParaDetalhadaDTO(consultaFinal));
-		comparativo.setDiferencas(calcularDiferencas(consultaInicial.getId(), consultaFinal.getId()));
+    /**
+     * Lista todas as consultas para gerenciamento administrativo.
+     * Ordenadas por data de consulta decrescente.
+     *
+     * @param pageable Configuracao de paginacao
+     * @return Pagina de consultas para listagem
+     */
+    @Transactional(readOnly = true)
+    public Page<ConsultaListagemDTO> listarConsultas(Pageable pageable) {
+        return consultaRepository.findAll(pageable).map(this::converterParaListagemDTO);
+    }
 
-		return comparativo;
-	}
+    /**
+     * Busca detalhes completos de uma consulta incluindo avaliacao fisica,
+     * questionario de estilo de vida e registro fotografico.
+     *
+     * @param id ID da consulta
+     * @return DTO detalhado com todos os dados da consulta
+     */
+    @Transactional(readOnly = true)
+    public ConsultaDetalhadaDTO buscarDetalhada(Long id) {
+        Consulta consulta = consultaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta nao encontrada"));
 
-	// ==============================================
-	// # Método - deletarConsulta
-	// # Deleta uma consulta e todas as entidades relacionadas necessárias
-	// ==============================================
-	@Transactional
-	public void deletarConsulta(Long consultaId) {
-		Consulta consulta = consultaRepository.findById(consultaId).orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada"));
+        ConsultaDetalhadaDTO dto = new ConsultaDetalhadaDTO();
+        dto.setId(consulta.getId());
+        dto.setPacienteId(consulta.getPaciente().getId());
+        dto.setNomePaciente(consulta.getPaciente().getNomeCompleto());
+        dto.setDataConsulta(consulta.getDataConsulta());
 
-		// Deletar entidades relacionadas primeiro (se necessário)
-		if (avaliacaoFisicaRepository.existsByConsultaId(consultaId)) {
-			avaliacaoFisicaRepository.deleteByConsultaId(consultaId);
-		}
+        if (consulta.getAvaliacaoFisica() != null) {
+            dto.setAvaliacaoFisica(converterAvaliacaoParaDTO(consulta.getAvaliacaoFisica()));
+        }
 
-		if (registroFotograficoRepository.existsByConsultaId(consultaId)) {
-			registroFotograficoRepository.deleteByConsultaId(consultaId);
-		}
+        if (consulta.getQuestionarioEstiloVida() != null) {
+            dto.setQuestionarioEstiloVida(converterQuestionarioParaDTO(consulta.getQuestionarioEstiloVida()));
+        }
 
-		// Questionário precisa de @Modifying no Repository
-		consultaRepository.delete(consulta);
-	}
+        if (consulta.getRegistroFotografico() != null) {
+            dto.setRegistroFotografico(converterRegistroParaDTO(consulta.getRegistroFotografico()));
+        }
 
-	// ==============================================
-	// # Método - listarTodasConsultas
-	// # Retorna todas as consultas ordenadas por data
-	// ==============================================
-	@Transactional(readOnly = true)
-	public List<ConsultaListagemDTO> listarTodasConsultas() {
-		List<Consulta> consultas = consultaRepository.findAllByOrderByDataConsultaDesc();
+        return dto;
+    }
 
-		return consultas.stream().map(consulta -> {
-			ConsultaListagemDTO dto = new ConsultaListagemDTO();
-			dto.setId(consulta.getId());
-			dto.setPacienteId(consulta.getPaciente().getId());
-			dto.setNomePaciente(consulta.getPaciente().getNomeCompleto());
-			dto.setDataConsulta(consulta.getDataConsulta());
-			return dto;
-		}).toList();
-	}
+    /**
+     * Atualiza a data de uma consulta ja existente.
+     *
+     * @param id ID da consulta
+     * @param dto Dados da atualizacao
+     * @return Consulta atualizada
+     */
+    @Transactional
+    public Consulta atualizarConsulta(Long id, ConsultaAtualizacaoDTO dto) {
+        Consulta consulta = consultaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta nao encontrada"));
 
-	// ==============================================
-	// # Metodo - listarTodasConsultasPaginado
-	// # Retorna consultas do sistema de forma paginada
-	// ==============================================
-	@Transactional(readOnly = true)
-	public Page<ConsultaListagemDTO> listarTodasConsultasPaginado(Pageable pageable) {
-		return consultaRepository.findAllWithPacientePaginado(pageable).map(consulta -> {
-			ConsultaListagemDTO dto = new ConsultaListagemDTO();
-			dto.setId(consulta.getId());
-			dto.setPacienteId(consulta.getPaciente().getId());
-			dto.setNomePaciente(consulta.getPaciente().getNomeCompleto());
-			dto.setDataConsulta(consulta.getDataConsulta());
-			return dto;
-		});
-	}
+        if (dto.getDataConsulta() != null) {
+            consulta.setDataConsulta(dto.getDataConsulta());
+        }
 
-	// ==============================================
-	// # Método - atualizarConsulta
-	// # Atualiza campos básicos da consulta (ex: data)
-	// ==============================================
-	@Transactional
-	public ConsultaDetalhadaDTO atualizarConsulta(Long id, ConsultaAtualizacaoDTO dados) {
-		System.out.println("Atualizando consulta ID: " + id);
-	    Consulta consulta = consultaRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada"));
+        return consultaRepository.save(consulta);
+    }
 
-	    if (dados.getDataConsulta() != null) {
-	        consulta.setDataConsulta(dados.getDataConsulta());
-	    }
+    /**
+     * Gera comparativo de medidas entre duas consultas de um paciente.
+     * Calcula diferencas absolutas de peso, IMC, percentual de gordura e medidas corporais.
+     * Lanca excecao se alguma das consultas nao possuir avaliacao fisica.
+     *
+     * @param pacienteId ID do paciente
+     * @param idConsulta1 ID da primeira consulta
+     * @param idConsulta2 ID da segunda consulta
+     * @return Comparativo com diferencas entre as consultas
+     */
+    @Transactional(readOnly = true)
+    public ComparativoConsultasDTO gerarComparativo(Long pacienteId, Long idConsulta1, Long idConsulta2) {
+        if (!pacienteRepository.existsById(pacienteId)) {
+            throw new ResourceNotFoundException("Paciente nao encontrado");
+        }
 
-	    consultaRepository.save(consulta);
-	    return mapearParaConsultaDetalhada(consulta);
-	}
+        AvaliacaoFisica avaliacao1 = avaliacaoFisicaRepository.findByConsultaId(idConsulta1)
+                .orElseThrow(() -> new BusinessException("Avaliacao fisica nao encontrada na primeira consulta"));
 
-	// ==============================================
-	// # Método - atualizarDataConsulta
-	// # Atualiza apenas a data de uma consulta e retorna resumo
-	// ==============================================
-	@Transactional
-	public ConsultaResumoDTO atualizarDataConsulta(Long consultaId, LocalDateTime novaData) {
-	    Consulta consulta = consultaRepository.findById(consultaId)
-	        .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada"));
+        AvaliacaoFisica avaliacao2 = avaliacaoFisicaRepository.findByConsultaId(idConsulta2)
+                .orElseThrow(() -> new BusinessException("Avaliacao fisica nao encontrada na segunda consulta"));
 
-	    if (novaData == null) {
-	        throw new BusinessException("Data da consulta não pode ser nula");
-	    }
+        ComparativoConsultasDTO comparativo = new ComparativoConsultasDTO();
+        comparativo.setIdConsulta1(idConsulta1);
+        comparativo.setIdConsulta2(idConsulta2);
+        comparativo.setDataConsulta1(avaliacao1.getConsulta().getDataConsulta());
+        comparativo.setDataConsulta2(avaliacao2.getConsulta().getDataConsulta());
 
-	    consulta.setDataConsulta(novaData);
-	    Consulta updated = consultaRepository.save(consulta);
+        DiferencasDTO diferencas = new DiferencasDTO();
+        diferencas.setPeso(atualMenosAnterior(avaliacao2.getPesoAtual(), avaliacao1.getPesoAtual()));
+        diferencas.setImc(atualMenosAnterior(avaliacao2.getImc(), avaliacao1.getImc()));
+        diferencas.setPercentualGordura(atualMenosAnterior(avaliacao2.getPercentualGordura(), avaliacao1.getPercentualGordura()));
+        diferencas.setMassaGorda(atualMenosAnterior(avaliacao2.getMassaGorda(), avaliacao1.getMassaGorda()));
+        diferencas.setMassaMagra(atualMenosAnterior(avaliacao2.getMassaMagra(), avaliacao1.getMassaMagra()));
 
-	    // Converter para DTO
-	    ConsultaResumoDTO dto = new ConsultaResumoDTO();
-	    dto.setId(updated.getId());
-	    dto.setPacienteId(updated.getPaciente().getId());
-	    dto.setNomePaciente(updated.getPaciente().getNomeCompleto());
-	    dto.setDataConsulta(updated.getDataConsulta());
-	    dto.setTemAvaliacaoFisica(avaliacaoFisicaRepository.existsByConsultaId(updated.getId()));
-	    dto.setTemQuestionario(questionarioRepository.findByConsultaId(updated.getId()).isPresent());
-	    dto.setTemFotos(registroFotograficoRepository.existsByConsultaId(updated.getId()));
+        comparativo.setDiferencas(diferencas);
 
-	    return dto;
-	}
+        Map<String, Map<String, Double>> medidas = new HashMap<>();
+        medidas.put("perimetroOmbro", criarMapa(avaliacao1.getPerimetroOmbro(), avaliacao2.getPerimetroOmbro()));
+        medidas.put("perimetroTorax", criarMapa(avaliacao1.getPerimetroTorax(), avaliacao2.getPerimetroTorax()));
+        medidas.put("perimetroCintura", criarMapa(avaliacao1.getPerimetroCintura(), avaliacao2.getPerimetroCintura()));
+        medidas.put("perimetroAbdominal", criarMapa(avaliacao1.getPerimetroAbdominal(), avaliacao2.getPerimetroAbdominal()));
+        medidas.put("perimetroQuadril", criarMapa(avaliacao1.getPerimetroQuadril(), avaliacao2.getPerimetroQuadril()));
+        medidas.put("perimetroBracoDireitoRelax", criarMapa(avaliacao1.getPerimetroBracoDireitoRelax(), avaliacao2.getPerimetroBracoDireitoRelax()));
+        medidas.put("perimetroBracoEsquerdoRelax", criarMapa(avaliacao1.getPerimetroBracoEsquerdoRelax(), avaliacao2.getPerimetroBracoEsquerdoRelax()));
+        medidas.put("perimetroCoxaDireita", criarMapa(avaliacao1.getPerimetroCoxaDireita(), avaliacao2.getPerimetroCoxaDireita()));
+        medidas.put("perimetroCoxaEsquerda", criarMapa(avaliacao1.getPerimetroCoxaEsquerda(), avaliacao2.getPerimetroCoxaEsquerda()));
+        medidas.put("perimetroPanturrilhaDireita", criarMapa(avaliacao1.getPerimetroPanturrilhaDireita(), avaliacao2.getPerimetroPanturrilhaDireita()));
+        medidas.put("perimetroPanturrilhaEsquerda", criarMapa(avaliacao1.getPerimetroPanturrilhaEsquerda(), avaliacao2.getPerimetroPanturrilhaEsquerda()));
 
-	// ============================
-	// METODOS AUXILIARES
-	// ============================
+        comparativo.setMedidasCorporais(medidas);
 
-	// ==============================================
-	// # Método - mapearParaConsultaDetalhada
-	// # Converte Consulta para ConsultaDetalhadaDTO reutilizando o conversor
-	// ==============================================
-	private ConsultaDetalhadaDTO mapearParaConsultaDetalhada(Consulta consulta) {
-		// Reutiliza o conversor existente para garantir comportamento consistente
-		return converterParaDetalhadaDTO(consulta);
-	}
+        return comparativo;
+    }
 
-	// ==============================================
-	// # Método - calcularDiferencas
-	// # Calcula diferenças entre avaliações de duas consultas
-	// ==============================================
-	private DiferencasDTO calcularDiferencas(Long consultaInicialId, Long consultaFinalId) {
-		DiferencasDTO diferencas = new DiferencasDTO();
+    /**
+     * Remove uma consulta e todos os dados relacionados (avaliacao, questionario, fotos).
+     * Realiza remocao em cascata via repository para manter integridade referencial.
+     *
+     * @param id ID da consulta
+     */
+    @Transactional
+    public void deletarConsulta(Long id) {
+        if (!consultaRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Consulta nao encontrada");
+        }
 
-		AvaliacaoFisica avalInicial = avaliacaoFisicaRepository.findByConsultaId(consultaInicialId).orElse(null);
-		AvaliacaoFisica avalFinal = avaliacaoFisicaRepository.findByConsultaId(consultaFinalId).orElse(null);
+        avaliacaoFisicaRepository.deleteByConsultaId(id);
+        questionarioRepository.deleteByConsultaId(id);
+        registroFotograficoRepository.deleteByConsultaId(id);
+        consultaRepository.deleteById(id);
+    }
 
-		if (avalInicial == null || avalFinal == null) {
-			return diferencas; // Retorna vazio se não houver avaliações
-		}
+    /**
+     * Converte entidade AvaliacaoFisica para DTO.
+     */
+    private AvaliacaoFisicaDTO converterAvaliacaoParaDTO(AvaliacaoFisica avaliacao) {
+        AvaliacaoFisicaDTO dto = new AvaliacaoFisicaDTO();
+        dto.setId(avaliacao.getId());
+        dto.setConsultaId(avaliacao.getConsulta().getId());
+        dto.setAltura(avaliacao.getAltura());
+        dto.setPerimetroOmbro(avaliacao.getPerimetroOmbro());
+        dto.setPerimetroTorax(avaliacao.getPerimetroTorax());
+        dto.setPerimetroCintura(avaliacao.getPerimetroCintura());
+        dto.setPerimetroAbdominal(avaliacao.getPerimetroAbdominal());
+        dto.setPerimetroQuadril(avaliacao.getPerimetroQuadril());
+        dto.setPerimetroBracoDireitoRelax(avaliacao.getPerimetroBracoDireitoRelax());
+        dto.setPerimetroBracoDireitoContr(avaliacao.getPerimetroBracoDireitoContr());
+        dto.setPerimetroBracoEsquerdoRelax(avaliacao.getPerimetroBracoEsquerdoRelax());
+        dto.setPerimetroBracoEsquerdoContr(avaliacao.getPerimetroBracoEsquerdoContr());
+        dto.setPerimetroAntebracoDireito(avaliacao.getPerimetroAntebracoDireito());
+        dto.setPerimetroAntebracoEsquerdo(avaliacao.getPerimetroAntebracoEsquerdo());
+        dto.setPerimetroCoxa(avaliacao.getPerimetroCoxa());
+        dto.setPerimetroCoxaDireita(avaliacao.getPerimetroCoxaDireita());
+        dto.setPerimetroCoxaEsquerda(avaliacao.getPerimetroCoxaEsquerda());
+        dto.setPerimetroPanturrilhaDireita(avaliacao.getPerimetroPanturrilhaDireita());
+        dto.setPerimetroPanturrilhaEsquerda(avaliacao.getPerimetroPanturrilhaEsquerda());
+        dto.setDobraTriceps(avaliacao.getDobraTriceps());
+        dto.setDobraPeito(avaliacao.getDobraPeito());
+        dto.setDobraAxilarMedia(avaliacao.getDobraAxilarMedia());
+        dto.setDobraSubescapular(avaliacao.getDobraSubescapular());
+        dto.setDobraAbdominal(avaliacao.getDobraAbdominal());
+        dto.setDobraSupraIliaca(avaliacao.getDobraSupraIliaca());
+        dto.setDobraCoxa(avaliacao.getDobraCoxa());
+        dto.setPesoAtual(avaliacao.getPesoAtual());
+        dto.setMassaMagra(avaliacao.getMassaMagra());
+        dto.setMassaGorda(avaliacao.getMassaGorda());
+        dto.setPercentualGordura(avaliacao.getPercentualGordura());
+        dto.setImc(avaliacao.getImc());
+        return dto;
+    }
 
-		// Composição Corporal
-		diferencas.setDiferencaPeso(calcularDiferenca(avalFinal.getPesoAtual(), avalInicial.getPesoAtual()));
-		diferencas.setDiferencaPercentualGordura(calcularDiferenca(avalFinal.getPercentualGordura(), avalInicial.getPercentualGordura()));
-		diferencas.setDiferencaMassaMagra(calcularDiferenca(avalFinal.getMassaMagra(), avalInicial.getMassaMagra()));
-		diferencas.setDiferencaMassaGorda(calcularDiferenca(avalFinal.getMassaGorda(), avalInicial.getMassaGorda()));
-		diferencas.setDiferencaImc(calcularDiferenca(avalFinal.getImc(), avalInicial.getImc()));
+    /**
+     * Converte entidade QuestionarioEstiloVida para DTO.
+     */
+    private QuestionarioEstiloVidaDTO converterQuestionarioParaDTO(QuestionarioEstiloVida questionario) {
+        QuestionarioEstiloVidaDTO dto = new QuestionarioEstiloVidaDTO();
+        dto.setId(questionario.getId());
+        dto.setConsultaId(questionario.getConsulta().getId());
+        dto.setObjetivo(questionario.getObjetivo());
+        dto.setFrequenciaTreino(questionario.getFrequenciaTreino());
+        dto.setTempoTreino(questionario.getTempoTreino());
+        dto.setCirurgias(questionario.getCirurgias());
+        dto.setDoencas(questionario.getDoencas());
+        dto.setHistoricoFamiliar(questionario.getHistoricoFamiliar());
+        dto.setMedicamentos(questionario.getMedicamentos());
+        dto.setSuplementos(questionario.getSuplementos());
+        dto.setUsoAnabolizantes(questionario.getUsoAnabolizantes());
+        dto.setCicloAnabolizantes(questionario.getCicloAnabolizantes());
+        dto.setDuracaoAnabolizantes(questionario.getDuracaoAnabolizantes());
+        dto.setFuma(questionario.getFuma());
+        dto.setFrequenciaAlcool(questionario.getFrequenciaAlcool());
+        dto.setFuncionamentoIntestino(questionario.getFuncionamentoIntestino());
+        dto.setQualidadeSono(questionario.getQualidadeSono());
+        dto.setIngestaoAguaDiaria(questionario.getIngestaoAguaDiaria());
+        dto.setAlimentosNaoGosta(questionario.getAlimentosNaoGosta());
+        dto.setFrutasPreferidas(questionario.getFrutasPreferidas());
+        dto.setNumeroRefeicoesDesejadas(questionario.getNumeroRefeicoesDesejadas());
+        dto.setHorarioMaiorFome(questionario.getHorarioMaiorFome());
+        dto.setPressaoArterial(questionario.getPressaoArterial());
+        dto.setIntolerancias(questionario.getIntolerancias());
+        return dto;
+    }
 
-		// Perímetros
-		Map<String, Double> diferencasPerimetros = new HashMap<>();
-		diferencasPerimetros.put("ombro", calcularDiferenca(avalFinal.getPerimetroOmbro(), avalInicial.getPerimetroOmbro()));
-		diferencasPerimetros.put("torax", calcularDiferenca(avalFinal.getPerimetroTorax(), avalInicial.getPerimetroTorax()));
-		diferencasPerimetros.put("cintura", calcularDiferenca(avalFinal.getPerimetroCintura(), avalInicial.getPerimetroCintura()));
-		diferencasPerimetros.put("abdominal", calcularDiferenca(avalFinal.getPerimetroAbdominal(), avalInicial.getPerimetroAbdominal()));
-		diferencasPerimetros.put("quadril", calcularDiferenca(avalFinal.getPerimetroQuadril(), avalInicial.getPerimetroQuadril()));
-		diferencasPerimetros.put("bracoDireitoRelax", calcularDiferenca(avalFinal.getPerimetroBracoDireitoRelax(), avalInicial.getPerimetroBracoDireitoRelax()));
-		diferencasPerimetros.put("bracoDireitoContr", calcularDiferenca(avalFinal.getPerimetroBracoDireitoContr(), avalInicial.getPerimetroBracoDireitoContr()));
-		diferencasPerimetros.put("bracoEsquerdoRelax", calcularDiferenca(avalFinal.getPerimetroBracoEsquerdoRelax(), avalInicial.getPerimetroBracoEsquerdoRelax()));
-		diferencasPerimetros.put("bracoEsquerdoContr", calcularDiferenca(avalFinal.getPerimetroBracoEsquerdoContr(), avalInicial.getPerimetroBracoEsquerdoContr()));
-		diferencasPerimetros.put("antebracoDireito", calcularDiferenca(avalFinal.getPerimetroAntebracoDireito(), avalInicial.getPerimetroAntebracoDireito()));
-		diferencasPerimetros.put("antebracoEsquerdo", calcularDiferenca(avalFinal.getPerimetroAntebracoEsquerdo(), avalInicial.getPerimetroAntebracoEsquerdo()));
-		diferencasPerimetros.put("coxa", calcularDiferenca(avalFinal.getPerimetroCoxa(), avalInicial.getPerimetroCoxa()));
-		diferencasPerimetros.put("coxaDireita", calcularDiferenca(avalFinal.getPerimetroCoxaDireita(), avalInicial.getPerimetroCoxaDireita()));
-		diferencasPerimetros.put("coxaEsquerda", calcularDiferenca(avalFinal.getPerimetroCoxaEsquerda(), avalInicial.getPerimetroCoxaEsquerda()));
-		diferencasPerimetros.put("panturrilhaDireita", calcularDiferenca(avalFinal.getPerimetroPanturrilhaDireita(), avalInicial.getPerimetroPanturrilhaDireita()));
-		diferencasPerimetros.put("panturrilhaEsquerda", calcularDiferenca(avalFinal.getPerimetroPanturrilhaEsquerda(), avalInicial.getPerimetroPanturrilhaEsquerda()));
-		diferencas.setDiferencasPerimetros(diferencasPerimetros);
+    /**
+     * Converte entidade RegistroFotografico para DTO.
+     */
+    private RegistroFotograficoDTO converterRegistroParaDTO(RegistroFotografico registro) {
+        RegistroFotograficoDTO dto = new RegistroFotograficoDTO();
+        dto.setId(registro.getId());
+        dto.setConsultaId(registro.getConsulta().getId());
+        dto.setFotoAnterior(registro.getFotoAnterior());
+        dto.setFotoPosterior(registro.getFotoPosterior());
+        dto.setFotoLateralEsquerda(registro.getFotoLateralEsquerda());
+        dto.setFotoLateralDireita(registro.getFotoLateralDireita());
+        return dto;
+    }
 
-		// Dobras Cutâneas
-		Map<String, Double> diferencasDobras = new HashMap<>();
-		diferencasDobras.put("triceps", calcularDiferenca(avalFinal.getDobraTriceps(), avalInicial.getDobraTriceps()));
-		diferencasDobras.put("peito", calcularDiferenca(avalFinal.getDobraPeito(), avalInicial.getDobraPeito()));
-		diferencasDobras.put("axilarMedia", calcularDiferenca(avalFinal.getDobraAxilarMedia(), avalInicial.getDobraAxilarMedia()));
-		diferencasDobras.put("subescapular", calcularDiferenca(avalFinal.getDobraSubescapular(), avalInicial.getDobraSubescapular()));
-		diferencasDobras.put("abdominal", calcularDiferenca(avalFinal.getDobraAbdominal(), avalInicial.getDobraAbdominal()));
-		diferencasDobras.put("supraIliaca", calcularDiferenca(avalFinal.getDobraSupraIliaca(), avalInicial.getDobraSupraIliaca()));
-		diferencasDobras.put("coxa", calcularDiferenca(avalFinal.getDobraCoxa(), avalInicial.getDobraCoxa()));
-		diferencas.setDiferencasDobras(diferencasDobras);
+    /**
+     * Converte entidade Consulta para DTO de listagem paginada.
+     */
+    private ConsultaListagemDTO converterParaListagemDTO(Consulta consulta) {
+        ConsultaListagemDTO dto = new ConsultaListagemDTO();
+        dto.setId(consulta.getId());
+        dto.setPacienteId(consulta.getPaciente().getId());
+        dto.setNomePaciente(consulta.getPaciente().getNomeCompleto());
+        dto.setDataConsulta(consulta.getDataConsulta());
 
-		return diferencas;
-	}
+        avaliacaoFisicaRepository.findByConsultaId(consulta.getId()).ifPresent(a -> dto.setTemAvaliacaoFisica(true));
+        questionarioRepository.findByConsultaId(consulta.getId()).ifPresent(q -> dto.setTemQuestionario(true));
+        registroFotograficoRepository.findByConsultaId(consulta.getId()).ifPresent(r -> dto.setTemFotos(true));
 
-	// ==============================================
-	// # Método - calcularDiferenca
-	// # Calcula diferença entre dois Double (retorna null se algum for null)
-	// ==============================================
-	private Double calcularDiferenca(Double valorFinal, Double valorInicial) {
-		if (valorFinal == null || valorInicial == null) {
-			return null;
-		}
-		return valorFinal - valorInicial;
-	}
+        return dto;
+    }
 
-	// ==============================================
-	// # Método - converterParaDetalhadaDTO
-	// # Converte Consulta para ConsultaDetalhadaDTO
-	// ==============================================
-	private ConsultaDetalhadaDTO converterParaDetalhadaDTO(Consulta consulta) {
-		ConsultaDetalhadaDTO dto = new ConsultaDetalhadaDTO();
-		dto.setId(consulta.getId());
-		dto.setPacienteId(consulta.getPaciente().getId());
-		dto.setNomePaciente(consulta.getPaciente().getNomeCompleto());
-		dto.setDataConsulta(consulta.getDataConsulta());
+    /**
+     * Calcula diferenca entre valor atual e anterior.
+     * Trata valores nulos retornando null.
+     */
+    private Double atualMenosAnterior(Double atual, Double anterior) {
+        if (atual == null || anterior == null) return null;
+        return Math.round((atual - anterior) * 100.0) / 100.0;
+    }
 
-		// Buscar avaliação física
-		avaliacaoFisicaRepository.findByConsultaId(consulta.getId()).ifPresent(avaliacao -> {
-			dto.setAvaliacaoFisica(converterAvaliacaoParaDTO(avaliacao));
-		});
-
-		// Buscar questionário
-		questionarioRepository.findByConsultaId(consulta.getId()).ifPresent(questionario -> {
-			dto.setQuestionario(converterQuestionarioParaDTO(questionario));
-		});
-
-		// Buscar fotos
-		registroFotograficoRepository.findByConsultaId(consulta.getId()).ifPresent(registro -> {
-			dto.setRegistroFotografico(converterRegistroParaDTO(registro));
-		});
-
-		return dto;
-	}
-
-	// ==============================================
-	// # Método - limparIdsParaRascunho
-	// # Remove IDs para evitar atualização acidental da consulta anterior
-	// ==============================================
-	private ConsultaDetalhadaDTO limparIdsParaRascunho(ConsultaDetalhadaDTO dto) {
-		dto.setId(null);
-		dto.setDataConsulta(LocalDateTime.now());
-
-		if (dto.getAvaliacaoFisica() != null) {
-			dto.getAvaliacaoFisica().setId(null);
-			dto.getAvaliacaoFisica().setConsultaId(null);
-		}
-
-		if (dto.getQuestionario() != null) {
-			dto.getQuestionario().setId(null);
-			dto.getQuestionario().setConsultaId(null);
-		}
-
-		if (dto.getRegistroFotografico() != null) {
-			dto.getRegistroFotografico().setId(null);
-			dto.getRegistroFotografico().setConsultaId(null);
-		}
-
-		return dto;
-	}
-
-	// ==============================================
-	// # Método - converterAvaliacaoParaDTO
-	// # Converte AvaliacaoFisica para AvaliacaoFisicaDTO
-	// ==============================================
-	private AvaliacaoFisicaDTO converterAvaliacaoParaDTO(AvaliacaoFisica avaliacao) {
-		AvaliacaoFisicaDTO dto = new AvaliacaoFisicaDTO();
-		dto.setId(avaliacao.getId());
-		dto.setConsultaId(avaliacao.getConsulta().getId());
-		dto.setAltura(avaliacao.getAltura());
-		dto.setPerimetroOmbro(avaliacao.getPerimetroOmbro());
-		dto.setPerimetroTorax(avaliacao.getPerimetroTorax());
-		dto.setPerimetroCintura(avaliacao.getPerimetroCintura());
-		dto.setPerimetroAbdominal(avaliacao.getPerimetroAbdominal());
-		dto.setPerimetroQuadril(avaliacao.getPerimetroQuadril());
-		dto.setPerimetroBracoDireitoRelax(avaliacao.getPerimetroBracoDireitoRelax());
-		dto.setPerimetroBracoDireitoContr(avaliacao.getPerimetroBracoDireitoContr());
-		dto.setPerimetroBracoEsquerdoRelax(avaliacao.getPerimetroBracoEsquerdoRelax());
-		dto.setPerimetroBracoEsquerdoContr(avaliacao.getPerimetroBracoEsquerdoContr());
-		dto.setPerimetroAntebracoDireito(avaliacao.getPerimetroAntebracoDireito());
-		dto.setPerimetroAntebracoEsquerdo(avaliacao.getPerimetroAntebracoEsquerdo());
-		dto.setPerimetroCoxa(avaliacao.getPerimetroCoxa());
-		dto.setPerimetroCoxaDireita(avaliacao.getPerimetroCoxaDireita());
-		dto.setPerimetroCoxaEsquerda(avaliacao.getPerimetroCoxaEsquerda());
-		dto.setPerimetroPanturrilhaDireita(avaliacao.getPerimetroPanturrilhaDireita());
-		dto.setPerimetroPanturrilhaEsquerda(avaliacao.getPerimetroPanturrilhaEsquerda());
-		dto.setDobraTriceps(avaliacao.getDobraTriceps());
-		dto.setDobraPeito(avaliacao.getDobraPeito());
-		dto.setDobraAxilarMedia(avaliacao.getDobraAxilarMedia());
-		dto.setDobraSubescapular(avaliacao.getDobraSubescapular());
-		dto.setDobraAbdominal(avaliacao.getDobraAbdominal());
-		dto.setDobraSupraIliaca(avaliacao.getDobraSupraIliaca());
-		dto.setDobraCoxa(avaliacao.getDobraCoxa());
-		dto.setPesoAtual(avaliacao.getPesoAtual());
-		dto.setMassaMagra(avaliacao.getMassaMagra());
-		dto.setMassaGorda(avaliacao.getMassaGorda());
-		dto.setPercentualGordura(avaliacao.getPercentualGordura());
-		dto.setImc(avaliacao.getImc());
-		return dto;
-	}
-
-	// ==============================================
-	// # Método - converterQuestionarioParaDTO
-	// # Converte QuestionarioEstiloVida para DTO
-	// ==============================================
-	private QuestionarioEstiloVidaDTO converterQuestionarioParaDTO(QuestionarioEstiloVida questionario) {
-		QuestionarioEstiloVidaDTO dto = new QuestionarioEstiloVidaDTO();
-		dto.setId(questionario.getId());
-		dto.setConsultaId(questionario.getConsulta().getId());
-		dto.setObjetivo(questionario.getObjetivo());
-		dto.setFrequenciaTreino(questionario.getFrequenciaTreino());
-		dto.setTempoTreino(questionario.getTempoTreino());
-		dto.setCirurgias(questionario.getCirurgias());
-		dto.setDoencas(questionario.getDoencas());
-		dto.setHistoricoFamiliar(questionario.getHistoricoFamiliar());
-		dto.setMedicamentos(questionario.getMedicamentos());
-		dto.setSuplementos(questionario.getSuplementos());
-		dto.setUsoAnabolizantes(questionario.getUsoAnabolizantes());
-		dto.setCicloAnabolizantes(questionario.getCicloAnabolizantes());
-		dto.setDuracaoAnabolizantes(questionario.getDuracaoAnabolizantes());
-		dto.setFuma(questionario.getFuma());
-		dto.setFrequenciaAlcool(questionario.getFrequenciaAlcool());
-		dto.setFuncionamentoIntestino(questionario.getFuncionamentoIntestino());
-		dto.setQualidadeSono(questionario.getQualidadeSono());
-		dto.setIngestaoAguaDiaria(questionario.getIngestaoAguaDiaria());
-		dto.setAlimentosNaoGosta(questionario.getAlimentosNaoGosta());
-		dto.setFrutasPreferidas(questionario.getFrutasPreferidas());
-		dto.setNumeroRefeicoesDesejadas(questionario.getNumeroRefeicoesDesejadas());
-		dto.setHorarioMaiorFome(questionario.getHorarioMaiorFome());
-		dto.setPressaoArterial(questionario.getPressaoArterial());
-		dto.setIntolerancias(questionario.getIntolerancias());
-		return dto;
-	}
-
-	// ==============================================
-	// # Método - converterRegistroParaDTO
-	// # Converte RegistroFotografico para DTO
-	// ==============================================
-	private RegistroFotograficoDTO converterRegistroParaDTO(RegistroFotografico registro) {
-		RegistroFotograficoDTO dto = new RegistroFotograficoDTO();
-		dto.setId(registro.getId());
-		dto.setConsultaId(registro.getConsulta().getId());
-		dto.setFotoAnterior(registro.getFotoAnterior());
-		dto.setFotoPosterior(registro.getFotoPosterior());
-		dto.setFotoLateralEsquerda(registro.getFotoLateralEsquerda());
-		dto.setFotoLateralDireita(registro.getFotoLateralDireita());
-		return dto;
-	}
-
+    /**
+     * Cria mapa com valores anterior e diferenca de uma medida.
+     */
+    private Map<String, Double> criarMapa(Double anterior, Double atual) {
+        Map<String, Double> mapa = new HashMap<>();
+        mapa.put("anterior", anterior);
+        mapa.put("atual", atual);
+        mapa.put("diferenca", atualMenosAnterior(atual, anterior));
+        return mapa;
+    }
 }

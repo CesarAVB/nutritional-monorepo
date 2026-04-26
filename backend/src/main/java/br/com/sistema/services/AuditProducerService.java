@@ -12,21 +12,24 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 
+/**
+ * Produz eventos de auditoria para o RabbitMQ.
+ * Serializa AuditEventMessage para JSON e envia para a fila configurada via audit.queue.name.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuditProducerService {
 
     private final RabbitTemplate rabbitTemplate;
-    private final ObjectMapper objectMapper; // Injetado pelo Spring
+    private final ObjectMapper objectMapper;
 
     @Value("${audit.queue.name:audit_events_queue}")
     private String auditQueueName;
 
-    // ==============================================
-    // # Método - setupObjectMapper
-    // # Garante que o ObjectMapper possua JavaTimeModule para serializar LocalDateTime
-    // ==============================================
+    /**
+     * Configura o ObjectMapper com JavaTimeModule para serializar LocalDateTime corretamente.
+     */
     @PostConstruct
     public void setupObjectMapper() {
         if (!objectMapper.getRegisteredModuleIds().contains(JavaTimeModule.class.getName())) {
@@ -35,10 +38,12 @@ public class AuditProducerService {
         }
     }
 
-    // ==============================================
-    // # Método - sendAuditEvent
-    // # Serializa e envia um evento de auditoria para a fila do RabbitMQ
-    // ==============================================
+    /**
+     * Envia um evento de auditoria para a fila do RabbitMQ.
+     * Falhas de serializacao ou envio sao registradas e nao lancam excecao.
+     *
+     * @param eventMessage Evento de auditoria a ser enviado
+     */
     public void sendAuditEvent(AuditEventMessage eventMessage) {
         try {
             String jsonEvent = objectMapper.writeValueAsString(eventMessage);

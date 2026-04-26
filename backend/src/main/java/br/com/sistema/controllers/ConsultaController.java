@@ -28,18 +28,29 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Controlador responsavel por gerenciar o ciclo de vida completo das consultas.
+ * Gerencia a criacao, listagem, detalhamento e comparacao de consultas, alem de
+ * permitir a busca de rascunhos para pre-preenchimento de novas entradas.
+ *
+ * <p>Suporta paginacao para listagens extensas e permite comparacao entre duas
+ * consultas do mesmo paciente para analise de progresso.</p>
+ */
 @RestController
 @RequestMapping("/api/v1/consultas")
 @RequiredArgsConstructor
-@Tag(name = "Consultas", description = "Endpoints para gestão de consultas e avaliações")
+@Tag(name = "Consultas", description = "Endpoints para gestao de consultas e avaliacoes")
 public class ConsultaController {
 
 	private final ConsultaService consultaService;
 
-	// ==============================================
-	// # Método - criar
-	// # Cria uma nova consulta para um paciente
-	// ==============================================
+	/**
+	 * Cria uma nova consulta para um paciente no sistema.
+	 * A nova consulta inicia sem avaliacoes ou fotos associadas.
+	 *
+	 * @param pacienteId identificador do paciente que tera a consulta criada
+	 * @return dados resumidos da consulta criada com identificador gerado
+	 */
 	@PostMapping("/paciente/{pacienteId}")
 	@Operation(summary = "Criar nova consulta", description = "Cria uma nova consulta para o paciente")
 	public ResponseEntity<ConsultaResumoDTO> criar(@PathVariable Long pacienteId) {
@@ -47,10 +58,12 @@ public class ConsultaController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(saved);
 	}
 
-	// ==============================================
-	// # Método - listarTodas
-	// # Lista todas as consultas do sistema
-	// ==============================================
+	/**
+	 * Lista todas as consultas registradas no sistema.
+	 * Ordenadas por data de forma decrescente.
+	 *
+	 * @return lista completa de consultas resumidas ordenadas por data
+	 */
 	@GetMapping
 	@Operation(summary = "Listar todas as consultas", description = "Retorna todas as consultas do sistema ordenadas por data")
 	public ResponseEntity<List<ConsultaListagemDTO>> listarTodas() {
@@ -58,10 +71,15 @@ public class ConsultaController {
 		return ResponseEntity.ok(consultas);
 	}
 
-	// ==============================================
-	// # Metodo - listarTodasPaginado
-	// # Lista consultas do sistema de forma paginada
-	// ==============================================
+	/**
+	 * Lista consultas do sistema de forma paginada com ordenacao configuravel.
+	 *
+	 * @param page numero da pagina comeando em 0
+	 * @param size quantidade de itens por pagina (padrao 10)
+	 * @param sort campo para ordenacao (padrao dataConsulta)
+	 * @param direction sentido da ordenacao: asc ou desc (padrao desc)
+	 * @return pagina de consultas resumidas conforme criterio informado
+	 */
 	@GetMapping("/paginado")
 	@Operation(summary = "Listar consultas paginadas", description = "Retorna consultas do sistema com paginacao")
 	public ResponseEntity<Page<ConsultaListagemDTO>> listarTodasPaginado(
@@ -75,33 +93,45 @@ public class ConsultaController {
 		return ResponseEntity.ok(consultas);
 	}
 
-	// ==============================================
-	// # Método - listarPorPaciente
-	// # Lista consultas de um paciente
-	// ==============================================
+	/**
+	 * Lista o historico completo de consultas de um paciente especifico.
+	 * Ordenado por data de forma decrescente.
+	 *
+	 * @param pacienteId identificador do paciente
+	 * @return lista de consultas resumidas do paciente ordenadas por data
+	 */
 	@GetMapping("/paciente/{pacienteId}")
-	@Operation(summary = "Listar consultas do paciente", description = "Retorna o histórico de consultas ordenado por data")
+	@Operation(summary = "Listar consultas do paciente", description = "Retorna o historico de consultas ordenado por data")
 	public ResponseEntity<List<ConsultaResumoDTO>> listarPorPaciente(@PathVariable Long pacienteId) {
 		List<ConsultaResumoDTO> consultas = consultaService.listarConsultasPorPaciente(pacienteId);
 		return ResponseEntity.ok(consultas);
 	}
 
-	// ==============================================
-	// # Método - buscarRascunhoNovaConsulta
-	// # Retorna os dados da última consulta para pré-preenchimento da nova
-	// ==============================================
+	/**
+	 * Recupera os dados da ultima consulta de um paciente para pre-preenchimento
+	 * em uma nova entrada. Permite continuidade e reducao de digitacao.
+	 *
+	 * @param pacienteId identificador do paciente
+	 * @return dados detalhados da ultima consulta ou 204 se nenhuma existir
+	 */
 	@GetMapping("/paciente/{pacienteId}/rascunho")
-	@Operation(summary = "Buscar rascunho da nova consulta", description = "Retorna os dados da última consulta do paciente para pré-preenchimento")
+	@Operation(summary = "Buscar rascunho da nova consulta", description = "Retorna os dados da ultima consulta do paciente para pre-preenchimento")
 	public ResponseEntity<ConsultaDetalhadaDTO> buscarRascunhoNovaConsulta(@PathVariable Long pacienteId) {
 		return consultaService.buscarRascunhoNovaConsulta(pacienteId)
 				.map(ResponseEntity::ok)
 				.orElseGet(() -> ResponseEntity.noContent().build());
 	}
 
-	// ==============================================
-	// # Metodo - listarPorPacientePaginado
-	// # Lista consultas de um paciente de forma paginada
-	// ==============================================
+	/**
+	 * Lista consultas de um paciente especifico de forma paginada.
+	 *
+	 * @param pacienteId identificador do paciente
+	 * @param page numero da pagina comeando em 0
+	 * @param size quantidade de itens por pagina (padrao 10)
+	 * @param sort campo para ordenacao (padrao dataConsulta)
+	 * @param direction sentido da ordenacao: asc ou desc (padrao desc)
+	 * @return pagina de consultas resumidas do paciente conforme criterio informado
+	 */
 	@GetMapping("/paciente/{pacienteId}/paginado")
 	@Operation(summary = "Listar consultas do paciente paginadas", description = "Retorna historico de consultas com paginacao")
 	public ResponseEntity<Page<ConsultaResumoDTO>> listarPorPacientePaginado(
@@ -116,32 +146,43 @@ public class ConsultaController {
 		return ResponseEntity.ok(consultas);
 	}
 
-	// ==============================================
-	// # Método - buscarCompleta
-	// # Busca os detalhes completos de uma consulta por ID
-	// ==============================================
+	/**
+	 * Recupera todos os detalhes de uma consulta especifica, incluindo
+	 * avaliacao fisica, registro fotografico e demais dados relacionados.
+	 *
+	 * @param id identificador da consulta
+	 * @return dados completos da consulta com todas as associacoes
+	 */
 	@GetMapping("/{id}")
-	@Operation(summary = "Buscar consulta completa", description = "Retorna todos os detalhes da consulta incluindo avaliações e fotos")
+	@Operation(summary = "Buscar consulta completa", description = "Retorna todos os detalhes da consulta incluindo avaliacoes e fotos")
 	public ResponseEntity<ConsultaDetalhadaDTO> buscarCompleta(@PathVariable Long id) {
 		ConsultaDetalhadaDTO consulta = consultaService.buscarConsultaCompleta(id);
 		return ResponseEntity.ok(consulta);
 	}
 
-	// ==============================================
-	// # Método - comparar
-	// # Compara duas consultas de um paciente
-	// ==============================================
+	/**
+	 * Compara avaliacoes e dados entre duas consultas do mesmo paciente.
+	 * Retorna diferenca de medidas, anotacoes e indicadores calculados.
+	 *
+	 * @param pacienteId identificador do paciente
+	 * @param consultaInicialId identificador da consulta mais antiga
+	 * @param consultaFinalId identificador da consulta mais recente
+	 * @return comparativo detalhado entre as duas consultas selecionadas
+	 */
 	@GetMapping("/comparar/{pacienteId}")
-	@Operation(summary = "Comparar duas consultas", description = "Compara avaliações entre duas consultas do mesmo paciente")
+	@Operation(summary = "Comparar duas consultas", description = "Compara avaliacoes entre duas consultas do mesmo paciente")
 	public ResponseEntity<ComparativoConsultasDTO> comparar(@PathVariable Long pacienteId, @RequestParam Long consultaInicialId, @RequestParam Long consultaFinalId) {
 		ComparativoConsultasDTO comparativo = consultaService.compararConsultas(pacienteId, consultaInicialId, consultaFinalId);
 		return ResponseEntity.ok(comparativo);
 	}
 
-	// ==============================================
-	// # Método - deletar
-	// # Deleta uma consulta e seus dados relacionados
-	// ==============================================
+	/**
+	 * Remove uma consulta e todos os seus dados relacionados,
+	 * incluindo avaliacao fisica, registros fotograficos e historico.
+	 *
+	 * @param id identificador da consulta a ser removida
+	 * @return resposta vazia com status 204 em caso de sucesso
+	 */
 	@DeleteMapping("/{id}")
 	@Operation(summary = "Deletar consulta", description = "Remove uma consulta e seus dados relacionados")
 	public ResponseEntity<Void> deletar(@PathVariable Long id) {
@@ -149,16 +190,18 @@ public class ConsultaController {
 		return ResponseEntity.noContent().build();
 	}
 
-    // ==============================================
-    // # Método - atualizarConsulta
-    // # Atualiza dados básicos da consulta
-    // ==============================================
+	/**
+	 * Atualiza dados basicos de uma consulta existente como
+	 * data, hora e observacoes gerais.
+	 *
+	 * @param id identificador da consulta
+	 * @param dados novos valores para os campos atualizaveis
+	 * @return dados completos da consulta apos aplicacao das modificacoes
+	 */
 	@PutMapping("/{id}")
-	@Operation(summary = "Atualizar consulta", description = "Atualiza dados básicos da consulta")
+	@Operation(summary = "Atualizar consulta", description = "Atualiza dados basicos da consulta")
 	public ResponseEntity<ConsultaDetalhadaDTO> atualizarConsulta(@PathVariable Long id, @RequestBody ConsultaAtualizacaoDTO dados) {
 	    ConsultaDetalhadaDTO updated = consultaService.atualizarConsulta(id, dados);
 	    return ResponseEntity.ok(updated);
 	}
-
-
 }

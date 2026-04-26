@@ -14,81 +14,93 @@ import br.com.sistema.repositories.ConsultaRepository;
 import br.com.sistema.utils.CalculosNutricionais;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Gerencia avaliacoes fisicas vinculadas a consultas.
+ * Calcula automaticamente IMC, percentual de gordura, massa magra e massa gorda
+ * com base nas medidas preenchidas pelo nutricionista.
+ */
 @Service
 @RequiredArgsConstructor
 public class AvaliacaoFisicaService {
-    
+
     private final AvaliacaoFisicaRepository avaliacaoFisicaRepository;
     private final ConsultaRepository consultaRepository;
-    
-    // ==============================================
-    // # Método - salvarAvaliacao
-    // # Salva uma nova avaliação física vinculada a uma consulta
-    // ==============================================
+
+    /**
+     * Salva uma nova avaliacao fisica para uma consulta.
+     * Calcula automaticamente IMC, percentual de gordura e composicao corporal.
+     * Lanca BusinessException se ja existir avaliacao para a consulta.
+     *
+     * @param consultaId ID da consulta
+     * @param dto Dados da avaliacao fisica
+     * @return Avaliacao fisica salva com campos calculados
+     */
     @Transactional
     public AvaliacaoFisicaDTO salvarAvaliacao(Long consultaId, AvaliacaoFisicaDTO dto) {
-        Consulta consulta = consultaRepository.findById(consultaId).orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada"));
-        
+        Consulta consulta = consultaRepository.findById(consultaId).orElseThrow(() -> new ResourceNotFoundException("Consulta nao encontrada"));
+
         if (avaliacaoFisicaRepository.existsByConsultaId(consultaId)) {
-            throw new BusinessException("Já existe uma avaliação física para esta consulta");
+            throw new BusinessException("Ja existe uma avaliacao fisica para esta consulta");
         }
-        
+
         AvaliacaoFisica avaliacao = new AvaliacaoFisica();
         avaliacao.setConsulta(consulta);
         mapearDTOParaEntidade(dto, avaliacao);
         calcularDadosAutomaticos(avaliacao, consulta.getPaciente());
-        System.out.println("Avaliacao antes de salvar (entidade): " + avaliacao);
         AvaliacaoFisica saved = avaliacaoFisicaRepository.save(avaliacao);
-        System.out.println("Avaliacao após salvar (entidade): " + saved);
         return converterParaDTO(saved);
     }
-    
-    // ==============================================
-    // # Método - atualizarAvaliacao
-    // # Atualiza uma avaliação física existente e recalcula dados
-    // ==============================================
+
+    /**
+     * Atualiza uma avaliacao fisica existente e recalcula dados automaticos.
+     * Usado quando o nutricionista altera medidas ou parametros.
+     *
+     * @param consultaId ID da consulta
+     * @param dto Novos dados da avaliacao
+     * @return Avaliacao atualizada com campos recalculados
+     */
     @Transactional
     public AvaliacaoFisicaDTO atualizarAvaliacao(Long consultaId, AvaliacaoFisicaDTO dto) {
-    	System.err.println("Atualizando avaliação física para consulta ID: " + consultaId);
-        AvaliacaoFisica avaliacao = avaliacaoFisicaRepository.findByConsultaId(consultaId).orElseThrow(() -> new ResourceNotFoundException("Avaliação física não encontrada"));
+        AvaliacaoFisica avaliacao = avaliacaoFisicaRepository.findByConsultaId(consultaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Avaliacao fisica nao encontrada"));
         mapearDTOParaEntidade(dto, avaliacao);
-        // Recalcula os dados automáticos caso o frontend tenha alterado peso ou dobras
         calcularDadosAutomaticos(avaliacao, avaliacao.getConsulta().getPaciente());
         AvaliacaoFisica updated = avaliacaoFisicaRepository.save(avaliacao);
         return converterParaDTO(updated);
     }
-    
-    // ==============================================
-    // # Método - buscarPorConsulta
-    // # Busca avaliação física por consulta
-    // ==============================================
+
+    /**
+     * Busca avaliacao fisica vinculada a uma consulta.
+     *
+     * @param consultaId ID da consulta
+     * @return Dados da avaliacao fisica
+     */
     @Transactional(readOnly = true)
     public AvaliacaoFisicaDTO buscarPorConsulta(Long consultaId) {
-        AvaliacaoFisica avaliacao = avaliacaoFisicaRepository.findByConsultaId(consultaId).orElseThrow(() -> new ResourceNotFoundException("Avaliação física não encontrada"));
+        AvaliacaoFisica avaliacao = avaliacaoFisicaRepository.findByConsultaId(consultaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Avaliacao fisica nao encontrada"));
         return converterParaDTO(avaliacao);
     }
-    
-    // ==============================================
-    // # Método - deletarAvaliacao
-    // # Deleta avaliação física por consulta
-    // ==============================================
+
+    /**
+     * Remove avaliacao fisica vinculada a uma consulta.
+     *
+     * @param consultaId ID da consulta
+     */
     @Transactional
     public void deletarAvaliacao(Long consultaId) {
         if (!avaliacaoFisicaRepository.existsByConsultaId(consultaId)) {
-            throw new ResourceNotFoundException("Avaliação física não encontrada");
+            throw new ResourceNotFoundException("Avaliacao fisica nao encontrada");
         }
         avaliacaoFisicaRepository.deleteByConsultaId(consultaId);
     }
-    
-    // ==============================================
-    // # Método - mapearDTOParaEntidade
-    // # Mapear campos do DTO para a entidade sem sobrescrever nulos
-    // ==============================================
+
+    /**
+     * Copia campos do DTO para a entidade, ignorando valores nulos.
+     * Permite atualizacao parcial sem sobrescrever dados existentes.
+     */
     private void mapearDTOParaEntidade(AvaliacaoFisicaDTO dto, AvaliacaoFisica entidade) {
-    	System.out.println("Mapeando DTO para Entidade: " + dto);
-    	
-    	// ATUALIZAR APENAS SE O CAMPO NÃO FOR NULL
-    	if (dto.getAltura() != null) entidade.setAltura(dto.getAltura());
+        if (dto.getAltura() != null) entidade.setAltura(dto.getAltura());
         if (dto.getPerimetroOmbro() != null) entidade.setPerimetroOmbro(dto.getPerimetroOmbro());
         if (dto.getPerimetroTorax() != null) entidade.setPerimetroTorax(dto.getPerimetroTorax());
         if (dto.getPerimetroCintura() != null) entidade.setPerimetroCintura(dto.getPerimetroCintura());
@@ -105,7 +117,6 @@ public class AvaliacaoFisicaService {
         if (dto.getPerimetroCoxaEsquerda() != null) entidade.setPerimetroCoxaEsquerda(dto.getPerimetroCoxaEsquerda());
         if (dto.getPerimetroPanturrilhaDireita() != null) entidade.setPerimetroPanturrilhaDireita(dto.getPerimetroPanturrilhaDireita());
         if (dto.getPerimetroPanturrilhaEsquerda() != null) entidade.setPerimetroPanturrilhaEsquerda(dto.getPerimetroPanturrilhaEsquerda());
-        
         if (dto.getDobraTriceps() != null) entidade.setDobraTriceps(dto.getDobraTriceps());
         if (dto.getDobraPeito() != null) entidade.setDobraPeito(dto.getDobraPeito());
         if (dto.getDobraAxilarMedia() != null) entidade.setDobraAxilarMedia(dto.getDobraAxilarMedia());
@@ -113,16 +124,12 @@ public class AvaliacaoFisicaService {
         if (dto.getDobraAbdominal() != null) entidade.setDobraAbdominal(dto.getDobraAbdominal());
         if (dto.getDobraSupraIliaca() != null) entidade.setDobraSupraIliaca(dto.getDobraSupraIliaca());
         if (dto.getDobraCoxa() != null) entidade.setDobraCoxa(dto.getDobraCoxa());
-        
         if (dto.getPesoAtual() != null) entidade.setPesoAtual(dto.getPesoAtual());
-        // NÃO mapear campos calculados (IMC, %gordura, massa gorda/magra) a partir do DTO
-        // Eles serão recalculados por `calcularDadosAutomaticos` com base em peso, dobras e paciente
     }
 
-    // ==============================================
-    // # Método - converterParaDTO
-    // # Converte AvaliacaoFisica para AvaliacaoFisicaDTO
-    // ==============================================
+    /**
+     * Converte entidade AvaliacaoFisica para DTO.
+     */
     private AvaliacaoFisicaDTO converterParaDTO(AvaliacaoFisica avaliacao) {
         AvaliacaoFisicaDTO dto = new AvaliacaoFisicaDTO();
         dto.setId(avaliacao.getId());
@@ -158,85 +165,64 @@ public class AvaliacaoFisicaService {
         dto.setImc(avaliacao.getImc());
         return dto;
     }
-    
-    // ==============================================
-    // # Método - calcularDadosAutomaticos
-    // # Calcula IMC, %gordura, massa gorda e massa magra quando possível
-    // ==============================================
+
+    /**
+     * Calcula automaticamente IMC, percentual de gordura, massa gorda e massa magra.
+     * Usa todas as 7 dobras cutaneas para calcular o % de gordura via protocolo Pollock.
+     * Alturas em centimetros sao convertidas para metros antes do calculo do IMC.
+     */
     private void calcularDadosAutomaticos(AvaliacaoFisica avaliacao, Paciente paciente) {
-       
-        // 1. Calcular IMC
         if (avaliacao.getPesoAtual() != null && avaliacao.getAltura() != null) {
             double alturaOriginal = avaliacao.getAltura();
-            double alturaParaCalculo = alturaOriginal;
-            // Se a altura foi enviada em centímetros (ex: 175), converte para metros
-            if (alturaOriginal > 10) { // valores >10 normalmente significam centímetros
-                alturaParaCalculo = alturaOriginal / 100.0;
-                System.out.println("Ajustando altura para cálculo de IMC (convertendo cm -> m): " + alturaOriginal + " -> " + alturaParaCalculo);
-            }
+            double alturaParaCalculo = alturaOriginal > 10 ? alturaOriginal / 100.0 : alturaOriginal;
             Double imc = CalculosNutricionais.calcularIMC(avaliacao.getPesoAtual(), alturaParaCalculo);
             if (imc != null) {
                 avaliacao.setImc(imc);
-            } else {
-                System.out.println("IMC não calculado: peso=" + avaliacao.getPesoAtual() + ", alturaParaCalculo=" + alturaParaCalculo);
             }
-        } else {
-            System.out.println("IMC não calculado porque peso ou altura estão nulos; peso=" + avaliacao.getPesoAtual() + ", altura=" + avaliacao.getAltura());
         }
-        
-        // 2. Calcular % Gordura (se todas as 7 dobras estiverem preenchidas)
+
         if (todasDobrasPreenchidas(avaliacao)) {
             Integer idade = CalculosNutricionais.calcularIdade(paciente.getDataNascimento());
-            
             Double percentualGordura = CalculosNutricionais.calcularPercentualGordura(
-                paciente.getSexo(),
-                idade,
-                avaliacao.getDobraTriceps(),
-                avaliacao.getDobraPeito(),
-                avaliacao.getDobraAxilarMedia(),
-                avaliacao.getDobraSubescapular(),
-                avaliacao.getDobraAbdominal(),
-                avaliacao.getDobraSupraIliaca(),
-                avaliacao.getDobraCoxa()
+                    paciente.getSexo(),
+                    idade,
+                    avaliacao.getDobraTriceps(),
+                    avaliacao.getDobraPeito(),
+                    avaliacao.getDobraAxilarMedia(),
+                    avaliacao.getDobraSubescapular(),
+                    avaliacao.getDobraAbdominal(),
+                    avaliacao.getDobraSupraIliaca(),
+                    avaliacao.getDobraCoxa()
             );
-            
+
             if (percentualGordura != null) {
                 avaliacao.setPercentualGordura(percentualGordura);
-            } else {
-                System.out.println("Percentual de gordura não calculado (resultado null)");
             }
-            
-            // 3. Calcular Massa Gorda e Massa Magra
+
             if (percentualGordura != null && avaliacao.getPesoAtual() != null) {
                 Double massaGorda = CalculosNutricionais.calcularMassaGorda(avaliacao.getPesoAtual(), percentualGordura);
                 if (massaGorda != null) {
                     avaliacao.setMassaGorda(massaGorda);
                 }
-                
-                Double massaMagra = CalculosNutricionais.calcularMassaMagra(
-                    avaliacao.getPesoAtual(), 
-                    massaGorda
-                );
+
+                Double massaMagra = CalculosNutricionais.calcularMassaMagra(avaliacao.getPesoAtual(), massaGorda);
                 if (massaMagra != null) {
                     avaliacao.setMassaMagra(massaMagra);
                 }
             }
-        } else {
-            System.out.println("Percentual de gordura não calculado: nem todas as 7 dobras estão preenchidas");
         }
     }
-    
-    // ==============================================
-    // # Método - todasDobrasPreenchidas
-    // # Verifica se todas as 7 dobras cutâneas estão preenchidas
-    // ==============================================
+
+    /**
+     * Verifica se todas as 7 dobras cutaneas do protocolo Pollock estao preenchidas.
+     */
     private boolean todasDobrasPreenchidas(AvaliacaoFisica avaliacao) {
         return avaliacao.getDobraTriceps() != null
-            && avaliacao.getDobraPeito() != null
-            && avaliacao.getDobraAxilarMedia() != null
-            && avaliacao.getDobraSubescapular() != null
-            && avaliacao.getDobraAbdominal() != null
-            && avaliacao.getDobraSupraIliaca() != null
-            && avaliacao.getDobraCoxa() != null;
+                && avaliacao.getDobraPeito() != null
+                && avaliacao.getDobraAxilarMedia() != null
+                && avaliacao.getDobraSubescapular() != null
+                && avaliacao.getDobraAbdominal() != null
+                && avaliacao.getDobraSupraIliaca() != null
+                && avaliacao.getDobraCoxa() != null;
     }
 }
