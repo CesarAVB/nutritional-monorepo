@@ -71,6 +71,7 @@ public class ConsultaController {
 		return ResponseEntity.ok(consultas);
 	}
 
+
 	/**
 	 * Lista consultas do sistema de forma paginada com ordenacao configuravel.
 	 *
@@ -89,7 +90,7 @@ public class ConsultaController {
 			@RequestParam(defaultValue = "desc") String direction) {
 		Sort.Direction sortDirection = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
 		Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
-		Page<ConsultaListagemDTO> consultas = consultaService.listarTodasConsultasPaginado(pageable);
+		Page<ConsultaListagemDTO> consultas = consultaService.listarConsultas(pageable);
 		return ResponseEntity.ok(consultas);
 	}
 
@@ -143,6 +144,7 @@ public class ConsultaController {
 		Sort.Direction sortDirection = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
 		Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
 		Page<ConsultaResumoDTO> consultas = consultaService.listarConsultasPorPacientePaginado(pacienteId, pageable);
+
 		return ResponseEntity.ok(consultas);
 	}
 
@@ -156,7 +158,7 @@ public class ConsultaController {
 	@GetMapping("/{id}")
 	@Operation(summary = "Buscar consulta completa", description = "Retorna todos os detalhes da consulta incluindo avaliacoes e fotos")
 	public ResponseEntity<ConsultaDetalhadaDTO> buscarCompleta(@PathVariable Long id) {
-		ConsultaDetalhadaDTO consulta = consultaService.buscarConsultaCompleta(id);
+		ConsultaDetalhadaDTO consulta = consultaService.buscarDetalhada(id);
 		return ResponseEntity.ok(consulta);
 	}
 
@@ -172,7 +174,7 @@ public class ConsultaController {
 	@GetMapping("/comparar/{pacienteId}")
 	@Operation(summary = "Comparar duas consultas", description = "Compara avaliacoes entre duas consultas do mesmo paciente")
 	public ResponseEntity<ComparativoConsultasDTO> comparar(@PathVariable Long pacienteId, @RequestParam Long consultaInicialId, @RequestParam Long consultaFinalId) {
-		ComparativoConsultasDTO comparativo = consultaService.compararConsultas(pacienteId, consultaInicialId, consultaFinalId);
+		ComparativoConsultasDTO comparativo = consultaService.gerarComparativo(pacienteId, consultaInicialId, consultaFinalId);
 		return ResponseEntity.ok(comparativo);
 	}
 

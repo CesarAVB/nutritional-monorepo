@@ -8,9 +8,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegistroFotograficoDTO {
-    
+
     private Long id;
     private Long consultaId;
+    private String dataFormatada;
     private String fotoAnterior;
     private String fotoPosterior;
     private String fotoLateralEsquerda;

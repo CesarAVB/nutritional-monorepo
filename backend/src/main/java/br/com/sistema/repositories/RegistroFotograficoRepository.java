@@ -10,7 +10,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import br.com.sistema.models.QuestionarioEstiloVida;
 import br.com.sistema.models.RegistroFotografico;
 
 @Repository
@@ -29,7 +28,7 @@ public interface RegistroFotograficoRepository extends JpaRepository<RegistroFot
     @Query("SELECT r.consulta.id, COUNT(r) > 0 FROM RegistroFotografico r WHERE r.consulta.id IN :ids GROUP BY r.consulta.id")
     Map<Long, Boolean> existsByConsultaIdIn(@Param("ids") List<Long> ids);
 
-    Optional<QuestionarioEstiloVida> findFirstByConsultaId(Long consultaId);
+    Optional<RegistroFotografico> findFirstByConsultaId(Long consultaId);
 
     // Batch: retorna apenas os IDs de consultas que possuem registro fotográfico
     @Query("SELECT r.consulta.id FROM RegistroFotografico r WHERE r.consulta.id IN :ids")

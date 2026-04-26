@@ -165,7 +165,19 @@ public class ConsultaService {
     }
 
     /**
-     * Lista todas as consultas para gerenciamento administrativo.
+     * Lista todas as consultas para gerenciamento administrativo, sem paginacao.
+     * Ordenadas por data de consulta decrescente.
+     *
+     * @return Lista de consultas para listagem
+     */
+    @Transactional(readOnly = true)
+    public List<ConsultaListagemDTO> listarTodasConsultas() {
+        return consultaRepository.findAllByOrderByDataConsultaDesc()
+                .stream().map(this::converterParaListagemDTO).toList();
+    }
+
+    /**
+     * Lista todas as consultas para gerenciamento administrativo, com paginacao.
      * Ordenadas por data de consulta decrescente.
      *
      * @param pageable Configuracao de paginacao
@@ -174,6 +186,32 @@ public class ConsultaService {
     @Transactional(readOnly = true)
     public Page<ConsultaListagemDTO> listarConsultas(Pageable pageable) {
         return consultaRepository.findAll(pageable).map(this::converterParaListagemDTO);
+    }
+
+    /**
+     * Lista consultas de um paciente de forma paginada.
+     *
+     * @param pacienteId ID do paciente
+     * @param pageable Configuracao de paginacao
+     * @return Pagina de resumos de consultas do paciente
+     */
+    @Transactional(readOnly = true)
+    public Page<ConsultaResumoDTO> listarConsultasPorPacientePaginado(Long pacienteId, Pageable pageable) {
+        if (!pacienteRepository.existsById(pacienteId)) {
+            throw new ResourceNotFoundException("Paciente nao encontrado");
+        }
+        return consultaRepository.findByPacienteIdOrderByDataConsultaDesc(pacienteId, pageable)
+                .map(consulta -> {
+                    ConsultaResumoDTO dto = new ConsultaResumoDTO();
+                    dto.setId(consulta.getId());
+                    dto.setPacienteId(consulta.getPaciente().getId());
+                    dto.setNomePaciente(consulta.getPaciente().getNomeCompleto());
+                    dto.setDataConsulta(consulta.getDataConsulta());
+                    dto.setTemAvaliacaoFisica(avaliacaoFisicaRepository.existsByConsultaId(consulta.getId()));
+                    dto.setTemQuestionario(questionarioRepository.existsByConsultaId(consulta.getId()));
+                    dto.setTemFotos(registroFotograficoRepository.existsByConsultaId(consulta.getId()));
+                    return dto;
+                });
     }
 
     /**
@@ -217,7 +255,7 @@ public class ConsultaService {
      * @return Consulta atualizada
      */
     @Transactional
-    public Consulta atualizarConsulta(Long id, ConsultaAtualizacaoDTO dto) {
+    public ConsultaDetalhadaDTO atualizarConsulta(Long id, ConsultaAtualizacaoDTO dto) {
         Consulta consulta = consultaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta nao encontrada"));
 
@@ -225,7 +263,8 @@ public class ConsultaService {
             consulta.setDataConsulta(dto.getDataConsulta());
         }
 
-        return consultaRepository.save(consulta);
+        consultaRepository.save(consulta);
+        return buscarDetalhada(id);
     }
 
     /**
