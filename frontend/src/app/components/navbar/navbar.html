@@ -76,7 +76,12 @@
 
         <button class="dropdown-item" (click)="navigateToSettings()">
           <i class="fas fa-cog"></i>
-          <span>Configurações</span>
+          <span>Configurações de IA</span>
+        </button>
+
+        <button class="dropdown-item" (click)="navigateToCustosIA()">
+          <i class="fas fa-dollar-sign"></i>
+          <span>Custos de IA</span>
         </button>
 
         <div class="dropdown-divider"></div>
@@ -136,7 +141,12 @@
 
       <button class="mobile-menu-item" (click)="navigateToSettings(); fecharMenu()">
         <i class="fas fa-cog"></i>
-        <span>Configurações</span>
+        <span>Configurações de IA</span>
+      </button>
+
+      <button class="mobile-menu-item" (click)="navigateToCustosIA(); fecharMenu()">
+        <i class="fas fa-dollar-sign"></i>
+        <span>Custos de IA</span>
       </button>
 
       <div class="mobile-menu-divider"></div>

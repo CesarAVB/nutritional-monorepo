@@ -13,6 +13,19 @@ public class OpenAIResponse {
 
     private String id;
     private List<Choice> choices;
+    private Usage usage;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Usage {
+        @com.fasterxml.jackson.annotation.JsonProperty("prompt_tokens")
+        private int promptTokens;
+        @com.fasterxml.jackson.annotation.JsonProperty("completion_tokens")
+        private int completionTokens;
+        @com.fasterxml.jackson.annotation.JsonProperty("total_tokens")
+        private int totalTokens;
+    }
 
     @Data
     @NoArgsConstructor

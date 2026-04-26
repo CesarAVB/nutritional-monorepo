@@ -8,6 +8,7 @@ import { ConsultaDetailsComponent } from './pages/consultas/consulta-details/con
 import { ConsultasListComponent } from './pages/consultas/consultas-list/consultas-list';
 import { DietaFormComponent } from './pages/dietas/dieta-form/dieta-form';
 import { ConfiguracoesIAComponent } from './pages/configuracoes/configuracoes-ia';
+import { CustosIAComponent } from './pages/configuracoes/custos-ia';
 import { LoginComponent } from './pages/login/login';
 import { authGuard } from './guards/auth.guard';
 
@@ -92,6 +93,12 @@ export const routes: Routes = [
     path: 'configuracoes',
     component: ConfiguracoesIAComponent,
     title: 'Configurações de IA - NutriControl',
+    canActivate: [authGuard]
+  },
+  {
+    path: 'configuracoes/custos-ia',
+    component: CustosIAComponent,
+    title: 'Custos de IA - NutriControl',
     canActivate: [authGuard]
   },
 ];

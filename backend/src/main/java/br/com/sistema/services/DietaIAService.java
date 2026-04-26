@@ -72,6 +72,7 @@ public class DietaIAService {
     private final AvaliacaoFisicaRepository avaliacaoFisicaRepository;
     private final TacoAlimentoRepository tacoAlimentoRepository;
     private final ConfiguracaoIAService configuracaoIAService;
+    private final UsoIALogService usoIALogService;
     private final ObjectMapper objectMapper;
     private final RestTemplate iaRestTemplate;
 
@@ -82,6 +83,7 @@ public class DietaIAService {
             AvaliacaoFisicaRepository avaliacaoFisicaRepository,
             TacoAlimentoRepository tacoAlimentoRepository,
             ConfiguracaoIAService configuracaoIAService,
+            UsoIALogService usoIALogService,
             ObjectMapper objectMapper,
             @Qualifier("iaRestTemplate") RestTemplate iaRestTemplate) {
         this.pacienteRepository = pacienteRepository;
@@ -90,6 +92,7 @@ public class DietaIAService {
         this.avaliacaoFisicaRepository = avaliacaoFisicaRepository;
         this.tacoAlimentoRepository = tacoAlimentoRepository;
         this.configuracaoIAService = configuracaoIAService;
+        this.usoIALogService = usoIALogService;
         this.objectMapper = objectMapper;
         this.iaRestTemplate = iaRestTemplate;
     }
@@ -127,7 +130,7 @@ public class DietaIAService {
         String promptSistema = configuracaoIAService.resolverPromptSistema(config);
         String promptUsuario = construirPromptUsuario(paciente, avaliacao, questionario, alimentosTaco, request);
 
-        return chamarIAApi(config, promptSistema, promptUsuario);
+        return chamarIAApi(config, promptSistema, promptUsuario, pacienteId);
     }
 
     /**
@@ -270,7 +273,7 @@ public class DietaIAService {
      * @param promptUsuario dados do paciente e parametros nutricionais
      * @return dieta parseada da resposta JSON da IA
      */
-    private DietaRequest chamarIAApi(ConfiguracaoIA config, String promptSistema, String promptUsuario) {
+    private DietaRequest chamarIAApi(ConfiguracaoIA config, String promptSistema, String promptUsuario, Long pacienteId) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(config.getApiKey());
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -308,16 +311,22 @@ public class DietaIAService {
             String jsonContent = response.getBody().getChoices().get(0).getMessage().getContent();
             log.debug("Resposta bruta da IA recebida ({} caracteres)", jsonContent.length());
 
+            usoIALogService.registrar(config, response.getBody(), pacienteId, true);
+
             return parsearResposta(jsonContent);
 
         } catch (HttpClientErrorException.Unauthorized ex) {
+            usoIALogService.registrar(config, null, pacienteId, false);
             throw new BusinessException("API key inv�lida. Verifique a chave configurada em Configura��es > IA.");
         } catch (HttpClientErrorException.TooManyRequests ex) {
+            usoIALogService.registrar(config, null, pacienteId, false);
             throw new BusinessException("Limite de requisi��es da IA atingido. Aguarde alguns instantes e tente novamente.");
         } catch (HttpClientErrorException ex) {
             log.error("Erro HTTP ao chamar IA: {} - {}", ex.getStatusCode(), ex.getResponseBodyAsString());
+            usoIALogService.registrar(config, null, pacienteId, false);
             throw new BusinessException("Erro ao chamar a IA: " + ex.getStatusCode() + ". Verifique as configura��es.");
         } catch (ResourceAccessException ex) {
+            usoIALogService.registrar(config, null, pacienteId, false);
             throw new BusinessException("Tempo de resposta da IA excedido. Tente novamente em instantes.");
         }
     }

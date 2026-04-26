@@ -241,6 +241,11 @@ export class NavbarComponent {
     this.router.navigate(['/configuracoes']);
   }
 
+  navigateToCustosIA(): void {
+    this.userMenuOpen = false;
+    this.router.navigate(['/configuracoes/custos-ia']);
+  }
+
   // ===========================================
   // # logout - Faz logout do usuário
   // ===========================================
