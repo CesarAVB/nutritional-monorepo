@@ -1,3 +1,9 @@
+## [1.8.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.7.0...v1.8.0) (2026-04-26)
+
+### Features
+
+* refatorar serviços e controladores para melhorar a legibilidade e a consistência dos métodos ([fe50567](https://github.com/CesarAVB/nutritional-monorepo/commit/fe50567c5f9bacd9cae51839a35a8da23a06e496))
+
 ## [1.7.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.6.1...v1.7.0) (2026-04-26)
 
 ### Features
