@@ -1,3 +1,10 @@
+## [1.7.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.6.1...v1.7.0) (2026-04-26)
+
+### Features
+
+* adicionar documentação e comentários detalhados no S3Service.java ([9d962e9](https://github.com/CesarAVB/nutritional-monorepo/commit/9d962e962d2999fcb2da75a39e8fb4acf9c5468f))
+* atualiza documentação e estrutura do projeto, cria tabelas de dietas e melhora estilo de formulários ([8eac0ae](https://github.com/CesarAVB/nutritional-monorepo/commit/8eac0aed75025e29034752075b737058a70501b9))
+
 ## [1.6.1](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.6.0...v1.6.1) (2026-04-26)
 
 ### Bug Fixes
