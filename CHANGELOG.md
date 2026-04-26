@@ -1,3 +1,9 @@
+## [1.6.1](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.6.0...v1.6.1) (2026-04-26)
+
+### Bug Fixes
+
+* corrige nome da tabela e ajusta anotações das colunas em TacoAlimento ([d2276a4](https://github.com/CesarAVB/nutritional-monorepo/commit/d2276a478a9bbb2a2909ec0ac757844cbebe6db5))
+
 ## [1.6.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.5.0...v1.6.0) (2026-04-26)
 
 ### Features
