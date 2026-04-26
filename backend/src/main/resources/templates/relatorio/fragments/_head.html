@@ -12,7 +12,7 @@
        ======================================== */
     @page {
       size: A4;
-      margin: 0mm 0mm 20mm 0mm;
+      margin: 20mm 0mm 20mm 0mm;
       @bottom-center {
         content: "Andre Reis | Nutricao Clinica e Esportiva | Av. Dr. Mario Guimaraes, 318, Sala 1001 | Nova Iguacu, RJ | CEP 26255-230";
         font-size: 10.5px;
@@ -21,6 +21,10 @@
         color: #0b6b57;
         margin: 7px;
       }
+    }
+
+    @page :first {
+      margin-top: 0mm;
     }
 
     * {
@@ -1255,6 +1259,7 @@
       border-top: 1px solid #bde7dc;
       padding-top: 12px;
       page-break-inside: avoid;
+      float: bottom;
     }
 
     .report-signature-card {
