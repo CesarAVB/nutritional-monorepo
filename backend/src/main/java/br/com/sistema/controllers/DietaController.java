@@ -21,10 +21,13 @@ import br.com.sistema.dtos.DietaContextoPacienteDTO;
 import br.com.sistema.dtos.DietaRequest;
 import br.com.sistema.dtos.DietaResponse;
 import br.com.sistema.dtos.DietaResumoResponse;
+import br.com.sistema.dtos.ia.GerarDietaIARequest;
+import br.com.sistema.services.DietaIAService;
 import br.com.sistema.services.DietaService;
 import br.com.sistema.services.RelatorioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -34,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class DietaController {
 
     private final DietaService dietaService;
+    private final DietaIAService dietaIAService;
     private final RelatorioService relatorioService;
 
     @GetMapping("/paciente/{pacienteId}/contexto")
@@ -58,6 +62,17 @@ public class DietaController {
     @Operation(summary = "Criar dieta", description = "Cria nova dieta para o paciente")
     public ResponseEntity<DietaResponse> criar(@PathVariable Long pacienteId, @RequestBody DietaRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(dietaService.criar(pacienteId, request));
+    }
+
+    @PostMapping("/paciente/{pacienteId}/gerar-ia")
+    @Operation(
+        summary = "Gerar dieta com IA",
+        description = "Usa IA para montar um plano alimentar baseado nos dados do paciente. Requer kcalTotal e macros definidos. Retorna DietaRequest para revisão antes de salvar."
+    )
+    public ResponseEntity<DietaRequest> gerarComIA(
+            @PathVariable Long pacienteId,
+            @Valid @RequestBody GerarDietaIARequest request) {
+        return ResponseEntity.ok(dietaIAService.gerarDieta(pacienteId, request));
     }
 
     @PutMapping("/{id}")
