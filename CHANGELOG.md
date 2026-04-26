@@ -1,3 +1,18 @@
+## [1.6.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.5.0...v1.6.0) (2026-04-26)
+
+### Features
+
+* adiciona campo de título da dieta e ingestão de água no formulário de dietas ([6258e94](https://github.com/CesarAVB/nutritional-monorepo/commit/6258e94b396a1ac37a8e7b221a3115af4c5ab1a0))
+* adiciona classes de configuração e requisições para integração com IA ([326f166](https://github.com/CesarAVB/nutritional-monorepo/commit/326f166ac833fb30698f6bbc7f807c5d62520b8f))
+* adiciona endpoint para geração de dieta com IA ([4c57e3f](https://github.com/CesarAVB/nutritional-monorepo/commit/4c57e3fa38b7b8df3ca1769d7525f8ef9adbbd90))
+* adiciona interfaces e serviço para configuração de IA ([191dc39](https://github.com/CesarAVB/nutritional-monorepo/commit/191dc3932cff81660e9eea4644c84f89926fca24))
+* adiciona página de configurações de IA e funcionalidade para geração de dietas com IA ([3f7c36e](https://github.com/CesarAVB/nutritional-monorepo/commit/3f7c36e0995447ac8616b59a8ceb3016ac0d31a4))
+* adiciona serviço DietaIAService para geração de dietas com IA ([d2c7239](https://github.com/CesarAVB/nutritional-monorepo/commit/d2c72394615fe22a38880bc9b489807546fa3797))
+* adicionar consultas em batch e otimizar carregamento de dados nas listas de pacientes e consultas ([9024791](https://github.com/CesarAVB/nutritional-monorepo/commit/90247919f56468bf1a319c8aa4ebb41df6aa449b))
+* adicionar variáveis de design e refatorar estilos na lista de pacientes ([232c4b4](https://github.com/CesarAVB/nutritional-monorepo/commit/232c4b481c7a5577d135f15a9653010c404156c8))
+* corrigir nomes de colunas na tabela de dietas e adicionar transações somente leitura nos serviços ([7d9e4eb](https://github.com/CesarAVB/nutritional-monorepo/commit/7d9e4ebf6044c98489fbb606bc674b259b12ab91))
+* criar formulário de dieta com funcionalidades de edição e geração de PDF ([c61cd53](https://github.com/CesarAVB/nutritional-monorepo/commit/c61cd534c9555edd011d062a3e36e980718f2191))
+
 ## [1.5.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.4.0...v1.5.0) (2026-04-12)
 
 ### Features
