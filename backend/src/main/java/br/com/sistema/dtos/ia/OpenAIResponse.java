@@ -19,6 +19,8 @@ public class OpenAIResponse {
     @AllArgsConstructor
     public static class Choice {
         private OpenAIRequest.Message message;
+
+        @com.fasterxml.jackson.annotation.JsonProperty("finish_reason")
         private String finishReason;
     }
 }
