@@ -1,3 +1,9 @@
+## [1.9.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.8.0...v1.9.0) (2026-04-26)
+
+### Features
+
+* adiciona configuração do Flyway para migrações de banco de dados ([301c01a](https://github.com/CesarAVB/nutritional-monorepo/commit/301c01a704f14c1166ca113ba1389cc3431df2d6))
+
 ## [1.8.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.7.0...v1.8.0) (2026-04-26)
 
 ### Features
