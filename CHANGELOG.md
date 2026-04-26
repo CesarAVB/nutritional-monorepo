@@ -1,3 +1,9 @@
+## [1.10.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.9.0...v1.10.0) (2026-04-26)
+
+### Features
+
+* implementar registro e visualização de uso da IA ([19be718](https://github.com/CesarAVB/nutritional-monorepo/commit/19be71851187fe259fe49018e7ee26f44f4d6632))
+
 ## [1.9.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.8.0...v1.9.0) (2026-04-26)
 
 ### Features
