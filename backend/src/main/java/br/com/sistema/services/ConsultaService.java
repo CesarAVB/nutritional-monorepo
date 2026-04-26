@@ -130,7 +130,9 @@ public class ConsultaService {
         }
 
         Optional<Consulta> ultimaOpt = consultas.stream()
-                .filter(c -> c.getAvaliacaoFisica() != null || c.getQuestionarioEstiloVida() != null || c.getRegistroFotografico() != null)
+                .filter(c -> avaliacaoFisicaRepository.existsByConsultaId(c.getId())
+                          || questionarioRepository.existsByConsultaId(c.getId())
+                          || registroFotograficoRepository.existsByConsultaId(c.getId()))
                 .findFirst();
 
         if (ultimaOpt.isEmpty()) {
@@ -140,26 +142,26 @@ public class ConsultaService {
         Consulta ultima = ultimaOpt.get();
         ConsultaDetalhadaDTO dto = new ConsultaDetalhadaDTO();
 
-        if (ultima.getAvaliacaoFisica() != null) {
-            AvaliacaoFisicaDTO avaliacaoDTO = converterAvaliacaoParaDTO(ultima.getAvaliacaoFisica());
+        avaliacaoFisicaRepository.findByConsultaId(ultima.getId()).ifPresent(avaliacao -> {
+            AvaliacaoFisicaDTO avaliacaoDTO = converterAvaliacaoParaDTO(avaliacao);
             avaliacaoDTO.setId(null);
             avaliacaoDTO.setConsultaId(null);
             dto.setAvaliacaoFisica(avaliacaoDTO);
-        }
+        });
 
-        if (ultima.getQuestionarioEstiloVida() != null) {
-            QuestionarioEstiloVidaDTO questionarioDTO = converterQuestionarioParaDTO(ultima.getQuestionarioEstiloVida());
+        questionarioRepository.findByConsultaId(ultima.getId()).ifPresent(questionario -> {
+            QuestionarioEstiloVidaDTO questionarioDTO = converterQuestionarioParaDTO(questionario);
             questionarioDTO.setId(null);
             questionarioDTO.setConsultaId(null);
-            dto.setQuestionarioEstiloVida(questionarioDTO);
-        }
+            dto.setQuestionario(questionarioDTO);
+        });
 
-        if (ultima.getRegistroFotografico() != null) {
-            RegistroFotograficoDTO registroDTO = converterRegistroParaDTO(ultima.getRegistroFotografico());
+        registroFotograficoRepository.findByConsultaId(ultima.getId()).ifPresent(registro -> {
+            RegistroFotograficoDTO registroDTO = converterRegistroParaDTO(registro);
             registroDTO.setId(null);
             registroDTO.setConsultaId(null);
             dto.setRegistroFotografico(registroDTO);
-        }
+        });
 
         return Optional.of(dto);
     }
@@ -232,17 +234,14 @@ public class ConsultaService {
         dto.setNomePaciente(consulta.getPaciente().getNomeCompleto());
         dto.setDataConsulta(consulta.getDataConsulta());
 
-        if (consulta.getAvaliacaoFisica() != null) {
-            dto.setAvaliacaoFisica(converterAvaliacaoParaDTO(consulta.getAvaliacaoFisica()));
-        }
+        avaliacaoFisicaRepository.findByConsultaId(id).ifPresent(a ->
+                dto.setAvaliacaoFisica(converterAvaliacaoParaDTO(a)));
 
-        if (consulta.getQuestionarioEstiloVida() != null) {
-            dto.setQuestionarioEstiloVida(converterQuestionarioParaDTO(consulta.getQuestionarioEstiloVida()));
-        }
+        questionarioRepository.findByConsultaId(id).ifPresent(q ->
+                dto.setQuestionario(converterQuestionarioParaDTO(q)));
 
-        if (consulta.getRegistroFotografico() != null) {
-            dto.setRegistroFotografico(converterRegistroParaDTO(consulta.getRegistroFotografico()));
-        }
+        registroFotograficoRepository.findByConsultaId(id).ifPresent(r ->
+                dto.setRegistroFotografico(converterRegistroParaDTO(r)));
 
         return dto;
     }
@@ -289,35 +288,31 @@ public class ConsultaService {
         AvaliacaoFisica avaliacao2 = avaliacaoFisicaRepository.findByConsultaId(idConsulta2)
                 .orElseThrow(() -> new BusinessException("Avaliacao fisica nao encontrada na segunda consulta"));
 
-        ComparativoConsultasDTO comparativo = new ComparativoConsultasDTO();
-        comparativo.setIdConsulta1(idConsulta1);
-        comparativo.setIdConsulta2(idConsulta2);
-        comparativo.setDataConsulta1(avaliacao1.getConsulta().getDataConsulta());
-        comparativo.setDataConsulta2(avaliacao2.getConsulta().getDataConsulta());
-
         DiferencasDTO diferencas = new DiferencasDTO();
-        diferencas.setPeso(atualMenosAnterior(avaliacao2.getPesoAtual(), avaliacao1.getPesoAtual()));
-        diferencas.setImc(atualMenosAnterior(avaliacao2.getImc(), avaliacao1.getImc()));
-        diferencas.setPercentualGordura(atualMenosAnterior(avaliacao2.getPercentualGordura(), avaliacao1.getPercentualGordura()));
-        diferencas.setMassaGorda(atualMenosAnterior(avaliacao2.getMassaGorda(), avaliacao1.getMassaGorda()));
-        diferencas.setMassaMagra(atualMenosAnterior(avaliacao2.getMassaMagra(), avaliacao1.getMassaMagra()));
+        diferencas.setDiferencaPeso(atualMenosAnterior(avaliacao2.getPesoAtual(), avaliacao1.getPesoAtual()));
+        diferencas.setDiferencaImc(atualMenosAnterior(avaliacao2.getImc(), avaliacao1.getImc()));
+        diferencas.setDiferencaPercentualGordura(atualMenosAnterior(avaliacao2.getPercentualGordura(), avaliacao1.getPercentualGordura()));
+        diferencas.setDiferencaMassaGorda(atualMenosAnterior(avaliacao2.getMassaGorda(), avaliacao1.getMassaGorda()));
+        diferencas.setDiferencaMassaMagra(atualMenosAnterior(avaliacao2.getMassaMagra(), avaliacao1.getMassaMagra()));
 
+        Map<String, Double> perimetros = new HashMap<>();
+        perimetros.put("perimetroOmbro", atualMenosAnterior(avaliacao2.getPerimetroOmbro(), avaliacao1.getPerimetroOmbro()));
+        perimetros.put("perimetroTorax", atualMenosAnterior(avaliacao2.getPerimetroTorax(), avaliacao1.getPerimetroTorax()));
+        perimetros.put("perimetroCintura", atualMenosAnterior(avaliacao2.getPerimetroCintura(), avaliacao1.getPerimetroCintura()));
+        perimetros.put("perimetroAbdominal", atualMenosAnterior(avaliacao2.getPerimetroAbdominal(), avaliacao1.getPerimetroAbdominal()));
+        perimetros.put("perimetroQuadril", atualMenosAnterior(avaliacao2.getPerimetroQuadril(), avaliacao1.getPerimetroQuadril()));
+        perimetros.put("perimetroBracoDireitoRelax", atualMenosAnterior(avaliacao2.getPerimetroBracoDireitoRelax(), avaliacao1.getPerimetroBracoDireitoRelax()));
+        perimetros.put("perimetroBracoEsquerdoRelax", atualMenosAnterior(avaliacao2.getPerimetroBracoEsquerdoRelax(), avaliacao1.getPerimetroBracoEsquerdoRelax()));
+        perimetros.put("perimetroCoxaDireita", atualMenosAnterior(avaliacao2.getPerimetroCoxaDireita(), avaliacao1.getPerimetroCoxaDireita()));
+        perimetros.put("perimetroCoxaEsquerda", atualMenosAnterior(avaliacao2.getPerimetroCoxaEsquerda(), avaliacao1.getPerimetroCoxaEsquerda()));
+        perimetros.put("perimetroPanturrilhaDireita", atualMenosAnterior(avaliacao2.getPerimetroPanturrilhaDireita(), avaliacao1.getPerimetroPanturrilhaDireita()));
+        perimetros.put("perimetroPanturrilhaEsquerda", atualMenosAnterior(avaliacao2.getPerimetroPanturrilhaEsquerda(), avaliacao1.getPerimetroPanturrilhaEsquerda()));
+        diferencas.setDiferencasPerimetros(perimetros);
+
+        ComparativoConsultasDTO comparativo = new ComparativoConsultasDTO();
+        comparativo.setConsultaInicial(buscarDetalhada(idConsulta1));
+        comparativo.setConsultaFinal(buscarDetalhada(idConsulta2));
         comparativo.setDiferencas(diferencas);
-
-        Map<String, Map<String, Double>> medidas = new HashMap<>();
-        medidas.put("perimetroOmbro", criarMapa(avaliacao1.getPerimetroOmbro(), avaliacao2.getPerimetroOmbro()));
-        medidas.put("perimetroTorax", criarMapa(avaliacao1.getPerimetroTorax(), avaliacao2.getPerimetroTorax()));
-        medidas.put("perimetroCintura", criarMapa(avaliacao1.getPerimetroCintura(), avaliacao2.getPerimetroCintura()));
-        medidas.put("perimetroAbdominal", criarMapa(avaliacao1.getPerimetroAbdominal(), avaliacao2.getPerimetroAbdominal()));
-        medidas.put("perimetroQuadril", criarMapa(avaliacao1.getPerimetroQuadril(), avaliacao2.getPerimetroQuadril()));
-        medidas.put("perimetroBracoDireitoRelax", criarMapa(avaliacao1.getPerimetroBracoDireitoRelax(), avaliacao2.getPerimetroBracoDireitoRelax()));
-        medidas.put("perimetroBracoEsquerdoRelax", criarMapa(avaliacao1.getPerimetroBracoEsquerdoRelax(), avaliacao2.getPerimetroBracoEsquerdoRelax()));
-        medidas.put("perimetroCoxaDireita", criarMapa(avaliacao1.getPerimetroCoxaDireita(), avaliacao2.getPerimetroCoxaDireita()));
-        medidas.put("perimetroCoxaEsquerda", criarMapa(avaliacao1.getPerimetroCoxaEsquerda(), avaliacao2.getPerimetroCoxaEsquerda()));
-        medidas.put("perimetroPanturrilhaDireita", criarMapa(avaliacao1.getPerimetroPanturrilhaDireita(), avaliacao2.getPerimetroPanturrilhaDireita()));
-        medidas.put("perimetroPanturrilhaEsquerda", criarMapa(avaliacao1.getPerimetroPanturrilhaEsquerda(), avaliacao2.getPerimetroPanturrilhaEsquerda()));
-
-        comparativo.setMedidasCorporais(medidas);
 
         return comparativo;
     }
@@ -435,9 +430,12 @@ public class ConsultaService {
         dto.setNomePaciente(consulta.getPaciente().getNomeCompleto());
         dto.setDataConsulta(consulta.getDataConsulta());
 
-        avaliacaoFisicaRepository.findByConsultaId(consulta.getId()).ifPresent(a -> dto.setTemAvaliacaoFisica(true));
-        questionarioRepository.findByConsultaId(consulta.getId()).ifPresent(q -> dto.setTemQuestionario(true));
-        registroFotograficoRepository.findByConsultaId(consulta.getId()).ifPresent(r -> dto.setTemFotos(true));
+        avaliacaoFisicaRepository.findByConsultaId(consulta.getId()).ifPresent(a -> {
+            dto.setPeso(a.getPesoAtual());
+            dto.setPercentualGordura(a.getPercentualGordura());
+        });
+        questionarioRepository.findByConsultaId(consulta.getId()).ifPresent(q ->
+                dto.setObjetivo(q.getObjetivo()));
 
         return dto;
     }
@@ -451,14 +449,4 @@ public class ConsultaService {
         return Math.round((atual - anterior) * 100.0) / 100.0;
     }
 
-    /**
-     * Cria mapa com valores anterior e diferenca de uma medida.
-     */
-    private Map<String, Double> criarMapa(Double anterior, Double atual) {
-        Map<String, Double> mapa = new HashMap<>();
-        mapa.put("anterior", anterior);
-        mapa.put("atual", atual);
-        mapa.put("diferenca", atualMenosAnterior(atual, anterior));
-        return mapa;
-    }
 }

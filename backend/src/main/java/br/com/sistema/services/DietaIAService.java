@@ -3,7 +3,6 @@ package br.com.sistema.services;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -125,7 +124,7 @@ public class DietaIAService {
 
         List<TacoAlimento> alimentosTaco = selecionarAlimentosTaco(questionario);
 
-        String promptSistema = configuracaoIAService.buscarPromptSistema();
+        String promptSistema = configuracaoIAService.resolverPromptSistema(config);
         String promptUsuario = construirPromptUsuario(paciente, avaliacao, questionario, alimentosTaco, request);
 
         return chamarIAApi(config, promptSistema, promptUsuario);
@@ -237,7 +236,7 @@ public class DietaIAService {
             sb.append("g | Gordura: ").append(formatarDouble(valorOuZero(t.getLipideosG())));
             sb.append(" | Calorias: ").append(formatarDouble(
                     valorOuZero(t.getCarboidratosG()) * 4 +
-                    valorOuZero(t.getProteinasG()) * 4 +
+                    valorOuZero(t.getProteinaG()) * 4 +
                     valorOuZero(t.getLipideosG()) * 9));
             sb.append(" kcal por 100g\n");
         }

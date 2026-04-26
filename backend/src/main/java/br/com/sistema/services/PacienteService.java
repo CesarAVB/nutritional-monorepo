@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.sistema.dtos.PacienteDTO;
 import br.com.sistema.exceptions.BusinessException;
 import br.com.sistema.exceptions.ResourceNotFoundException;
-import br.com.sistema.models.Consulta;
 import br.com.sistema.models.Paciente;
 import br.com.sistema.repositories.ConsultaRepository;
 import br.com.sistema.repositories.PacienteRepository;
@@ -43,11 +42,11 @@ public class PacienteService {
     @Transactional
     public PacienteDTO cadastrarPaciente(PacienteDTO dto) {
         if (pacienteRepository.existsByCpf(dto.getCpf())) {
-            throw new BusinessException("CPF já cadastrado no sistema");
+            throw new BusinessException("CPF jï¿½ cadastrado no sistema");
         }
         
         if (dto.getSexo() == null) {
-            throw new BusinessException("Sexo é obrigatório");
+            throw new BusinessException("Sexo ï¿½ obrigatï¿½rio");
         }
         
         Paciente paciente = new Paciente();
@@ -71,7 +70,7 @@ public class PacienteService {
      */
     @Transactional(readOnly = true)
     public PacienteDTO buscarPorId(Long id) {
-        Paciente paciente = pacienteRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+        Paciente paciente = pacienteRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Paciente nï¿½o encontrado"));
         return converterParaDTO(paciente);
     }
     
@@ -84,7 +83,7 @@ public class PacienteService {
      */
     @Transactional(readOnly = true)
     public PacienteDTO buscarPorCpf(String cpf) {
-        Paciente paciente = pacienteRepository.findByCpf(cpf).orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+        Paciente paciente = pacienteRepository.findByCpf(cpf).orElseThrow(() -> new ResourceNotFoundException("Paciente nï¿½o encontrado"));
         return converterParaDTO(paciente);
     }
     
@@ -154,7 +153,7 @@ public class PacienteService {
      */
     @Transactional
     public PacienteDTO atualizarPaciente(Long id, PacienteDTO dto) {
-        Paciente paciente = pacienteRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+        Paciente paciente = pacienteRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Paciente nï¿½o encontrado"));
         paciente.setNomeCompleto(dto.getNomeCompleto());
         paciente.setTelefoneWhatsapp(dto.getTelefoneWhatsapp());
         paciente.setEmail(dto.getEmail());
@@ -176,7 +175,7 @@ public class PacienteService {
     @Transactional
     public void deletarPaciente(Long id) {
         if (!pacienteRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Paciente não encontrado");
+            throw new ResourceNotFoundException("Paciente nï¿½o encontrado");
         }
         pacienteRepository.deleteById(id);
     }
