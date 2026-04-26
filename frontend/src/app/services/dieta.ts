@@ -7,6 +7,7 @@ import {
   DietaRequest,
   DietaResponse,
   DietaResumoResponse,
+  GerarDietaIARequest,
 } from '../models/dieta.model';
 
 @Injectable({
@@ -42,5 +43,9 @@ export class DietaService {
 
   baixarPdf(id: number): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/${id}/pdf`, { responseType: 'blob' });
+  }
+
+  gerarComIA(pacienteId: number, request: GerarDietaIARequest): Observable<DietaRequest> {
+    return this.http.post<DietaRequest>(`${this.apiUrl}/paciente/${pacienteId}/gerar-ia`, request);
   }
 }

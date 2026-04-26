@@ -74,6 +74,15 @@ export interface DietaContextoPacienteDTO {
   numeroRefeicoesDesejadas?: number;
 }
 
+export interface GerarDietaIARequest {
+  kcalTotal: number;
+  proteinasG: number;
+  carboidratosG: number;
+  gordurasG: number;
+  titulo?: string;
+  objetivo?: string;
+}
+
 export interface DietaRequest {
   titulo?: string;
   objetivo?: string;
