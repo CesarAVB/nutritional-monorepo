@@ -7,7 +7,7 @@ import { UsoIALogResponse, UsoIAResumoResponse } from '../../models/uso-ia-log.m
 @Component({
   selector: 'app-custos-ia',
   standalone: true,
-  imports: [CommonModule, RouterModule, CurrencyPipe, DatePipe, DecimalPipe],
+  imports: [CommonModule, RouterModule, DatePipe, DecimalPipe],
   templateUrl: './custos-ia.html',
   styleUrls: ['./custos-ia.scss'],
 })
