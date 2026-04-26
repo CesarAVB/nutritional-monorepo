@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, signal, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -16,7 +16,8 @@ interface PacienteView extends PacienteDTO {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './pacientes-list.html',
-  styleUrls: ['./pacientes-list.scss']
+  styleUrls: ['./pacientes-list.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PacientesListComponent implements OnInit, OnDestroy {
   searchTerm = signal('');

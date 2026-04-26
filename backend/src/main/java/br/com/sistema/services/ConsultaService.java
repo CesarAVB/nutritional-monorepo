@@ -2,9 +2,11 @@ package br.com.sistema.services;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -81,29 +83,23 @@ public class ConsultaService {
 	// ==============================================
 	@Transactional(readOnly = true)
 	public List<ConsultaResumoDTO> listarConsultasPorPaciente(Long pacienteId) {
-		return consultaRepository.findByPacienteIdOrderByDataConsultaDesc(pacienteId).stream().map(consulta -> {
+		List<Consulta> consultas = consultaRepository.findByPacienteIdOrderByDataConsultaDesc(pacienteId);
+		if (consultas.isEmpty()) return List.of();
+
+		List<Long> ids = consultas.stream().map(Consulta::getId).toList();
+		Set<Long> comAvaliacao = new HashSet<>(avaliacaoFisicaRepository.findConsultaIdsComAvaliacao(ids));
+		Set<Long> comQuestionario = new HashSet<>(questionarioRepository.findConsultaIdsComQuestionario(ids));
+		Set<Long> comFotos = new HashSet<>(registroFotograficoRepository.findConsultaIdsComFotos(ids));
+
+		return consultas.stream().map(consulta -> {
 			ConsultaResumoDTO dto = new ConsultaResumoDTO();
 			dto.setId(consulta.getId());
 			dto.setPacienteId(consulta.getPaciente().getId());
 			dto.setNomePaciente(consulta.getPaciente().getNomeCompleto());
 			dto.setDataConsulta(consulta.getDataConsulta());
-
-			// Busca Avaliação Física
-			avaliacaoFisicaRepository.findByConsultaId(consulta.getId()).ifPresent(avaliacao -> {
-				dto.setPeso(avaliacao.getPesoAtual());
-				dto.setPercentualGordura(avaliacao.getPercentualGordura());
-			});
-			dto.setTemAvaliacaoFisica(avaliacaoFisicaRepository.existsByConsultaId(consulta.getId()));
-
-			// Busca Questionário
-			questionarioRepository.findByConsultaId(consulta.getId()).ifPresentOrElse(q -> {
-				dto.setObjetivo(q.getObjetivo());
-				dto.setTemQuestionario(true);
-			}, () -> dto.setTemQuestionario(false));
-
-			// Busca Fotos
-			dto.setTemFotos(registroFotograficoRepository.existsByConsultaId(consulta.getId()));
-
+			dto.setTemAvaliacaoFisica(comAvaliacao.contains(consulta.getId()));
+			dto.setTemQuestionario(comQuestionario.contains(consulta.getId()));
+			dto.setTemFotos(comFotos.contains(consulta.getId()));
 			return dto;
 		}).toList();
 	}
@@ -129,26 +125,23 @@ public class ConsultaService {
 	// ==============================================
 	@Transactional(readOnly = true)
 	public Page<ConsultaResumoDTO> listarConsultasPorPacientePaginado(Long pacienteId, Pageable pageable) {
-		return consultaRepository.findByPacienteIdOrderByDataConsultaDesc(pacienteId, pageable).map(consulta -> {
+		Page<Consulta> page = consultaRepository.findByPacienteIdWithPacientePaginado(pacienteId, pageable);
+		if (page.isEmpty()) return page.map(c -> new ConsultaResumoDTO());
+
+		List<Long> ids = page.getContent().stream().map(Consulta::getId).toList();
+		Set<Long> comAvaliacao = new HashSet<>(avaliacaoFisicaRepository.findConsultaIdsComAvaliacao(ids));
+		Set<Long> comQuestionario = new HashSet<>(questionarioRepository.findConsultaIdsComQuestionario(ids));
+		Set<Long> comFotos = new HashSet<>(registroFotograficoRepository.findConsultaIdsComFotos(ids));
+
+		return page.map(consulta -> {
 			ConsultaResumoDTO dto = new ConsultaResumoDTO();
 			dto.setId(consulta.getId());
 			dto.setPacienteId(consulta.getPaciente().getId());
 			dto.setNomePaciente(consulta.getPaciente().getNomeCompleto());
 			dto.setDataConsulta(consulta.getDataConsulta());
-
-			avaliacaoFisicaRepository.findByConsultaId(consulta.getId()).ifPresent(avaliacao -> {
-				dto.setPeso(avaliacao.getPesoAtual());
-				dto.setPercentualGordura(avaliacao.getPercentualGordura());
-			});
-			dto.setTemAvaliacaoFisica(avaliacaoFisicaRepository.existsByConsultaId(consulta.getId()));
-
-			questionarioRepository.findByConsultaId(consulta.getId()).ifPresentOrElse(q -> {
-				dto.setObjetivo(q.getObjetivo());
-				dto.setTemQuestionario(true);
-			}, () -> dto.setTemQuestionario(false));
-
-			dto.setTemFotos(registroFotograficoRepository.existsByConsultaId(consulta.getId()));
-
+			dto.setTemAvaliacaoFisica(comAvaliacao.contains(consulta.getId()));
+			dto.setTemQuestionario(comQuestionario.contains(consulta.getId()));
+			dto.setTemFotos(comFotos.contains(consulta.getId()));
 			return dto;
 		});
 	}
@@ -231,7 +224,7 @@ public class ConsultaService {
 	// ==============================================
 	@Transactional(readOnly = true)
 	public Page<ConsultaListagemDTO> listarTodasConsultasPaginado(Pageable pageable) {
-		return consultaRepository.findAllByOrderByDataConsultaDesc(pageable).map(consulta -> {
+		return consultaRepository.findAllWithPacientePaginado(pageable).map(consulta -> {
 			ConsultaListagemDTO dto = new ConsultaListagemDTO();
 			dto.setId(consulta.getId());
 			dto.setPacienteId(consulta.getPaciente().getId());

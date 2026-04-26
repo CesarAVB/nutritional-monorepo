@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import br.com.sistema.models.Consulta;
@@ -42,4 +43,17 @@ public interface ConsultaRepository extends JpaRepository<Consulta, Long> {
 
     // Listar todas as consultas em ordem decrescente (paginado)
     Page<Consulta> findAllByOrderByDataConsultaDesc(Pageable pageable);
+
+    // Batch: resume de consultas por lista de pacientes — elimina N+1 em PacienteService
+    @Query("SELECT c.paciente.id, COUNT(c), MAX(c.dataConsulta) FROM Consulta c WHERE c.paciente.id IN :ids GROUP BY c.paciente.id")
+    List<Object[]> findResumoByPacienteIds(@Param("ids") List<Long> ids);
+
+    // Paginated com JOIN FETCH do paciente — evita lazy load por linha na lista de consultas
+    @Query(value = "SELECT c FROM Consulta c JOIN FETCH c.paciente WHERE c.paciente.id = :pacienteId ORDER BY c.dataConsulta DESC",
+           countQuery = "SELECT COUNT(c) FROM Consulta c WHERE c.paciente.id = :pacienteId")
+    Page<Consulta> findByPacienteIdWithPacientePaginado(@Param("pacienteId") Long pacienteId, Pageable pageable);
+
+    @Query(value = "SELECT c FROM Consulta c JOIN FETCH c.paciente ORDER BY c.dataConsulta DESC",
+           countQuery = "SELECT COUNT(c) FROM Consulta c")
+    Page<Consulta> findAllWithPacientePaginado(Pageable pageable);
 }

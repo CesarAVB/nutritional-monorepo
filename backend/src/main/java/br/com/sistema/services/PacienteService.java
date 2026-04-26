@@ -1,6 +1,9 @@
 package br.com.sistema.services;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -88,9 +91,12 @@ public class PacienteService {
     // ==============================================
     @Transactional(readOnly = true)
     public Page<PacienteDTO> listarTodosPaginado(Pageable pageable) {
-        return pacienteRepository.findAll(pageable).map(this::converterParaDTO);
+        Page<Paciente> page = pacienteRepository.findAll(pageable);
+        Map<Long, Object[]> summaryMap = buildConsultaSummaryMap(
+                page.getContent().stream().map(Paciente::getId).toList());
+        return page.map(p -> converterParaDTOComSummary(p, summaryMap));
     }
-    
+
     // ==============================================
     // # Metodo - buscarPorNome
     // # Busca pacientes por nome
@@ -99,14 +105,17 @@ public class PacienteService {
     public List<PacienteDTO> buscarPorNome(String nome) {
         return pacienteRepository.findByNomeCompletoContainingIgnoreCase(nome).stream().map(this::converterParaDTO).toList();
     }
-    
+
     // ==============================================
     // # Metodo - buscarPorNomePaginado
     // # Busca pacientes por nome de forma paginada
     // ==============================================
     @Transactional(readOnly = true)
     public Page<PacienteDTO> buscarPorNomePaginado(String nome, Pageable pageable) {
-        return pacienteRepository.findByNomeCompletoContainingIgnoreCase(nome, pageable).map(this::converterParaDTO);
+        Page<Paciente> page = pacienteRepository.findByNomeCompletoContainingIgnoreCase(nome, pageable);
+        Map<Long, Object[]> summaryMap = buildConsultaSummaryMap(
+                page.getContent().stream().map(Paciente::getId).toList());
+        return page.map(p -> converterParaDTOComSummary(p, summaryMap));
     }
     
     // ==============================================
@@ -145,6 +154,7 @@ public class PacienteService {
     // ==============================================
     // # Método - converterParaDTO
     // # Converte entidade Paciente para PacienteDTO adicionando campos calculados
+    // # Usado em operações de entidade única (buscarPorId, cadastrar, atualizar)
     // ==============================================
     public PacienteDTO converterParaDTO(Paciente paciente) {
         PacienteDTO dto = new PacienteDTO();
@@ -156,17 +166,52 @@ public class PacienteService {
         dto.setEmail(paciente.getEmail());
         dto.setSexo(paciente.getSexo());
         dto.setProntuario(paciente.getProntuario());
-        
-        // Buscar dados calculados
+
         Long totalConsultas = consultaRepository.countByPacienteId(paciente.getId());
         dto.setTotalConsultas(totalConsultas.intValue());
-        
-        List<Consulta> consultas = consultaRepository.findByPacienteIdOrderByDataConsultaDesc(paciente.getId());
-        
-        if (!consultas.isEmpty()) {
-            dto.setUltimaConsulta(consultas.get(0).getDataConsulta());
+
+        consultaRepository.findFirstByPacienteIdOrderByDataConsultaDesc(paciente.getId())
+                .ifPresent(c -> dto.setUltimaConsulta(c.getDataConsulta()));
+
+        return dto;
+    }
+
+    // ==============================================
+    // # Método - buildConsultaSummaryMap
+    // # Carrega count + última consulta para uma lista de pacientes em uma única query
+    // ==============================================
+    private Map<Long, Object[]> buildConsultaSummaryMap(List<Long> pacienteIds) {
+        Map<Long, Object[]> map = new HashMap<>();
+        if (!pacienteIds.isEmpty()) {
+            consultaRepository.findResumoByPacienteIds(pacienteIds)
+                    .forEach(row -> map.put((Long) row[0], row));
         }
-        
+        return map;
+    }
+
+    // ==============================================
+    // # Método - converterParaDTOComSummary
+    // # Converte Paciente para DTO usando dados pré-carregados em batch
+    // ==============================================
+    private PacienteDTO converterParaDTOComSummary(Paciente paciente, Map<Long, Object[]> summaryMap) {
+        PacienteDTO dto = new PacienteDTO();
+        dto.setId(paciente.getId());
+        dto.setNomeCompleto(paciente.getNomeCompleto());
+        dto.setCpf(paciente.getCpf());
+        dto.setDataNascimento(paciente.getDataNascimento());
+        dto.setTelefoneWhatsapp(paciente.getTelefoneWhatsapp());
+        dto.setEmail(paciente.getEmail());
+        dto.setSexo(paciente.getSexo());
+        dto.setProntuario(paciente.getProntuario());
+
+        Object[] summary = summaryMap.get(paciente.getId());
+        if (summary != null) {
+            dto.setTotalConsultas(((Long) summary[1]).intValue());
+            dto.setUltimaConsulta((LocalDateTime) summary[2]);
+        } else {
+            dto.setTotalConsultas(0);
+        }
+
         return dto;
     }
 }

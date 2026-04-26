@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, signal, inject, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -11,7 +11,8 @@ import { ToastService } from '../../../services/toast';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './consultas-list.html',
-  styleUrl: './consultas-list.scss'
+  styleUrl: './consultas-list.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ConsultasListComponent implements OnInit, OnDestroy {
   private router = inject(Router);
