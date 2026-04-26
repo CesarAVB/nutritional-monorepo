@@ -21,24 +21,26 @@
 
   @if (consulta()) {
   <div class="header">
-    <button class="back-button" (click)="voltar()">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <polyline points="15 18 9 12 15 6"></polyline>
-      </svg>
-    </button>
-    <div class="header-content">
-      <h1>Consulta - {{ consulta()?.nomePaciente }}</h1>
-      <p>{{ formatarData(consulta()!.dataConsulta) }}</p>
+    <div class="header-main">
+      <button class="back-button" (click)="voltar()">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+      <div class="header-content">
+        <h1>Consulta - {{ consulta()?.nomePaciente }}</h1>
+        <p>{{ formatarData(consulta()!.dataConsulta) }}</p>
+      </div>
     </div>
     <div class="header-actions">
       <button class="btn-edit" (click)="editarConsulta()">

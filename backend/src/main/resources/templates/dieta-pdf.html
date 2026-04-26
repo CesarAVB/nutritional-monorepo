@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{relatorio/fragments/_head :: head}"></head>
+
+<body>
+<div class="doc">
+
+  <!-- HEADER -->
+  <div th:replace="~{relatorio/fragments/_header :: header(
+      logoUrl=${'https://minio-s3.cesaravb.com.br/public/logo.png'},
+      clinicName=${'André Reis'},
+      clinicSubtitle=${'Nutrição Clínica e Esportiva'},
+      doctorName=${null},
+      crn=${'22102151'},
+      phone=${'(21) 99929-1477'},
+      instagram=${'@personalnutri.andrereis'}
+    )}">
+  </div>
+
+  <div class="report-main-title">Plano Alimentar</div>
+
+  <!-- DADOS DO PACIENTE E CABEÇALHO DA DIETA -->
+  <div style="padding: 0 24px;">
+
+    <div class="card" style="margin-bottom: 18px;">
+      <table style="width:100%; border-collapse: collapse;">
+        <tr>
+          <td style="width:65%; vertical-align:top; padding-right:20px;">
+            <p class="info-label" style="margin-bottom:4px;">Paciente</p>
+            <p style="font-size:20px; font-weight:800; color:#064e3b; margin:0 0 8px 0;" th:text="${paciente.nomeCompleto}">Nome do Paciente</p>
+            <p class="info-label" style="margin-bottom:4px;">Objetivo</p>
+            <p style="font-size:15px; font-weight:600; color:#1e293b; margin:0;" th:text="${dieta.objetivo != null ? dieta.objetivo : '—'}">Emagrecimento</p>
+          </td>
+          <td style="width:35%; vertical-align:top; text-align:right;">
+            <p class="info-label" style="margin-bottom:4px;">Título da Dieta</p>
+            <p style="font-size:14px; font-weight:700; color:#0d9488; margin:0 0 8px 0;" th:text="${dieta.titulo != null ? dieta.titulo : 'Plano Alimentar'}">Plano Alimentar</p>
+            <p class="info-label" style="margin-bottom:4px;">Data</p>
+            <p style="font-size:14px; font-weight:600; color:#1e293b; margin:0;" th:text="${dataCriacao}">01/01/2024</p>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- MACRONUTRIENTES -->
+    <div th:if="${dieta.kcalTotal != null or dieta.proteinasG != null or dieta.carboidratosG != null or dieta.gordurasG != null}">
+      <div class="card" style="margin-bottom:18px;">
+        <p class="card-title"><i class="fas fa-chart-pie"></i> Composição Nutricional</p>
+        <table class="metrics-grid">
+          <tr>
+            <td class="metric-box" th:if="${dieta.kcalTotal != null}">
+              <div class="metric-card metric-weight">
+                <div class="metric-icon"><i class="fas fa-fire"></i></div>
+                <p class="metric-value"><span th:text="${dieta.kcalTotal}">2000</span></p>
+                <span class="metric-label">Kcal Total</span>
+              </div>
+            </td>
+            <td class="metric-box" th:if="${dieta.proteinasG != null}">
+              <div class="metric-card metric-height">
+                <div class="metric-icon"><i class="fas fa-drumstick-bite"></i></div>
+                <p class="metric-value"><span th:text="${dieta.proteinasG}">150</span><span class="metric-value-small">g</span></p>
+                <span class="metric-label">Proteínas</span>
+              </div>
+            </td>
+            <td class="metric-box" th:if="${dieta.carboidratosG != null}">
+              <div class="metric-card">
+                <div class="metric-icon"><i class="fas fa-bread-slice"></i></div>
+                <p class="metric-value"><span th:text="${dieta.carboidratosG}">200</span><span class="metric-value-small">g</span></p>
+                <span class="metric-label">Carboidratos</span>
+              </div>
+            </td>
+            <td class="metric-box" th:if="${dieta.gordurasG != null}">
+              <div class="metric-card metric-imc">
+                <div class="metric-icon"><i class="fas fa-tint"></i></div>
+                <p class="metric-value"><span th:text="${dieta.gordurasG}">60</span><span class="metric-value-small">g</span></p>
+                <span class="metric-label">Gorduras</span>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- REFEIÇÕES -->
+    <th:block th:if="${dieta.refeicoes != null and !dieta.refeicoes.isEmpty()}">
+      <th:block th:each="refeicao : ${dieta.refeicoes}">
+        <div class="card avoid-break" style="margin-bottom:16px;">
+
+          <!-- Título da Refeição -->
+          <p class="card-title" style="text-transform:uppercase; letter-spacing:0.05em;">
+            <i class="fas fa-utensils" style="color:#0d9488; margin-right:8px;"></i>
+            <span th:switch="${refeicao.tipo}">
+              <span th:case="'AO_ACORDAR'">Ao Acordar</span>
+              <span th:case="'DESJEJUM'">Desjejum</span>
+              <span th:case="'ALMOCO'">Almoço</span>
+              <span th:case="'LANCHE_DA_TARDE'">Lanche da Tarde</span>
+              <span th:case="'JANTAR'">Jantar</span>
+              <span th:case="'CEIA'">Ceia</span>
+              <span th:case="*" th:text="${refeicao.tipo}">Refeição</span>
+            </span>
+          </p>
+
+          <!-- Opções da refeição -->
+          <th:block th:each="opcao, opStat : ${refeicao.opcoes}">
+
+            <!-- Rótulo de opção (somente a partir da 2ª) -->
+            <p th:if="${opcao.numeroOpcao > 0}"
+               style="font-size:11px; font-weight:700; color:#0d9488; text-transform:uppercase; letter-spacing:0.05em; margin:14px 0 8px 0; padding-top:12px; border-top:1px dashed #d1e7e3;">
+              <i class="fas fa-exchange-alt" style="margin-right:5px;"></i>
+              Opção <span th:text="${opcao.numeroOpcao}">1</span>
+            </p>
+
+            <!-- Alimentos da opção -->
+            <table class="tbl" style="margin-bottom:4px;" th:if="${opcao.alimentos != null and !opcao.alimentos.isEmpty()}">
+              <thead>
+                <tr>
+                  <th style="width:60%;">Alimento</th>
+                  <th style="text-align:center; width:20%;">Quantidade</th>
+                  <th style="text-align:center; width:20%;">Unidade</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="alimento : ${opcao.alimentos}">
+                  <td th:text="${alimento.nome}">Frango grelhado</td>
+                  <td style="text-align:center;" th:text="${alimento.quantidade != null ? alimento.quantidade : '—'}">150</td>
+                  <td style="text-align:center;" th:text="${alimento.unidade != null ? alimento.unidade : '—'}">g</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p th:if="${opcao.alimentos == null or opcao.alimentos.isEmpty()}"
+               style="color:#94a3b8; font-size:12px; margin:4px 0;">Nenhum alimento cadastrado.</p>
+
+          </th:block>
+
+          <p th:if="${refeicao.opcoes == null or refeicao.opcoes.isEmpty()}"
+             style="color:#94a3b8; font-size:12px;">Nenhuma opção cadastrada para esta refeição.</p>
+
+        </div>
+      </th:block>
+    </th:block>
+
+    <div th:if="${dieta.refeicoes == null or dieta.refeicoes.isEmpty()}"
+         class="card" style="text-align:center; color:#94a3b8; margin-bottom:16px;">
+      <p>Nenhuma refeição cadastrada nesta dieta.</p>
+    </div>
+
+    <!-- SUPLEMENTAÇÃO -->
+    <div th:if="${dieta.suplementos != null and !dieta.suplementos.isEmpty()}" class="card avoid-break" style="margin-bottom:16px;">
+      <p class="card-title"><i class="fas fa-capsules"></i> Suplementação</p>
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Suplemento</th>
+            <th>Dosagem</th>
+            <th>Quando tomar</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="s : ${dieta.suplementos}">
+            <td th:text="${s.nome}">Whey Protein</td>
+            <td th:text="${s.dosagem != null ? s.dosagem : '—'}">30g</td>
+            <td th:text="${s.timing != null ? s.timing : '—'}">Pós-treino</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- INGESTÃO DE ÁGUA -->
+    <div th:if="${dieta.ingestaoAguaLitros != null}" class="card avoid-break" style="margin-bottom:16px;">
+      <p class="card-title"><i class="fas fa-tint"></i> Ingestão de Água</p>
+      <p style="font-size:18px; font-weight:800; color:#0d9488; margin:0;">
+        <span th:text="${dieta.ingestaoAguaLitros}">2.5</span>
+        <span style="font-size:14px; color:#64748b; font-weight:600;"> litros/dia</span>
+      </p>
+    </div>
+
+    <!-- OBSERVAÇÕES -->
+    <div th:if="${dieta.observacoes != null and !#strings.isEmpty(dieta.observacoes)}" class="card avoid-break" style="margin-bottom:16px;">
+      <p class="card-title"><i class="fas fa-info-circle"></i> Informações e Orientações</p>
+      <p style="font-size:13px; line-height:1.8; color:#1e293b; white-space:pre-line; margin:0;" th:text="${dieta.observacoes}">Orientações gerais...</p>
+    </div>
+
+    <!-- ASSINATURA -->
+    <div th:replace="~{relatorio/fragments/_signature-footer :: signatureFooter(
+        doctorName=${'André Reis'},
+        doctorTitle=${'Nutricionista Clínico e Esportivo'},
+        crn=${'22102151'}
+      )}">
+    </div>
+
+  </div><!-- fim padding -->
+</div>
+</body>
+</html>

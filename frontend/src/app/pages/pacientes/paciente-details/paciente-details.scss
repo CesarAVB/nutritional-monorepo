@@ -1,3 +1,7 @@
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin-small { animation: spin 0.8s linear infinite; display: inline-block; }
+.icon-button-danger { &:hover { color: #ef4444 !important; background: #fee2e2 !important; } }
+
 .details-container {
   padding: 2rem;
   max-width: 1400px;
@@ -14,7 +18,7 @@
 
 .header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1.5rem;
   margin-bottom: 2rem;
   background: #ffffff;
@@ -22,47 +26,58 @@
   border-radius: var(--radius-xl);
   border: 1px solid var(--gray-200);
   box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
 
-  .back-button {
-    width: 44px;
-    height: 44px;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--gray-200);
-    background: #ffffff;
-    color: var(--gray-600);
+  .header-main {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-
-    &:hover {
-      background: var(--gray-50);
-      color: var(--primary-600);
-      border-color: var(--gray-300);
-      transform: translateY(-1px);
-    }
-
-    &:active { transform: translateY(0); }
-  }
-
-  .header-content {
+    align-items: flex-start;
+    gap: 1.5rem;
     flex: 1;
+    min-width: 280px;
 
-    h1 {
-      margin: 0 0 0.25rem 0;
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: var(--gray-800);
-      letter-spacing: -0.5px;
+    .back-button {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--gray-200);
+      background: #ffffff;
+      color: var(--gray-600);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+
+      &:hover {
+        background: var(--gray-50);
+        color: var(--primary-600);
+        border-color: var(--gray-300);
+        transform: translateY(-1px);
+      }
+
+      &:active { transform: translateY(0); }
     }
 
-    p {
-      margin: 0;
-      color: var(--gray-500);
-      font-size: 1rem;
-      font-weight: 400;
+    .header-content {
+      flex: 1;
+      min-width: 0;
+
+      h1 {
+        margin: 0 0 0.25rem 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--gray-800);
+        letter-spacing: -0.5px;
+        word-wrap: break-word;
+      }
+
+      p {
+        margin: 0;
+        color: var(--gray-500);
+        font-size: 1rem;
+        font-weight: 400;
+      }
     }
   }
 
@@ -70,44 +85,77 @@
     display: flex;
     gap: 0.75rem;
     align-items: center;
+    flex-wrap: wrap;
 
     button {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 0.5rem;
       padding: 0.75rem 1.25rem;
-      border: none;
+      border: 1px solid var(--gray-200);
       border-radius: var(--radius-lg);
       font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s ease;
-      box-shadow: var(--shadow-sm);
+      background: #ffffff;
+      color: var(--gray-700);
 
       &:hover {
         transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
+        box-shadow: var(--shadow-sm);
       }
     }
 
-    .btn-edit { background: var(--info); color: white; }
-    .btn-danger { background: var(--danger); color: white; }
-    .btn-success { background: var(--primary-600); color: white; }
+    .btn-edit {
+      &:hover {
+        color: var(--info);
+        border-color: var(--info);
+        background: #eff6ff;
+      }
+      svg { color: var(--info); }
+    }
+    .btn-danger {
+      &:hover {
+        color: var(--danger);
+        border-color: var(--danger);
+        background: #fef2f2;
+      }
+      svg { color: var(--danger); }
+    }
+    .btn-success {
+      background: var(--primary-50);
+      color: var(--primary-700);
+      border-color: var(--primary-200);
+      svg { color: var(--primary-600); }
+      &:hover {
+        background: var(--primary-600);
+        border-color: var(--primary-600);
+        color: white;
+        svg { color: white; }
+      }
+    }
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     padding: 1.5rem;
+
+    .header-main {
+      width: 100%;
+    }
 
     .header-actions {
       width: 100%;
-      flex-wrap: wrap;
+      flex-direction: column;
+      align-items: stretch;
 
       button {
-        flex: 1;
+        width: 100%;
         justify-content: center;
       }
     }

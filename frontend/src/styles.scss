@@ -74,6 +74,178 @@ body {
 /* ==========================================================================
    Utilitários Globais de Componentes
    ========================================================================== */
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  background: transparent;
+  flex-wrap: wrap;
+
+  .header-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex: 1;
+    min-width: 280px;
+
+    .back-button {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--gray-200);
+      background: #ffffff;
+      color: var(--gray-600);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+
+      &:hover {
+        background: var(--gray-50);
+        color: var(--primary-600);
+        border-color: var(--gray-300);
+        transform: translateY(-1px);
+      }
+
+      &:active { transform: translateY(0); }
+    }
+
+    .header-content {
+      flex: 1;
+      min-width: 0;
+
+      h1, .page-title {
+        margin: 0 0 0.25rem 0;
+        font-size: 2.25rem;
+        font-weight: 700;
+        color: var(--gray-800);
+        letter-spacing: -0.5px;
+        word-wrap: break-word;
+      }
+
+      p, .page-subtitle {
+        margin: 0;
+        color: var(--gray-500);
+        font-size: 1.05rem;
+        font-weight: 400;
+      }
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+
+    button, .btn-primary, .btn-secondary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: #ffffff;
+      color: var(--gray-700);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+      }
+    }
+
+    .btn-primary {
+      background: var(--primary-600);
+      color: white;
+      border-color: var(--primary-600);
+      &:hover {
+        background: var(--primary-700);
+        border-color: var(--primary-700);
+        color: white;
+      }
+    }
+
+    .btn-success {
+      background: var(--primary-50);
+      color: var(--primary-700);
+      border-color: var(--primary-200);
+      svg { color: var(--primary-600); }
+      &:hover {
+        background: var(--primary-600);
+        border-color: var(--primary-600);
+        color: white;
+        svg { color: white; }
+      }
+    }
+
+    .btn-edit {
+      &:hover {
+        color: var(--info);
+        border-color: var(--info);
+        background: #eff6ff;
+      }
+      svg { color: var(--info); }
+    }
+
+    .btn-danger {
+      &:hover {
+        color: var(--danger);
+        border-color: var(--danger);
+        background: #fef2f2;
+      }
+      svg { color: var(--danger); }
+    }
+  }
+}
+
+.header.card-header-style {
+  background: #ffffff;
+  padding: 1.5rem 2rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 2rem;
+
+  .header-content h1 {
+    font-size: 1.75rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+
+    &.card-header-style {
+      padding: 1.5rem;
+    }
+
+    .header-main {
+      width: 100%;
+    }
+
+    .header-actions {
+      width: 100%;
+      flex-direction: column;
+      align-items: stretch;
+
+      button, .btn-primary, .btn-secondary {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  }
+}
+
 .card {
   background: #ffffff;
   border-radius: var(--radius-xl);

@@ -31,6 +31,7 @@ import br.com.sistema.dtos.AvaliacaoFisicaDTO;
 import br.com.sistema.dtos.ConsultaComparativaItemDTO;
 import br.com.sistema.dtos.ConsultaDetalhadaDTO;
 import br.com.sistema.dtos.ConsultaResumoDTO;
+import br.com.sistema.dtos.DietaResponse;
 import br.com.sistema.dtos.PacienteDTO;
 import br.com.sistema.dtos.QuestionarioEstiloVidaDTO;
 import br.com.sistema.dtos.RegistroFotograficoDTO;
@@ -38,6 +39,9 @@ import br.com.sistema.dtos.RelatorioRequestDTO;
 
 @Service
 public class RelatorioService {
+
+    @Autowired
+    private DietaService dietaService;
 
     @Autowired
     private PacienteService pacienteService;
@@ -486,6 +490,24 @@ public class RelatorioService {
         item.put("unidade", unidade);
         item.put("melhora", melhora);
         variacoes.add(item);
+    }
+
+    // ==============================================
+    // # Método - gerarPdfDieta
+    // # Gera o PDF do plano alimentar (dieta) usando Thymeleaf + OpenHTMLtoPDF
+    // ==============================================
+    public byte[] gerarPdfDieta(Long dietaId) throws Exception {
+        DietaResponse dieta = dietaService.buscarPorId(dietaId);
+        PacienteDTO paciente = pacienteService.buscarPorId(dieta.getPacienteId());
+
+        Context context = new Context();
+        context.setVariable("dieta", dieta);
+        context.setVariable("paciente", paciente);
+        context.setVariable("dataCriacao", dieta.getDataCriacao().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+
+        String html = templateEngine.process("dieta-pdf", context);
+        log.info("### PDF DIETA gerado para dietaId={}", dietaId);
+        return gerarPDF(html);
     }
 
     // ==============================================

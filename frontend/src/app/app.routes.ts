@@ -6,6 +6,7 @@ import { PacienteDetailsComponent } from './pages/pacientes/paciente-details/pac
 import { ConsultaFormComponent } from './pages/consultas/consulta-form/consulta-form';
 import { ConsultaDetailsComponent } from './pages/consultas/consulta-details/consulta-details';
 import { ConsultasListComponent } from './pages/consultas/consultas-list/consultas-list';
+import { DietaFormComponent } from './pages/dietas/dieta-form/dieta-form';
 import { LoginComponent } from './pages/login/login';
 import { authGuard } from './guards/auth.guard';
 
@@ -54,6 +55,18 @@ export const routes: Routes = [
     path: 'pacientes/:id/consulta',
     component: ConsultaFormComponent,
     title: 'Nova Consulta - NutriControl',
+    canActivate: [authGuard]
+  },
+  {
+    path: 'pacientes/:id/dietas/nova',
+    component: DietaFormComponent,
+    title: 'Nova Dieta - NutriControl',
+    canActivate: [authGuard]
+  },
+  {
+    path: 'pacientes/:id/dietas/:dietaId/editar',
+    component: DietaFormComponent,
+    title: 'Editar Dieta - NutriControl',
     canActivate: [authGuard]
   },
   {

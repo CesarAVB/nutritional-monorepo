@@ -5,7 +5,9 @@ import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PacienteService } from '../../../services/paciente';
 import { ConsultaService } from '../../../services/consulta';
+import { DietaService } from '../../../services/dieta';
 import { PacienteDTO, ConsultaResumoDTO } from '../../../models/paciente.model';
+import { DietaResumoResponse } from '../../../models/dieta.model';
 import { ToastService } from '../../../services/toast';
 import { environment } from '../../../../environments/environment';
 
@@ -19,12 +21,17 @@ import { environment } from '../../../../environments/environment';
 export class PacienteDetailsComponent implements OnInit {
   private toastService = inject(ToastService);
   private http = inject(HttpClient);
+  private dietaService = inject(DietaService);
   paciente = signal<PacienteDTO | null>(null);
   consultas = signal<ConsultaResumoDTO[]>([]);
+  dietas = signal<DietaResumoResponse[]>([]);
   isLoading = signal(false);
   error = signal('');
   mostrarModalExclusao = signal(false);
+  mostrarModalExclusaoDieta = signal(false);
+  dietaParaExcluir = signal<number | null>(null);
   gerandoComparativo = signal(false);
+  gerandoPdfDieta = signal<number | null>(null);
   expandirProntuario = signal(false);
 
   constructor(
@@ -42,6 +49,7 @@ export class PacienteDetailsComponent implements OnInit {
     if (id) {
       this.carregarPaciente(id);
       this.carregarConsultas(id);
+      this.carregarDietas(id);
     }
   }
 
@@ -79,6 +87,91 @@ export class PacienteDetailsComponent implements OnInit {
         this.toastService.error('Erro ao carregar histórico de consultas');
       }
     });
+  }
+
+  // ===========================================
+  // # carregarDietas - Carrega as dietas do paciente
+  // ===========================================
+  carregarDietas(pacienteId: number): void {
+    this.dietaService.listarPorPaciente(pacienteId).subscribe({
+      next: (dietas) => this.dietas.set(dietas),
+      error: () => {},
+    });
+  }
+
+  // ===========================================
+  // # novaDieta - Navega para criação de nova dieta
+  // ===========================================
+  novaDieta(): void {
+    const id = this.paciente()?.id;
+    if (id) this.router.navigate(['/pacientes', id, 'dietas', 'nova']);
+  }
+
+  // ===========================================
+  // # editarDieta - Navega para edição de dieta
+  // ===========================================
+  editarDieta(dietaId: number): void {
+    const id = this.paciente()?.id;
+    if (id) this.router.navigate(['/pacientes', id, 'dietas', dietaId, 'editar']);
+  }
+
+  // ===========================================
+  // # confirmarExclusaoDieta - Abre modal de exclusão de dieta
+  // ===========================================
+  confirmarExclusaoDieta(dietaId: number): void {
+    this.dietaParaExcluir.set(dietaId);
+    this.mostrarModalExclusaoDieta.set(true);
+  }
+
+  cancelarExclusaoDieta(): void {
+    this.mostrarModalExclusaoDieta.set(false);
+    this.dietaParaExcluir.set(null);
+  }
+
+  excluirDieta(): void {
+    const dietaId = this.dietaParaExcluir();
+    if (!dietaId) return;
+    this.dietaService.deletar(dietaId).subscribe({
+      next: () => {
+        this.toastService.success('Dieta excluída com sucesso!');
+        this.mostrarModalExclusaoDieta.set(false);
+        this.dietaParaExcluir.set(null);
+        const id = this.paciente()?.id;
+        if (id) this.carregarDietas(id);
+      },
+      error: () => this.toastService.error('Erro ao excluir dieta.'),
+    });
+  }
+
+  // ===========================================
+  // # baixarPdfDieta - Baixa PDF de uma dieta
+  // ===========================================
+  baixarPdfDieta(dietaId: number): void {
+    this.gerandoPdfDieta.set(dietaId);
+    this.dietaService.baixarPdf(dietaId).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `dieta-${dietaId}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.gerandoPdfDieta.set(null);
+      },
+      error: () => {
+        this.toastService.error('Erro ao gerar PDF da dieta.');
+        this.gerandoPdfDieta.set(null);
+      },
+    });
+  }
+
+  // ===========================================
+  // # formatarDataSimples - Formata data ISO para dd/MM/yyyy
+  // ===========================================
+  formatarDataSimples(dataISO: string): string {
+    if (!dataISO) return '-';
+    const [ano, mes, dia] = dataISO.split('-');
+    return `${dia}/${mes}/${ano}`;
   }
 
   // ===========================================

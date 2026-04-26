@@ -6,56 +6,6 @@
   min-height: calc(100vh - 70px);
 }
 
-.pacientes-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 2.5rem;
-
-  .header-content {
-    .page-title {
-      font-size: 2.25rem;
-      font-weight: 700;
-      color: var(--gray-800);
-      margin: 0 0 0.5rem 0;
-      letter-spacing: -0.5px;
-    }
-
-    .page-subtitle {
-      font-size: 1.1rem;
-      color: var(--gray-500);
-      margin: 0;
-      font-weight: 400;
-    }
-  }
-
-  .btn-primary {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.25rem;
-    background: var(--primary-600);
-    color: white;
-    border: none;
-    border-radius: var(--radius-lg);
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: var(--shadow-sm);
-
-    &:hover {
-      background: var(--primary-700);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-    }
-
-    &:active {
-      transform: translateY(0);
-    }
-  }
-}
-
 // Alert de erro
 .alert {
   padding: 1rem 1.5rem;
@@ -408,17 +358,6 @@
 @media (max-width: 768px) {
   .pacientes-container {
     padding: 1rem;
-  }
-
-  .pacientes-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-
-    .btn-primary {
-      width: 100%;
-      justify-content: center;
-    }
   }
 
   .search-container {
