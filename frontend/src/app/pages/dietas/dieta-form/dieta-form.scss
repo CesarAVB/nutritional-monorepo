@@ -157,6 +157,19 @@
     width: 100%;
     &:focus { outline: none; border-color: #0d9488; background: #fff; }
     &::placeholder { color: #94a3b8; }
+    
+    &.form-input-readonly {
+      background: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      color: #334155 !important;
+      cursor: default !important;
+      font-weight: 600;
+      
+      &:focus {
+        border-color: #0d9488 !important;
+        box-shadow: none !important;
+      }
+    }
   }
 
   textarea { resize: vertical; }

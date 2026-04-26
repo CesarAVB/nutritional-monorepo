@@ -58,6 +58,15 @@ export class DietaFormComponent implements OnInit {
       suplementos: this.fb.array([]),
     });
 
+    // Inicializa todas como fechadas
+    this.refeicoes.valueChanges.subscribe(() => {
+      const novasFechadas = new Set<number>();
+      for (let i = 0; i < this.refeicoes.length; i++) {
+        novasFechadas.add(i);
+      }
+      this.refeicoesFechadas.set(novasFechadas);
+    });
+
     this.dietaService.buscarContextoPaciente(id).subscribe({
       next: (ctx) => this.contexto.set(ctx),
       error: () => {},
@@ -384,6 +393,24 @@ export class DietaFormComponent implements OnInit {
         })
       );
     });
+  }
+
+  estimateKcal(refeicaoCtrl: any): number {
+    let total = 0;
+    const opcoes = refeicaoCtrl.get('opcoes') as FormArray;
+    if (opcoes && opcoes.length > 0) {
+      const primeiraOpcao = opcoes.at(0);
+      const alimentos = primeiraOpcao.get('alimentos') as FormArray;
+      if (alimentos) {
+        alimentos.controls.forEach((a: any) => {
+          // A estimativa simples: considera 1g de comida = 1-2 kcal dependendo do tipo, 
+          // ou aqui apenas um valor fixo se não houver base de dados.
+          // Como não temos base nutricional, usaremos uma estimativa genérica de 150kcal por alimento comum
+          total += 150;
+        });
+      }
+    }
+    return total;
   }
 
   // ===================================================

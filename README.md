@@ -1,0 +1,331 @@
+﻿# Sistema de GestÃ£o Nutricional - API
+
+[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.9-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-blue.svg)](https://www.mysql.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+> **MicroserviÃ§o REST** para gestÃ£o completa de consultas nutricionais, acompanhamento evolutivo de pacientes, avaliaÃ§Ãµes fÃ­sicas detalhadas e controle de histÃ³rico nutricional.
+
+ðŸŒ **API em ProduÃ§Ã£o**: [https://api-sysnutritional.cesaravb.com.br](https://api-sysnutritional.cesaravb.com.br)
+
+---
+
+## ðŸ“‹ Sobre o Projeto
+
+Sistema desenvolvido para **nutricionistas** que precisam gerenciar seus pacientes de forma profissional, com foco em:
+
+- ðŸ“Š **Acompanhamento Evolutivo**: ComparaÃ§Ã£o de medidas, peso e percentual de gordura entre consultas
+- ðŸ“¸ **Registro FotogrÃ¡fico**: Armazenamento de fotos (anterior, posterior, laterais) para anÃ¡lise visual
+- ðŸ“ **Anamnese Completa**: QuestionÃ¡rio detalhado de estilo de vida, hÃ¡bitos e histÃ³rico clÃ­nico
+- ðŸ“ **AvaliaÃ§Ã£o AntropomÃ©trica**: PerÃ­metros corporais, dobras cutÃ¢neas e composiÃ§Ã£o corporal
+- ðŸ” **HistÃ³rico Detalhado**: Timeline completa de todas as consultas por paciente
+
+---
+
+## ðŸš€ Tecnologias Utilizadas
+
+### Backend
+- **Java 21** - Linguagem de programaÃ§Ã£o
+- **Spring Boot 3.5.9** - Framework principal
+- **Spring Data JPA** - PersistÃªncia de dados
+- **Hibernate** - ORM para mapeamento objeto-relacional
+- **Spring Validation** - ValidaÃ§Ã£o de dados com Bean Validation
+
+### Banco de Dados
+- **MySQL 8.0** - Banco de dados relacional
+- **Flyway** - Versionamento e migraÃ§Ã£o de banco de dados
+
+### DocumentaÃ§Ã£o
+- **SpringDoc OpenAPI 3** - DocumentaÃ§Ã£o automÃ¡tica da API
+- **Swagger UI** - Interface interativa para testar endpoints
+
+### Ferramentas
+- **Lombok** - ReduÃ§Ã£o de cÃ³digo boilerplate
+- **Log4j2** - Sistema de logs estruturado
+- **Maven** - Gerenciamento de dependÃªncias
+- **Spring DevTools** - Hot reload durante desenvolvimento
+
+---
+
+## ðŸ“ Estrutura do Projeto
+```
+backend-nutritional/
+â”‚
+â”œâ”€â”€ src/main/java/br/com/sistema/
+â”‚   â”œâ”€â”€ configurations/          # ConfiguraÃ§Ãµes (CORS, OpenAPI)
+â”‚   â”œâ”€â”€ controllers/             # Endpoints REST
+â”‚   â”œâ”€â”€ dtos/                    # Data Transfer Objects
+â”‚   â”œâ”€â”€ exceptions/              # Tratamento de exceÃ§Ãµes
+â”‚   â”œâ”€â”€ models/                  # Entidades JPA
+â”‚   â”œâ”€â”€ repositories/            # Interfaces de acesso a dados
+â”‚   â”œâ”€â”€ services/                # LÃ³gica de negÃ³cio
+â”‚   â””â”€â”€ Startup.java             # Classe principal
+â”‚
+â”œâ”€â”€ src/main/resources/
+â”‚   â”œâ”€â”€ db/migration/            # Scripts Flyway
+â”‚   â”œâ”€â”€ application.properties   # ConfiguraÃ§Ãµes principais
+â”‚   â”œâ”€â”€ application-prod.properties
+â”‚   â””â”€â”€ log4j2-spring.xml        # ConfiguraÃ§Ã£o de logs
+â”‚
+â””â”€â”€ pom.xml                      # DependÃªncias Maven
+```
+
+---
+
+## ðŸ”§ ConfiguraÃ§Ã£o e InstalaÃ§Ã£o
+
+### PrÃ©-requisitos
+
+- **Java 21+** instalado
+- **MySQL 8.0+** instalado e rodando
+- **Maven 3.6+** instalado
+- **Git** para clonar o repositÃ³rio
+
+### 1ï¸âƒ£ Clone o RepositÃ³rio
+```bash
+git clone https://github.com/seu-usuario/backend-nutritional.git
+cd backend-nutritional
+```
+
+### 2ï¸âƒ£ Configure o Banco de Dados
+```sql
+-- Conecte ao MySQL
+mysql -u root -p
+
+-- Crie o banco de dados
+CREATE DATABASE nutricontrol_db;
+CREATE USER 'nutricontrol_user'@'localhost' IDENTIFIED BY 'sua_senha';
+GRANT ALL PRIVILEGES ON nutricontrol_db.* TO 'nutricontrol_user'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+### 3ï¸âƒ£ Configure as VariÃ¡veis de Ambiente (ProduÃ§Ã£o)
+
+Crie um arquivo `.env` ou configure as variÃ¡veis:
+```bash
+export MYSQLHOST=localhost
+export MYSQLPORT=3306
+export MYSQLDATABASE=nutricontrol_db
+export MYSQLUSER=nutricontrol_user
+export MYSQLPASSWORD=sua_senha
+```
+
+### 4ï¸âƒ£ Execute as Migrations
+```bash
+mvn flyway:migrate
+```
+
+### 5ï¸âƒ£ Compile e Execute
+```bash
+# Compilar
+mvn clean install
+
+# Executar
+mvn spring-boot:run
+
+# Ou executar o JAR
+java -jar target/nutritional-0.0.1-SNAPSHOT.jar
+```
+
+---
+
+## ðŸ“¡ Endpoints da API
+
+### ðŸ‘¥ Pacientes
+
+| MÃ©todo | Endpoint | DescriÃ§Ã£o |
+|--------|----------|-----------|
+| `POST` | `/api/v1/pacientes` | Cadastrar novo paciente |
+| `GET` | `/api/v1/pacientes` | Listar todos os pacientes |
+| `GET` | `/api/v1/pacientes/{id}` | Buscar paciente por ID |
+| `GET` | `/api/v1/pacientes/cpf/{cpf}` | Buscar paciente por CPF |
+| `GET` | `/api/v1/pacientes/buscar?nome=JoÃ£o` | Buscar por nome |
+| `PUT` | `/api/v1/pacientes/{id}` | Atualizar paciente |
+| `DELETE` | `/api/v1/pacientes/{id}` | Deletar paciente |
+
+### ðŸ“‹ Consultas
+
+| MÃ©todo | Endpoint | DescriÃ§Ã£o |
+|--------|----------|-----------|
+| `POST` | `/api/v1/consultas/paciente/{pacienteId}` | Criar nova consulta |
+| `GET` | `/api/v1/consultas/paciente/{pacienteId}` | Listar consultas do paciente |
+| `GET` | `/api/v1/consultas/{id}` | Buscar consulta completa |
+| `GET` | `/api/v1/consultas/comparar/{pacienteId}?consultaInicialId=1&consultaFinalId=2` | Comparar duas consultas |
+| `PUT` | `/api/v1/consultas/{id}` | Atualizar dados da consulta |
+| `DELETE` | `/api/v1/consultas/{id}` | Deletar consulta |
+
+### ðŸ“ AvaliaÃ§Ãµes FÃ­sicas
+
+| MÃ©todo | Endpoint | DescriÃ§Ã£o |
+|--------|----------|-----------|
+| `POST` | `/api/v1/avaliacoes/consulta/{consultaId}` | Salvar avaliaÃ§Ã£o fÃ­sica |
+| `GET` | `/api/v1/avaliacoes/consulta/{consultaId}` | Buscar avaliaÃ§Ã£o fÃ­sica |
+| `PUT` | `/api/v1/avaliacoes/consulta/{consultaId}` | Atualizar avaliaÃ§Ã£o fÃ­sica |
+| `DELETE` | `/api/v1/avaliacoes/consulta/{consultaId}` | Deletar avaliaÃ§Ã£o fÃ­sica |
+
+### ðŸ“ QuestionÃ¡rios de Estilo de Vida
+
+| MÃ©todo | Endpoint | DescriÃ§Ã£o |
+|--------|----------|-----------|
+| `POST` | `/api/v1/questionario/consulta/{consultaId}` | Salvar questionÃ¡rio |
+| `GET` | `/api/v1/questionario/consulta/{consultaId}` | Buscar questionÃ¡rio |
+| `PUT` | `/api/v1/questionario/consulta/{consultaId}` | Atualizar questionÃ¡rio |
+| `DELETE` | `/api/v1/questionario/consulta/{consultaId}` | Deletar questionÃ¡rio |
+
+### ðŸ“¸ Registro FotogrÃ¡fico
+
+| MÃ©todo | Endpoint | DescriÃ§Ã£o |
+|--------|----------|-----------|
+| `POST` | `/api/v1/registro-fotografico/consulta/{consultaId}` | Upload de fotos |
+| `GET` | `/api/v1/registro-fotografico/consulta/{consultaId}` | Buscar fotos |
+| `PUT` | `/api/v1/registro-fotografico/consulta/{consultaId}` | Atualizar fotos |
+| `DELETE` | `/api/v1/registro-fotografico/consulta/{consultaId}` | Deletar fotos |
+
+---
+
+## ðŸ“ Exemplos de Uso
+
+### Cadastrar Paciente
+```bash
+curl -X POST https://api-sysnutritional.cesaravb.com.br/api/v1/pacientes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nomeCompleto": "Ana Paula Santos",
+    "cpf": "11122233344",
+    "dataNascimento": "1995-07-20",
+    "telefoneWhatsapp": "21999887766",
+    "email": "ana.paula@email.com"
+  }'
+```
+
+### Criar Consulta
+```bash
+curl -X POST https://api-sysnutritional.cesaravb.com.br/api/v1/consultas/paciente/1
+```
+
+### Salvar AvaliaÃ§Ã£o FÃ­sica
+```bash
+curl -X POST https://api-sysnutritional.cesaravb.com.br/api/v1/avaliacoes/consulta/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "altura": 1.75,
+    "pesoAtual": 80.5,
+    "percentualGordura": 18.5,
+    "massaMagra": 65.6,
+    "massaGorda": 14.9,
+    "imc": 26.3
+  }'
+```
+
+### Comparar Consultas
+```bash
+curl https://api-sysnutritional.cesaravb.com.br/api/v1/consultas/comparar/1?consultaInicialId=1&consultaFinalId=2
+```
+
+---
+
+## ðŸ“š DocumentaÃ§Ã£o Interativa
+
+### Desenvolvimento (Local)
+- **Swagger UI**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+- **OpenAPI JSON**: [http://localhost:8080/api-docs](http://localhost:8080/api-docs)
+
+### ProduÃ§Ã£o
+- **Swagger UI**: [https://api-sysnutritional.cesaravb.com.br/swagger-ui.html](https://api-sysnutritional.cesaravb.com.br/swagger-ui.html)
+- **OpenAPI JSON**: [https://api-sysnutritional.cesaravb.com.br/api-docs](https://api-sysnutritional.cesaravb.com.br/api-docs)
+
+---
+
+## ðŸ—„ï¸ Modelo de Dados
+
+### Principais Entidades
+```
+Paciente
+â”œâ”€â”€ Consulta (1:N)
+    â”œâ”€â”€ QuestionarioEstiloVida (1:1)
+    â”œâ”€â”€ AvaliacaoFisica (1:1)
+    â””â”€â”€ RegistroFotografico (1:1)
+```
+
+### Tabelas
+
+- `tbl_pacientes` - Dados cadastrais dos pacientes
+- `tbl_consultas` - Registro de cada atendimento
+- `tbl_questionarios_estilo_vida` - Anamnese subjetiva
+- `tbl_avaliacoes_fisicas` - Medidas antropomÃ©tricas
+- `tbl_registros_fotograficos` - Armazenamento de fotos
+
+---
+
+## ðŸ”’ SeguranÃ§a
+
+- âœ… ValidaÃ§Ã£o de CPF Ãºnico
+- âœ… CORS configurado para origens especÃ­ficas
+- âœ… Tratamento global de exceÃ§Ãµes
+- âœ… ValidaÃ§Ã£o de dados com Bean Validation
+- ðŸ”œ **Em desenvolvimento**: AutenticaÃ§Ã£o JWT
+
+---
+
+## ðŸš€ Deploy
+
+### Docker (Recomendado)
+```dockerfile
+FROM openjdk:21-jdk-slim
+WORKDIR /app
+COPY target/nutritional-0.0.1-SNAPSHOT.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+```bash
+docker build -t nutritional-api .
+docker run -p 8080:8080 nutritional-api
+```
+
+### ProduÃ§Ã£o
+
+A API estÃ¡ em produÃ§Ã£o em: **https://api-sysnutritional.cesaravb.com.br**
+
+ConfiguraÃ§Ãµes de ambiente em produÃ§Ã£o:
+- Nginx como proxy reverso
+- SSL/TLS via Cloudflare
+- MySQL 8.0 dedicado
+- Logs centralizados
+
+---
+
+## ðŸ› ï¸ Melhorias Futuras
+
+- [x] Upload de fotos com armazenamento em S3
+- [ ] GeraÃ§Ã£o de relatÃ³rios em PDF
+- [ ] IntegraÃ§Ã£o com WhatsApp para envio de dietas
+- [ ] Sistema de autenticaÃ§Ã£o e autorizaÃ§Ã£o
+- [ ] Cache com Redis
+- [ ] Testes unitÃ¡rios e de integraÃ§Ã£o completos
+- [ ] CI/CD com GitHub Actions
+
+---
+
+## ðŸ¤ Contribuindo
+
+ContribuiÃ§Ãµes sÃ£o bem-vindas! Para contribuir:
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/MinhaFeature`)
+3. Commit suas mudanÃ§as (`git commit -m 'Adiciona MinhaFeature'`)
+4. Push para a branch (`git push origin feature/MinhaFeature`)
+5. Abra um Pull Request
+
+---
+
+## ðŸ“ž Contato
+
+- **Website**: [cesaravb.com.br](https://cesaravb.com.br)
+- **API**: [api-sysnutritional.cesaravb.com.br](https://api-sysnutritional.cesaravb.com.br)
+
+---
+
+<div align="center">
+  <sub>Desenvolvido por CÃ©sar Augusto</sub>
+</div>

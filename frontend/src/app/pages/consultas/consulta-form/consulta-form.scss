@@ -267,13 +267,14 @@
   }
 
   .form-input-readonly {
-    background: #f8fafc !important;
-    border-color: #e2e8f0 !important;
-    color: #64748b !important;
-    cursor: not-allowed;
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+    cursor: default !important;
+    font-weight: 500;
 
     &:focus {
-      border-color: #e2e8f0 !important;
+      border-color: #cbd5e1 !important;
       box-shadow: none !important;
     }
   }

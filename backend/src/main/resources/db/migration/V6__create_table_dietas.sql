@@ -2,6 +2,14 @@
 -- V6: Criar Tabelas de Dietas
 -- ====================================
 
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS tbl_alimentos_refeicao;
+DROP TABLE IF EXISTS tbl_refeicao_opcoes;
+DROP TABLE IF EXISTS tbl_refeicoes;
+DROP TABLE IF EXISTS tbl_suplementos_dieta;
+DROP TABLE IF EXISTS tbl_dietas;
+SET FOREIGN_KEY_CHECKS = 1;
+
 CREATE TABLE tbl_dietas (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     paciente_id BIGINT NOT NULL,
