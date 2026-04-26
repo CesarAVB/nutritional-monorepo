@@ -400,22 +400,34 @@
           <span class="info-label">Horário de maior fome</span>
           <span class="info-value">{{ consulta()?.questionario?.horarioMaiorFome || '-' }}</span>
         </div>
-        @if (consulta()?.questionario?.frutasPreferidas) {
-        <div class="info-row full-width">
-          <span class="info-label">Frutas preferidas</span>
-          <p class="info-value">{{ consulta()?.questionario?.frutasPreferidas }}</p>
+        @if (consulta()?.questionario?.frutasPreferidas || consulta()?.questionario?.alimentosNaoGosta || consulta()?.questionario?.intolerancias) {
+        <div class="expandable-text-container" [class.expanded]="expandirAlimentarTextos()">
+          @if (consulta()?.questionario?.frutasPreferidas) {
+          <div class="info-row full-width">
+            <span class="info-label">Frutas preferidas</span>
+            <p class="info-value">{{ consulta()?.questionario?.frutasPreferidas }}</p>
+          </div>
+          }
+          @if (consulta()?.questionario?.alimentosNaoGosta) {
+          <div class="info-row full-width">
+            <span class="info-label">Alimentos que não gosta</span>
+            <p class="info-value">{{ consulta()?.questionario?.alimentosNaoGosta }}</p>
+          </div>
+          }
+          @if (consulta()?.questionario?.intolerancias) {
+          <div class="info-row full-width">
+            <span class="info-label">Intolerâncias</span>
+            <p class="info-value">{{ consulta()?.questionario?.intolerancias }}</p>
+          </div>
+          }
         </div>
-        }
-        @if (consulta()?.questionario?.alimentosNaoGosta) {
-        <div class="info-row full-width">
-          <span class="info-label">Alimentos que não gosta</span>
-          <p class="info-value">{{ consulta()?.questionario?.alimentosNaoGosta }}</p>
-        </div>
-        }
-        @if (consulta()?.questionario?.intolerancias) {
-        <div class="info-row full-width">
-          <span class="info-label">Intolerâncias</span>
-          <p class="info-value">{{ consulta()?.questionario?.intolerancias }}</p>
+        <div class="expandir-footer">
+          <button class="btn-expand" (click)="expandirAlimentarTextos.set(!expandirAlimentarTextos())">
+            <svg class="expand-icon" [class.rotated]="expandirAlimentarTextos()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+            {{ expandirAlimentarTextos() ? 'Ver menos' : 'Ver mais' }}
+          </button>
         </div>
         }
       </div>
@@ -443,16 +455,20 @@
           <span class="info-label">Uso de anabolizantes</span>
           <span class="info-value">{{ consulta()?.questionario?.usoAnabolizantes || '-' }}</span>
         </div>
-        @if (consulta()?.questionario?.medicamentos) {
-        <div class="info-row full-width">
-          <span class="info-label">Medicamentos</span>
-          <p class="info-value">{{ consulta()?.questionario?.medicamentos }}</p>
-        </div>
-        }
-        @if (consulta()?.questionario?.suplementos) {
-        <div class="info-row full-width">
-          <span class="info-label">Suplementos</span>
-          <p class="info-value">{{ consulta()?.questionario?.suplementos }}</p>
+        @if (consulta()?.questionario?.medicamentos || consulta()?.questionario?.suplementos) {
+        <div class="expandable-text-container" [class.expanded]="expandirSaude()">
+          @if (consulta()?.questionario?.medicamentos) {
+          <div class="info-row full-width">
+            <span class="info-label">Medicamentos</span>
+            <p class="info-value">{{ consulta()?.questionario?.medicamentos }}</p>
+          </div>
+          }
+          @if (consulta()?.questionario?.suplementos) {
+          <div class="info-row full-width">
+            <span class="info-label">Suplementos</span>
+            <p class="info-value">{{ consulta()?.questionario?.suplementos }}</p>
+          </div>
+          }
         </div>
         }
         @if (expandirSaude()) {

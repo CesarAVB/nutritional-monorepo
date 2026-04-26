@@ -25,6 +25,7 @@ export class PacienteDetailsComponent implements OnInit {
   error = signal('');
   mostrarModalExclusao = signal(false);
   gerandoComparativo = signal(false);
+  expandirProntuario = signal(false);
 
   constructor(
     private route: ActivatedRoute,

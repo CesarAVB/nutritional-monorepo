@@ -40,19 +40,23 @@ export class ConsultaDetailsComponent implements OnInit {
   tituloFotoAmpliada = signal<string>('');
 
   // Controle de collapse dos cards
-  cardAvaliacaoFisica = signal(false);
-  cardPerimetros = signal(false);
-  cardDobras = signal(false);
-  cardEstiloVida = signal(false);
-  cardHabitos = signal(false);
-  cardAlimentar = signal(false);
-  cardSaude = signal(false);
-  cardFotos = signal(false);
+  cardAvaliacaoFisica = signal(true);
+  cardPerimetros = signal(true);
+  cardDobras = signal(true);
+  cardEstiloVida = signal(true);
+  cardHabitos = signal(true);
+  cardAlimentar = signal(true);
+  cardSaude = signal(true);
+  cardFotos = signal(true);
 
   // Controle de expansão das seções
   expandirPerimetros = signal(false);
   expandirDobras = signal(false);
   expandirSaude = signal(false);
+
+  // Controle de expansão de textos longos
+  expandirAlimentarTextos = signal(false);
+  expandirSaudeTextos = signal(false);
 
   // ===========================================
   // # ngOnInit - Inicializa o componente
