@@ -6,7 +6,9 @@ import { DietaService } from '../../../services/dieta';
 import { ToastService } from '../../../services/toast';
 import {
   DietaContextoPacienteDTO,
+  DietaRequest,
   DietaResponse,
+  GerarDietaIARequest,
   TIPOS_REFEICAO,
   TipoRefeicao,
 } from '../../../models/dieta.model';
@@ -32,6 +34,7 @@ export class DietaFormComponent implements OnInit {
   isLoading = signal(false);
   isSaving = signal(false);
   isGerandoPdf = signal(false);
+  isGerandoIA = signal(false);
   contexto = signal<DietaContextoPacienteDTO | null>(null);
   refeicoesFechadas = signal<Set<number>>(new Set());
 
@@ -301,6 +304,85 @@ export class DietaFormComponent implements OnInit {
         this.toastService.error('Erro ao gerar PDF.');
         this.isGerandoPdf.set(false);
       },
+    });
+  }
+
+  // ===================================================
+  // # Gerar com IA
+  // ===================================================
+  get macrosPreenchidos(): boolean {
+    const v = this.form.value;
+    return !!(v.kcalTotal > 0 && v.proteinasG > 0 && v.carboidratosG > 0 && v.gordurasG > 0);
+  }
+
+  gerarComIA(): void {
+    if (!this.macrosPreenchidos || this.isGerandoIA()) return;
+
+    this.isGerandoIA.set(true);
+    const v = this.form.value;
+    const request: GerarDietaIARequest = {
+      kcalTotal: v.kcalTotal,
+      proteinasG: v.proteinasG,
+      carboidratosG: v.carboidratosG,
+      gordurasG: v.gordurasG,
+      titulo: v.titulo || undefined,
+      objetivo: v.objetivo || undefined,
+    };
+
+    this.dietaService.gerarComIA(this.pacienteId(), request).subscribe({
+      next: (dieta) => {
+        this.preencherFormComDietaGerada(dieta);
+        this.toastService.success('Dieta gerada com sucesso! Revise as refeições e salve.');
+        this.isGerandoIA.set(false);
+      },
+      error: (err) => {
+        const msg = err?.error?.message || 'Erro ao gerar dieta com IA. Verifique as configurações.';
+        this.toastService.error(msg);
+        this.isGerandoIA.set(false);
+      },
+    });
+  }
+
+  private preencherFormComDietaGerada(dieta: DietaRequest): void {
+    if (dieta.titulo) this.form.patchValue({ titulo: dieta.titulo });
+    if (dieta.objetivo) this.form.patchValue({ objetivo: dieta.objetivo });
+    if (dieta.observacoes) this.form.patchValue({ observacoes: dieta.observacoes });
+
+    this.refeicoes.clear();
+    (dieta.refeicoes ?? []).forEach((r) => {
+      const rg = this.fb.group({
+        tipo: [r.tipo, Validators.required],
+        ordemExibicao: [r.ordemExibicao ?? 0],
+        opcoes: this.fb.array(
+          (r.opcoes ?? []).map((o) =>
+            this.fb.group({
+              numeroOpcao: [o.numeroOpcao ?? 1],
+              alimentos: this.fb.array(
+                (o.alimentos ?? []).map((a) =>
+                  this.fb.group({
+                    nome: [a.nome, Validators.required],
+                    quantidade: [a.quantidade ?? null],
+                    unidade: [a.unidade ?? ''],
+                    ordem: [a.ordem ?? 0],
+                  })
+                )
+              ),
+            })
+          )
+        ),
+      });
+      this.refeicoes.push(rg);
+    });
+
+    this.suplementos.clear();
+    (dieta.suplementos ?? []).forEach((s) => {
+      this.suplementos.push(
+        this.fb.group({
+          nome: [s.nome, Validators.required],
+          dosagem: [s.dosagem ?? ''],
+          timing: [s.timing ?? ''],
+        })
+      );
     });
   }
 

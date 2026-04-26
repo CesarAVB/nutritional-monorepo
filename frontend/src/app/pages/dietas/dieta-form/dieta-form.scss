@@ -299,6 +299,12 @@
   &:hover:not(:disabled) { background: #1e3a8a; }
 }
 
+.btn-ia {
+  @extend %btn-base;
+  background: #6366f1; color: #fff;
+  &:hover:not(:disabled) { background: #4f46e5; }
+}
+
 .btn-secondary {
   @extend %btn-base;
   background: #fff; color: #475569;

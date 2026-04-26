@@ -1,0 +1,167 @@
+<div class="config-container">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="header-info">
+      <h1>
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="12" cy="10" r="3"/></svg>
+        Configurações de IA
+      </h1>
+      <p class="header-sub">Configure o provedor e o assistente de IA para geração automática de dietas</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-salvar" (click)="salvar()" [disabled]="isSaving()">
+        <ng-container *ngIf="isSaving(); else salvarLabel">
+          <svg class="spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+          Salvando...
+        </ng-container>
+        <ng-template #salvarLabel>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Salvar
+        </ng-template>
+      </button>
+    </div>
+  </div>
+
+  <ng-container *ngIf="isCarregando(); else formContent">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Carregando configurações...</p>
+    </div>
+  </ng-container>
+
+  <ng-template #formContent>
+    <form [formGroup]="form" class="form-body">
+
+      <!-- PROVEDOR -->
+      <div class="form-card">
+        <h2 class="section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+          Provedor
+        </h2>
+        <div class="provider-cards">
+          <label class="provider-card" [class.selected]="form.get('provedor')?.value === 'OPENAI'">
+            <input type="radio" formControlName="provedor" value="OPENAI" (change)="onProvedorChange()" />
+            <div class="provider-info">
+              <span class="provider-name">OpenAI</span>
+              <span class="provider-desc">GPT-4o, GPT-4-turbo e outros modelos da OpenAI</span>
+            </div>
+          </label>
+          <label class="provider-card" [class.selected]="form.get('provedor')?.value === 'OPENROUTER'">
+            <input type="radio" formControlName="provedor" value="OPENROUTER" (change)="onProvedorChange()" />
+            <div class="provider-info">
+              <span class="provider-name">OpenRouter</span>
+              <span class="provider-desc">Acesso a Claude, Llama, Mistral e centenas de modelos</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- AUTENTICAÇÃO -->
+      <div class="form-card">
+        <h2 class="section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Autenticação
+        </h2>
+        <div class="field-group">
+          <label>API Key</label>
+          <div class="input-with-toggle">
+            <input
+              [type]="mostrarApiKey() ? 'text' : 'password'"
+              formControlName="apiKey"
+              placeholder="sk-..."
+              autocomplete="off"
+            />
+            <button type="button" class="toggle-btn" (click)="toggleApiKey()" [title]="mostrarApiKey() ? 'Ocultar' : 'Mostrar'">
+              <svg *ngIf="!mostrarApiKey()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg *ngIf="mostrarApiKey()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+          <p class="field-hint">Sua chave de API é armazenada com segurança no servidor e nunca exposta ao navegador.</p>
+        </div>
+      </div>
+
+      <!-- MODELO -->
+      <div class="form-card">
+        <h2 class="section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          Modelo e Endpoint
+        </h2>
+        <div class="fields-row">
+          <div class="field-group flex-2">
+            <label>Modelo</label>
+            <input type="text" formControlName="modelo" placeholder="ex: gpt-4o" />
+          </div>
+          <div class="field-group flex-3">
+            <label>Base URL</label>
+            <input type="text" formControlName="baseUrl" placeholder="https://api.openai.com/v1" />
+          </div>
+        </div>
+      </div>
+
+      <!-- PARÂMETROS -->
+      <div class="form-card">
+        <h2 class="section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+          Parâmetros
+        </h2>
+        <div class="field-group temperatura-group">
+          <label>Temperatura — <strong>{{ temperaturaAtual }}</strong></label>
+          <div class="slider-row">
+            <span class="slider-label">Preciso</span>
+            <input type="range" formControlName="temperaturaModelo" min="0.1" max="1.0" step="0.05" class="slider" />
+            <span class="slider-label">Criativo</span>
+          </div>
+          <p class="field-hint">Valores menores (0.1–0.4) geram respostas mais consistentes. Valores maiores (0.7–1.0) mais variadas.</p>
+        </div>
+      </div>
+
+      <!-- PROMPT DO SISTEMA -->
+      <div class="form-card">
+        <h2 class="section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Prompt do Sistema
+        </h2>
+        <div class="field-group">
+          <label>Instruções para o Assistente de IA</label>
+          <textarea
+            formControlName="promptSistema"
+            rows="10"
+            placeholder="Deixe em branco para usar o prompt padrão do sistema..."
+          ></textarea>
+          <p class="field-hint">Define o comportamento base do assistente. Se vazio, o sistema usará o prompt padrão otimizado para geração de dietas com a tabela TACO.</p>
+        </div>
+      </div>
+
+      <!-- TESTE DE CONEXÃO -->
+      <div class="form-card test-card">
+        <h2 class="section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Teste de Conexão
+        </h2>
+        <p class="test-desc">Verifica se a API key e o modelo estão configurados corretamente. Salve antes de testar.</p>
+
+        <div class="test-actions">
+          <button type="button" class="btn-testar" (click)="testarConexao()" [disabled]="isTestando()">
+            <ng-container *ngIf="isTestando(); else testarLabel">
+              <svg class="spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+              Testando...
+            </ng-container>
+            <ng-template #testarLabel>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              Testar Conexão
+            </ng-template>
+          </button>
+
+          <div *ngIf="resultadoTeste()" class="test-result" [class.success]="resultadoTeste()?.sucesso" [class.error]="!resultadoTeste()?.sucesso">
+            <svg *ngIf="resultadoTeste()?.sucesso" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg *ngIf="!resultadoTeste()?.sucesso" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            {{ resultadoTeste()?.mensagem }}
+          </div>
+        </div>
+      </div>
+
+    </form>
+  </ng-template>
+
+</div>

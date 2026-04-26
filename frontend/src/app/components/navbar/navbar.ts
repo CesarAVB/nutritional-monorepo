@@ -238,8 +238,7 @@ export class NavbarComponent {
   // ===========================================
   navigateToSettings(): void {
     this.userMenuOpen = false;
-    // TODO: Implementar navegação para configurações
-    console.log('Navegando para configurações...');
+    this.router.navigate(['/configuracoes']);
   }
 
   // ===========================================
