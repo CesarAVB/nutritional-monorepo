@@ -1,3 +1,9 @@
+## [1.17.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.16.0...v1.17.0) (2026-04-27)
+
+### Features
+
+* adicionar layout de configurações com sidebar e conteúdo principal ([decd0ed](https://github.com/CesarAVB/nutritional-monorepo/commit/decd0ed28a2000b219291a5526d77f8b8a1dbc22))
+
 ## [1.16.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.15.0...v1.16.0) (2026-04-27)
 
 ### Features
