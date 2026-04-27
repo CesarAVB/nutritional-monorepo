@@ -1,3 +1,9 @@
+## [1.12.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.11.0...v1.12.0) (2026-04-27)
+
+### Features
+
+* adicionar distribuição calórica esperada e ajustes na apresentação das kcal totais ([bd4c497](https://github.com/CesarAVB/nutritional-monorepo/commit/bd4c497927e942d9207f63eaeb22437710fc2499))
+
 ## [1.11.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.10.0...v1.11.0) (2026-04-27)
 
 ### Features
