@@ -14,7 +14,7 @@ interface DiaSemana {
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './configuracoes-agendamento.html',
-  styleUrl: './configuracoes-agendamento.css',
+  styleUrl: './configuracoes-agendamento.scss',
 })
 export class ConfiguracoesAgendamentoComponent implements OnInit {
   private fb = inject(FormBuilder);
