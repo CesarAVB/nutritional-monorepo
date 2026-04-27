@@ -258,19 +258,13 @@ public class DietaIAService {
         sb.append("Meta de carboidratos: ").append(request.getCarboidratosG()).append("g\n");
         sb.append("Meta de gorduras: ").append(request.getGordurasG()).append("g\n");
 
-        sb.append("\n=== DISTRIBUICAO CALORICA ESPERADA ===\n");
-        sb.append("REGRA CRITICA: a soma das calorias da OPCAO 1 (principal) de cada refeicao deve ser IGUAL A ")
-          .append(kcalTotal).append(" kcal.\n");
-        sb.append("Cada opcao alternativa (numeroOpcao: 2) deve ter o mesmo valor calorico da opcao 1 da mesma refeicao.\n");
-        sb.append("NUNCA divida as calorias entre as opcoes — cada opcao e uma refeicao completa e independente.\n\n");
-        sb.append("Sugestao de distribuicao (ajuste conforme horario de maior fome):\n");
-        sb.append("- AO_ACORDAR: 0 kcal (apenas agua)\n");
-
         int refeicoesSemAcordar = Math.max(numRefeicoes - 1, 1);
         int kcalPorRefeicao = kcalTotal / refeicoesSemAcordar;
-        sb.append("- Cada uma das demais ").append(refeicoesSemAcordar)
-          .append(" refeicoes: aproximadamente ").append(kcalPorRefeicao).append(" kcal\n");
-        sb.append("  (redistribua conforme os percentuais do prompt do sistema e o horario de maior fome)\n");
+
+        sb.append("\n=== DISTRIBUICAO CALORICA ESPERADA ===\n");
+        sb.append("- AO_ACORDAR: 0 kcal\n");
+        sb.append("- Demais ").append(refeicoesSemAcordar)
+          .append(" refeicoes: ~").append(kcalPorRefeicao).append(" kcal cada (opcao 1 e opcao 2 separadamente)\n");
 
         return sb.toString();
     }
