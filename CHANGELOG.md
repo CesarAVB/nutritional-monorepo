@@ -1,3 +1,9 @@
+## [1.15.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.14.0...v1.15.0) (2026-04-27)
+
+### Features
+
+* renomear colunas de templates de confirmação e lembretes na configuração de agendamento ([d3d9386](https://github.com/CesarAVB/nutritional-monorepo/commit/d3d9386731f72367bcae9eb034b01bf7c6344ebb))
+
 ## [1.14.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.13.0...v1.14.0) (2026-04-27)
 
 ### Features
