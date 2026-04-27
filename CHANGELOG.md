@@ -1,3 +1,9 @@
+## [1.16.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.15.0...v1.16.0) (2026-04-27)
+
+### Features
+
+* adicionar campo de notificação enviada ao DTO de agendamento e lógica de aviso no formulário ([48d9634](https://github.com/CesarAVB/nutritional-monorepo/commit/48d963419c52067f346ac6299f044164f15f8a9d))
+
 ## [1.15.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.14.0...v1.15.0) (2026-04-27)
 
 ### Features
