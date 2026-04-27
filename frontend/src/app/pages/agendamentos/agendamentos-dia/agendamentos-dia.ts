@@ -71,8 +71,12 @@ export class AgendamentosDiaComponent implements OnInit {
     return `${dia}/${mes}/${ano}`;
   }
 
-  formatarHorario(iso: string): string {
-    return iso.substring(11, 16);
+  formatarHorario(iso: string | number[]): string {
+    if (Array.isArray(iso)) {
+      const [, , , h, m] = iso as number[];
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+    return (iso as string).substring(11, 16);
   }
 
   novoAgendamento(): void {
