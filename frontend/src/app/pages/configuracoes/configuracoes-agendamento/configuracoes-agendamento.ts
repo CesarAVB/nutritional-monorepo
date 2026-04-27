@@ -28,6 +28,12 @@ export class ConfiguracoesAgendamentoComponent implements OnInit {
   abaAtiva = signal<string>('agenda');
   resultadoTeste = signal<{ conectado: boolean; mensagem: string } | null>(null);
 
+  paciente_nome = '';
+  nutricionista_nome = '';
+  data_consulta = '';
+  hora_consulta = '';
+  tipo_consulta = '';
+
   form!: FormGroup;
 
   diasSemana: DiaSemana[] = [
