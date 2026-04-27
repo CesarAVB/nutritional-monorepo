@@ -39,6 +39,7 @@ public class WhatsAppWebhookController {
      * @param payload evento webhook no formato Evolution API
      * @return resposta HTTP 200 OK sempre, independente do processamento
      */
+    @SuppressWarnings("unchecked")
     @PostMapping
     public ResponseEntity<Void> receberEvento(@RequestBody Map<String, Object> payload) {
         try {

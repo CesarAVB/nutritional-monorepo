@@ -1,516 +1,339 @@
-<div class="container-fluid py-4">
-  <div class="row">
-    <div class="col-12">
-      <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-          <h4 class="mb-0">
-            <i class="fas fa-calendar-alt me-2"></i>
-            Configurações de Agendamento
-          </h4>
-        </div>
-
-        <div class="card-body">
-          @if (isCarregando()) {
-            <div class="text-center py-5">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Carregando...</span>
-              </div>
-            </div>
-          } @else {
-            <ul class="nav nav-tabs mb-4" role="tablist">
-              <li class="nav-item" role="presentation">
-                <button
-                  class="nav-link"
-                  [class.active]="abaAtiva() === 'agenda'"
-                  (click)="mudarAba('agenda')"
-                  type="button"
-                >
-                  <i class="fas fa-calendar me-1"></i> Agenda
-                </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button
-                  class="nav-link"
-                  [class.active]="abaAtiva() === 'whatsapp'"
-                  (click)="mudarAba('whatsapp')"
-                  type="button"
-                >
-                  <i class="fab fa-whatsapp me-1"></i> WhatsApp
-                </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button
-                  class="nav-link"
-                  [class.active]="abaAtiva() === 'notificacoes'"
-                  (click)="mudarAba('notificacoes')"
-                  type="button"
-                >
-                  <i class="fas fa-bell me-1"></i> Notificações
-                </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button
-                  class="nav-link"
-                  [class.active]="abaAtiva() === 'templates'"
-                  (click)="mudarAba('templates')"
-                  type="button"
-                >
-                  <i class="fas fa-file-alt me-1"></i> Templates
-                </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button
-                  class="nav-link"
-                  [class.active]="abaAtiva() === 'nutricionista'"
-                  (click)="mudarAba('nutricionista')"
-                  type="button"
-                >
-                  <i class="fas fa-user-md me-1"></i> Nutricionista
-                </button>
-              </li>
-            </ul>
-
-            <form [formGroup]="form" (ngSubmit)="salvar()">
-              @if (abaAtiva() === 'agenda') {
-                <div class="tab-content">
-                  <h5 class="mb-3">Configurações de Agenda</h5>
-
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <label for="duracaoPadrao" class="form-label">
-                        Duração Padrão (minutos)
-                      </label>
-                      <input
-                        type="number"
-                        class="form-control"
-                        id="duracaoPadrao"
-                        formControlName="duracaoPadraoMinutos"
-                        min="15"
-                        step="5"
-                      />
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                      <label for="intervalo" class="form-label">
-                        Intervalo Entre Consultas (minutos)
-                      </label>
-                      <input
-                        type="number"
-                        class="form-control"
-                        id="intervalo"
-                        formControlName="intervaloEntreConsultasMinutos"
-                        min="0"
-                        step="5"
-                      />
-                    </div>
-                  </div>
-
-                  <div class="mb-3">
-                    <label class="form-label d-block">Dias de Atendimento</label>
-                    <div class="dias-semana">
-                      @for (dia of diasSemana; track dia.sigla) {
-                        <div class="form-check form-check-inline">
-                          <input
-                            type="checkbox"
-                            class="form-check-input"
-                            [id]="'dia-' + dia.sigla"
-                            [checked]="isDiaAtivo(dia.sigla)"
-                            (change)="toggleDia(dia.sigla)"
-                          />
-                          <label class="form-check-label" [for]="'dia-' + dia.sigla">
-                            {{ dia.label }}
-                          </label>
-                        </div>
-                      }
-                    </div>
-                  </div>
-
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <label for="horarioInicio" class="form-label">
-                        Horário de Início
-                      </label>
-                      <input
-                        type="time"
-                        class="form-control"
-                        id="horarioInicio"
-                        formControlName="horarioInicio"
-                      />
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                      <label for="horarioFim" class="form-label">
-                        Horário de Fim
-                      </label>
-                      <input
-                        type="time"
-                        class="form-control"
-                        id="horarioFim"
-                        formControlName="horarioFim"
-                      />
-                    </div>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="fusoHorario" class="form-label">
-                      Fuso Horário
-                    </label>
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="fusoHorario"
-                      formControlName="fusoHorario"
-                      placeholder="America/Sao_Paulo"
-                    />
-                  </div>
-                </div>
-              }
-
-              @if (abaAtiva() === 'whatsapp') {
-                <div class="tab-content">
-                  <h5 class="mb-3">Configurações do WhatsApp (Evolution API)</h5>
-
-                  <div class="mb-3">
-                    <label for="evolutionUrl" class="form-label">
-                      URL da API
-                    </label>
-                    <input
-                      type="url"
-                      class="form-control"
-                      id="evolutionUrl"
-                      formControlName="evolutionUrl"
-                      placeholder="https://api.evolution.com.br"
-                    />
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="evolutionInstancia" class="form-label">
-                      Nome da Instância
-                    </label>
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="evolutionInstancia"
-                      formControlName="evolutionInstancia"
-                      placeholder="minha-instancia"
-                    />
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="evolutionApiKey" class="form-label">
-                      API Key
-                    </label>
-                    <div class="input-group">
-                      <input
-                        [type]="mostrarApiKey() ? 'text' : 'password'"
-                        class="form-control"
-                        id="evolutionApiKey"
-                        formControlName="evolutionApiKey"
-                        placeholder="Sua chave de API"
-                      />
-                      <button
-                        type="button"
-                        class="btn btn-outline-secondary"
-                        (click)="toggleApiKey()"
-                      >
-                        <i [class]="mostrarApiKey() ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="mb-3">
-                    <button
-                      type="button"
-                      class="btn btn-info"
-                      (click)="testarWhatsapp()"
-                      [disabled]="isTestando()"
-                    >
-                      @if (isTestando()) {
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                      }
-                      <i class="fas fa-plug me-1"></i>
-                      Testar Conexão
-                    </button>
-                  </div>
-
-                  @if (resultadoTeste()) {
-                    <div
-                      class="alert"
-                      [class.alert-success]="resultadoTeste()?.conectado"
-                      [class.alert-danger]="!resultadoTeste()?.conectado"
-                    >
-                      <i
-                        [class]="resultadoTeste()?.conectado ? 'fas fa-check-circle' : 'fas fa-times-circle'"
-                        class="me-2"
-                      ></i>
-                      {{ resultadoTeste()?.mensagem }}
-                    </div>
-                  }
-                </div>
-              }
-
-              @if (abaAtiva() === 'notificacoes') {
-                <div class="tab-content">
-                  <h5 class="mb-3">Configurações de Notificações</h5>
-
-                  <div class="mb-4">
-                    <h6 class="text-muted mb-3">Lembretes Automáticos</h6>
-                    <div class="form-check form-switch mb-2">
-                      <input
-                        type="checkbox"
-                        class="form-check-input"
-                        id="lembreteImediato"
-                        formControlName="lembreteImediatoAtivo"
-                      />
-                      <label class="form-check-label" for="lembreteImediato">
-                        Lembrete Imediato (após criação)
-                      </label>
-                    </div>
-
-                    <div class="form-check form-switch mb-2">
-                      <input
-                        type="checkbox"
-                        class="form-check-input"
-                        id="lembrete72h"
-                        formControlName="lembrete72hAtivo"
-                      />
-                      <label class="form-check-label" for="lembrete72h">
-                        Lembrete 72 horas antes
-                      </label>
-                    </div>
-
-                    <div class="form-check form-switch mb-2">
-                      <input
-                        type="checkbox"
-                        class="form-check-input"
-                        id="lembrete24h"
-                        formControlName="lembrete24hAtivo"
-                      />
-                      <label class="form-check-label" for="lembrete24h">
-                        Lembrete 24 horas antes
-                      </label>
-                    </div>
-
-                    <div class="form-check form-switch mb-2">
-                      <input
-                        type="checkbox"
-                        class="form-check-input"
-                        id="lembrete2h"
-                        formControlName="lembrete2hAtivo"
-                      />
-                      <label class="form-check-label" for="lembrete2h">
-                        Lembrete 2 horas antes
-                      </label>
-                    </div>
-                  </div>
-
-                  <div class="mb-3">
-                    <h6 class="text-muted mb-3">Janela de Notificações</h6>
-                    <p class="text-muted small">
-                      Defina o horário permitido para envio de notificações automáticas
-                    </p>
-
-                    <div class="row">
-                      <div class="col-md-6 mb-3">
-                        <label for="janelaNotifInicio" class="form-label">
-                          Início
-                        </label>
-                        <input
-                          type="time"
-                          class="form-control"
-                          id="janelaNotifInicio"
-                          formControlName="janelaNotifInicio"
-                        />
-                      </div>
-
-                      <div class="col-md-6 mb-3">
-                        <label for="janelaNotifFim" class="form-label">
-                          Fim
-                        </label>
-                        <input
-                          type="time"
-                          class="form-control"
-                          id="janelaNotifFim"
-                          formControlName="janelaNotifFim"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              }
-
-              @if (abaAtiva() === 'templates') {
-                <div class="tab-content">
-                  <h5 class="mb-3">Templates de Mensagens</h5>
-
-                  <div class="alert alert-info mb-3">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>Variáveis disponíveis:</strong>
-                    <div class="mt-2 variaveis-template">
-                      <span class="badge bg-secondary me-1">&#123;&#123;paciente_nome&#125;&#125;</span>
-                      <span class="badge bg-secondary me-1">&#123;&#123;nutricionista_nome&#125;&#125;</span>
-                      <span class="badge bg-secondary me-1">&#123;&#123;data_consulta&#125;&#125;</span>
-                      <span class="badge bg-secondary me-1">&#123;&#123;hora_consulta&#125;&#125;</span>
-                      <span class="badge bg-secondary me-1">&#123;&#123;tipo_consulta&#125;&#125;</span>
-                    </div>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="templateConfirmacao" class="form-label">
-                      Template de Confirmação
-                    </label>
-                    <textarea
-                      class="form-control"
-                      id="templateConfirmacao"
-                      formControlName="templateConfirmacao"
-                      rows="3"
-                      placeholder="Olá &#123;&#123;paciente_nome&#125;&#125;, confirme sua consulta em &#123;&#123;data_consulta&#125;&#125; às &#123;&#123;hora_consulta&#125;&#125;."
-                    ></textarea>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="templateLembrete72h" class="form-label">
-                      Template Lembrete 72h
-                    </label>
-                    <textarea
-                      class="form-control"
-                      id="templateLembrete72h"
-                      formControlName="templateLembrete72h"
-                      rows="3"
-                      placeholder="Lembrete: Faltam 3 dias para sua consulta com &#123;&#123;nutricionista_nome&#125;&#125;."
-                    ></textarea>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="templateLembrete24h" class="form-label">
-                      Template Lembrete 24h
-                    </label>
-                    <textarea
-                      class="form-control"
-                      id="templateLembrete24h"
-                      formControlName="templateLembrete24h"
-                      rows="3"
-                      placeholder="Lembrete: Sua consulta é amanhã às &#123;&#123;hora_consulta&#125;&#125;."
-                    ></textarea>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="templateLembrete2h" class="form-label">
-                      Template Lembrete 2h
-                    </label>
-                    <textarea
-                      class="form-control"
-                      id="templateLembrete2h"
-                      formControlName="templateLembrete2h"
-                      rows="3"
-                      placeholder="Lembrete: Sua consulta é hoje às &#123;&#123;hora_consulta&#125;&#125;."
-                    ></textarea>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="templateConsultaConfirmada" class="form-label">
-                      Template Consulta Confirmada
-                    </label>
-                    <textarea
-                      class="form-control"
-                      id="templateConsultaConfirmada"
-                      formControlName="templateConsultaConfirmada"
-                      rows="3"
-                      placeholder="Consulta confirmada para &#123;&#123;data_consulta&#125;&#125; às &#123;&#123;hora_consulta&#125;&#125;."
-                    ></textarea>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="templateConsultaCancelada" class="form-label">
-                      Template Consulta Cancelada
-                    </label>
-                    <textarea
-                      class="form-control"
-                      id="templateConsultaCancelada"
-                      formControlName="templateConsultaCancelada"
-                      rows="3"
-                      placeholder="Sua consulta de &#123;&#123;tipo_consulta&#125;&#125; foi cancelada."
-                    ></textarea>
-                  </div>
-                </div>
-              }
-
-              @if (abaAtiva() === 'nutricionista') {
-                <div class="tab-content">
-                  <h5 class="mb-3">Notificações do Nutricionista</h5>
-
-                  <div class="mb-3">
-                    <label for="emailNotificacao" class="form-label">
-                      E-mail para Notificações
-                    </label>
-                    <input
-                      type="email"
-                      class="form-control"
-                      id="emailNotificacao"
-                      formControlName="emailNotificacao"
-                      placeholder="nutricionista@exemplo.com"
-                    />
-                  </div>
-
-                  <div class="mb-4">
-                    <h6 class="text-muted mb-3">Alertas</h6>
-
-                    <div class="form-check form-switch mb-2">
-                      <input
-                        type="checkbox"
-                        class="form-check-input"
-                        id="notifAoCriar"
-                        formControlName="notifAoCriar"
-                      />
-                      <label class="form-check-label" for="notifAoCriar">
-                        Notificar ao criar novo agendamento
-                      </label>
-                    </div>
-
-                    <div class="form-check form-switch mb-2">
-                      <input
-                        type="checkbox"
-                        class="form-check-input"
-                        id="notifAoCancelar"
-                        formControlName="notifAoCancelar"
-                      />
-                      <label class="form-check-label" for="notifAoCancelar">
-                        Notificar ao cancelar agendamento
-                      </label>
-                    </div>
-
-                    <div class="form-check form-switch mb-2">
-                      <input
-                        type="checkbox"
-                        class="form-check-input"
-                        id="alertaNaoConfirmacao"
-                        formControlName="alertaNaoConfirmacao"
-                      />
-                      <label class="form-check-label" for="alertaNaoConfirmacao">
-                        Alertar sobre consultas não confirmadas
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              }
-
-              <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                <button
-                  type="submit"
-                  class="btn btn-primary"
-                  [disabled]="isSaving() || form.invalid"
-                >
-                  @if (isSaving()) {
-                    <span class="spinner-border spinner-border-sm me-2"></span>
-                  }
-                  <i class="fas fa-save me-1"></i>
-                  Salvar Configurações
-                </button>
-              </div>
-            </form>
-          }
-        </div>
-      </div>
+<div class="config-container">
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="header-info">
+      <h1>
+        <i class="fas fa-calendar-alt"></i>
+        Configurações de Agendamento
+      </h1>
+      <p class="header-sub">Configure horários de atendimento, notificações e integração com WhatsApp</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-salvar" (click)="salvar()" [disabled]="isSaving()">
+        @if (isSaving()) {
+          <svg class="spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+          Salvando...
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Salvar Configurações
+        }
+      </button>
     </div>
   </div>
+
+  @if (isCarregando()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Carregando configurações...</p>
+    </div>
+  } @else {
+    <!-- TABS -->
+    <div class="tabs-wrapper">
+      <button class="tab-btn" [class.active]="abaAtiva() === 'agenda'" (click)="mudarAba('agenda')">
+        <i class="fas fa-calendar"></i>
+        <span>Agenda</span>
+      </button>
+      <button class="tab-btn" [class.active]="abaAtiva() === 'whatsapp'" (click)="mudarAba('whatsapp')">
+        <i class="fab fa-whatsapp"></i>
+        <span>WhatsApp</span>
+      </button>
+      <button class="tab-btn" [class.active]="abaAtiva() === 'notificacoes'" (click)="mudarAba('notificacoes')">
+        <i class="fas fa-bell"></i>
+        <span>Notificações</span>
+      </button>
+      <button class="tab-btn" [class.active]="abaAtiva() === 'templates'" (click)="mudarAba('templates')">
+        <i class="fas fa-file-code"></i>
+        <span>Templates</span>
+      </button>
+      <button class="tab-btn" [class.active]="abaAtiva() === 'nutricionista'" (click)="mudarAba('nutricionista')">
+        <i class="fas fa-user-md"></i>
+        <span>Nutricionista</span>
+      </button>
+    </div>
+
+    <form [formGroup]="form" class="form-body">
+      @if (abaAtiva() === 'agenda') {
+        <div class="form-card animate-fade-in">
+          <h2 class="section-title">
+            <i class="fas fa-clock"></i>
+            Horários de Atendimento
+          </h2>
+          
+          <div class="fields-row mb-4">
+            <div class="field-group">
+              <label>Duração Padrão (minutos)</label>
+              <input type="number" formControlName="duracaoPadraoMinutos" min="15" step="5" />
+            </div>
+            <div class="field-group">
+              <label>Intervalo Entre Consultas (minutos)</label>
+              <input type="number" formControlName="intervaloEntreConsultasMinutos" min="0" step="5" />
+            </div>
+          </div>
+
+          <div class="field-group mb-4">
+            <label>Dias de Atendimento</label>
+            <div class="dias-semana">
+              @for (dia of diasSemana; track dia.sigla) {
+                <label class="dia-checkbox" [class.active]="isDiaAtivo(dia.sigla)">
+                  <input
+                    type="checkbox"
+                    [checked]="isDiaAtivo(dia.sigla)"
+                    (change)="toggleDia(dia.sigla)"
+                  />
+                  <span>{{ dia.label }}</span>
+                </label>
+              }
+            </div>
+          </div>
+
+          <div class="fields-row mb-4">
+            <div class="field-group">
+              <label>Horário de Início</label>
+              <input type="time" formControlName="horarioInicio" />
+            </div>
+            <div class="field-group">
+              <label>Horário de Fim</label>
+              <input type="time" formControlName="horarioFim" />
+            </div>
+          </div>
+
+          <div class="field-group max-w-sm">
+            <label>Fuso Horário</label>
+            <input type="text" formControlName="fusoHorario" placeholder="America/Sao_Paulo" />
+          </div>
+        </div>
+      }
+
+      @if (abaAtiva() === 'whatsapp') {
+        <div class="form-card animate-fade-in">
+          <h2 class="section-title">
+            <i class="fab fa-whatsapp"></i>
+            Integração Evolution API
+          </h2>
+
+          <div class="field-group mb-4">
+            <label>URL da API</label>
+            <input type="url" formControlName="evolutionUrl" placeholder="https://api.evolution.com.br" />
+          </div>
+
+          <div class="field-group mb-4">
+            <label>Nome da Instância</label>
+            <input type="text" formControlName="evolutionInstancia" placeholder="minha-instancia" />
+          </div>
+
+          <div class="field-group mb-4">
+            <label>API Key</label>
+            <div class="input-with-toggle">
+              <input
+                [type]="mostrarApiKey() ? 'text' : 'password'"
+                formControlName="evolutionApiKey"
+                placeholder="Sua chave de API"
+              />
+              <button type="button" class="toggle-btn" (click)="toggleApiKey()">
+                <i [class]="mostrarApiKey() ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="test-actions mt-4">
+            <button type="button" class="btn-testar" (click)="testarWhatsapp()" [disabled]="isTestando()">
+              @if (isTestando()) {
+                <svg class="spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                Testando...
+              } @else {
+                <i class="fas fa-plug"></i> Testar Conexão
+              }
+            </button>
+
+            @if (resultadoTeste()) {
+              <div class="test-result" [class.success]="resultadoTeste()?.conectado" [class.error]="!resultadoTeste()?.conectado">
+                <i [class]="resultadoTeste()?.conectado ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+                {{ resultadoTeste()?.mensagem }}
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      @if (abaAtiva() === 'notificacoes') {
+        <div class="form-card animate-fade-in">
+          <h2 class="section-title">
+            <i class="fas fa-bell"></i>
+            Lembretes Automáticos para Pacientes
+          </h2>
+          
+          <div class="switches-list mb-5">
+            <label class="switch-item">
+              <div class="switch-info">
+                <span class="switch-title">Lembrete Imediato</span>
+                <span class="switch-desc">Enviado assim que a consulta é agendada no sistema</span>
+              </div>
+              <div class="switch-control">
+                <input type="checkbox" formControlName="lembreteImediatoAtivo" />
+                <span class="slider round"></span>
+              </div>
+            </label>
+
+            <label class="switch-item">
+              <div class="switch-info">
+                <span class="switch-title">Lembrete 72h antes</span>
+                <span class="switch-desc">Mensagem enviada 3 dias antes da data da consulta</span>
+              </div>
+              <div class="switch-control">
+                <input type="checkbox" formControlName="lembrete72hAtivo" />
+                <span class="slider round"></span>
+              </div>
+            </label>
+
+            <label class="switch-item">
+              <div class="switch-info">
+                <span class="switch-title">Lembrete 24h antes</span>
+                <span class="switch-desc">Mensagem enviada 1 dia antes, solicitando confirmação</span>
+              </div>
+              <div class="switch-control">
+                <input type="checkbox" formControlName="lembrete24hAtivo" />
+                <span class="slider round"></span>
+              </div>
+            </label>
+
+            <label class="switch-item">
+              <div class="switch-info">
+                <span class="switch-title">Lembrete 2h antes</span>
+                <span class="switch-desc">Mensagem enviada no dia da consulta, 2 horas antes</span>
+              </div>
+              <div class="switch-control">
+                <input type="checkbox" formControlName="lembrete2hAtivo" />
+                <span class="slider round"></span>
+              </div>
+            </label>
+          </div>
+
+          <h2 class="section-title">
+            <i class="fas fa-moon"></i>
+            Janela de Notificações
+          </h2>
+          <p class="field-hint mb-3">Defina o horário permitido para envio de notificações automáticas (evita mensagens de madrugada).</p>
+          
+          <div class="fields-row">
+            <div class="field-group">
+              <label>Horário Inicial Permitido</label>
+              <input type="time" formControlName="janelaNotifInicio" />
+            </div>
+            <div class="field-group">
+              <label>Horário Final Permitido</label>
+              <input type="time" formControlName="janelaNotifFim" />
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (abaAtiva() === 'templates') {
+        <div class="form-card animate-fade-in">
+          <h2 class="section-title">
+            <i class="fas fa-envelope-open-text"></i>
+            Templates de Mensagens
+          </h2>
+          
+          <div class="info-alert mb-4">
+            <i class="fas fa-info-circle"></i>
+            <div class="info-content">
+              <strong>Variáveis disponíveis nos templates:</strong>
+              <div class="tags-list">
+                <span class="tag">&#123;&#123;paciente_nome&#125;&#125;</span>
+                <span class="tag">&#123;&#123;nutricionista_nome&#125;&#125;</span>
+                <span class="tag">&#123;&#123;data_consulta&#125;&#125;</span>
+                <span class="tag">&#123;&#123;hora_consulta&#125;&#125;</span>
+                <span class="tag">&#123;&#123;tipo_consulta&#125;&#125;</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-group mb-4">
+            <label>Template de Confirmação Inicial (Imediato)</label>
+            <textarea formControlName="templateConfirmacao" rows="3" placeholder="Olá &#123;&#123;paciente_nome&#125;&#125;, confirme sua consulta em &#123;&#123;data_consulta&#125;&#125; às &#123;&#123;hora_consulta&#125;&#125;."></textarea>
+          </div>
+
+          <div class="field-group mb-4">
+            <label>Template Lembrete 72h</label>
+            <textarea formControlName="templateLembrete72h" rows="3" placeholder="Lembrete: Faltam 3 dias para sua consulta..."></textarea>
+          </div>
+
+          <div class="field-group mb-4">
+            <label>Template Lembrete 24h</label>
+            <textarea formControlName="templateLembrete24h" rows="3" placeholder="Lembrete: Sua consulta é amanhã às &#123;&#123;hora_consulta&#125;&#125;."></textarea>
+          </div>
+
+          <div class="field-group mb-4">
+            <label>Template Lembrete 2h</label>
+            <textarea formControlName="templateLembrete2h" rows="3" placeholder="Lembrete: Sua consulta é hoje às &#123;&#123;hora_consulta&#125;&#125;."></textarea>
+          </div>
+
+          <div class="field-group mb-4">
+            <label>Template de Consulta Confirmada (Após resposta do paciente)</label>
+            <textarea formControlName="templateConsultaConfirmada" rows="3" placeholder="Sua consulta para &#123;&#123;data_consulta&#125;&#125; foi confirmada com sucesso!"></textarea>
+          </div>
+
+          <div class="field-group">
+            <label>Template de Consulta Cancelada</label>
+            <textarea formControlName="templateConsultaCancelada" rows="3" placeholder="Sua consulta de &#123;&#123;tipo_consulta&#125;&#125; foi cancelada."></textarea>
+          </div>
+        </div>
+      }
+
+      @if (abaAtiva() === 'nutricionista') {
+        <div class="form-card animate-fade-in">
+          <h2 class="section-title">
+            <i class="fas fa-user-md"></i>
+            Avisos para o Profissional
+          </h2>
+
+          <div class="field-group mb-5">
+            <label>E-mail para Receber Notificações</label>
+            <input type="email" formControlName="emailNotificacao" placeholder="nutricionista@exemplo.com" />
+            <p class="field-hint">Deixe em branco para usar o e-mail de login da sua conta.</p>
+          </div>
+
+          <h2 class="section-title">
+            <i class="fas fa-exclamation-circle"></i>
+            Eventos de Alerta
+          </h2>
+
+          <div class="switches-list">
+            <label class="switch-item">
+              <div class="switch-info">
+                <span class="switch-title">Notificar ao Criar</span>
+                <span class="switch-desc">Receber aviso quando uma consulta for criada (ex: via link externo)</span>
+              </div>
+              <div class="switch-control">
+                <input type="checkbox" formControlName="notifAoCriar" />
+                <span class="slider round"></span>
+              </div>
+            </label>
+
+            <label class="switch-item">
+              <div class="switch-info">
+                <span class="switch-title">Notificar Cancelamentos</span>
+                <span class="switch-desc">Receber aviso quando o paciente cancelar ou pedir reagendamento</span>
+              </div>
+              <div class="switch-control">
+                <input type="checkbox" formControlName="notifAoCancelar" />
+                <span class="slider round"></span>
+              </div>
+            </label>
+
+            <label class="switch-item">
+              <div class="switch-info">
+                <span class="switch-title">Alerta de Não Confirmação</span>
+                <span class="switch-desc">Avisar se o paciente não confirmar 24h antes da consulta</span>
+              </div>
+              <div class="switch-control">
+                <input type="checkbox" formControlName="alertaNaoConfirmacao" />
+                <span class="slider round"></span>
+              </div>
+            </label>
+          </div>
+        </div>
+      }
+    </form>
+  }
 </div>
