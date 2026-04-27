@@ -27,6 +27,7 @@ export class AgendamentoFormComponent implements OnInit {
   pacienteSelecionado: PacienteDTO | null = null;
   showDropdown = false;
   dataPreenchida = ''; // YYYY-MM-DD pré-vinda da queryParam
+  private buscaDebounce: ReturnType<typeof setTimeout> | null = null;
 
   readonly tipos: TipoAgendamento[] = ['PRIMEIRA_CONSULTA', 'RETORNO', 'AVALIACAO'];
   readonly tipoLabel: Record<TipoAgendamento, string> = {
@@ -119,10 +120,13 @@ export class AgendamentoFormComponent implements OnInit {
   buscarPacientes(event: Event): void {
     const termo = (event.target as HTMLInputElement).value;
     if (termo.length < 2) { this.pacientesBusca = []; this.showDropdown = false; return; }
-    this.pacienteService.buscarPorNome(termo).subscribe({
-      next: (lista) => { this.pacientesBusca = lista.slice(0, 8); this.showDropdown = true; },
-      error: () => { this.pacientesBusca = []; }
-    });
+    if (this.buscaDebounce) clearTimeout(this.buscaDebounce);
+    this.buscaDebounce = setTimeout(() => {
+      this.pacienteService.buscarPorNome(termo).subscribe({
+        next: (lista) => { this.pacientesBusca = lista.slice(0, 8); this.showDropdown = true; },
+        error: () => { this.pacientesBusca = []; }
+      });
+    }, 300);
   }
 
   selecionarPaciente(p: PacienteDTO): void {

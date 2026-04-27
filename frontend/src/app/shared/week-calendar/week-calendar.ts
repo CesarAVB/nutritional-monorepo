@@ -19,14 +19,27 @@ export class WeekCalendarComponent {
   @Output() diaSelecionado = new EventEmitter<string>();
 
   protected readonly DIAS_SEMANA = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+  protected readonly hoje_str = new Date().toISOString().split('T')[0];
 
-  protected formatarData(dataStr: string): string {
-    const [, mes, dia] = dataStr.split('-');
-    return `${dia}/${mes}`;
+  protected formatarPeriodo(): string {
+    if (!this.semana) return '';
+    const [, mesI, diaI] = this.semana.dataInicio.split('-');
+    const [, mesF, diaF] = this.semana.dataFim.split('-');
+    return mesI === mesF
+      ? `${diaI} – ${diaF}/${mesF}`
+      : `${diaI}/${mesI} – ${diaF}/${mesF}`;
+  }
+
+  protected numeroDia(dataStr: string): string {
+    return dataStr.split('-')[2].replace(/^0/, '');
+  }
+
+  protected primeiroNome(nomeCompleto: string): string {
+    return nomeCompleto.split(' ')[0];
   }
 
   protected ehHoje(dataStr: string): boolean {
-    return dataStr === new Date().toISOString().split('T')[0];
+    return dataStr === this.hoje_str;
   }
 
   protected formatarHorario(isoStr: string): string {
@@ -35,12 +48,12 @@ export class WeekCalendarComponent {
 
   protected corStatus(status: StatusAgendamento): string {
     const cores: Record<StatusAgendamento, string> = {
-      AGUARDANDO_CONFIRMACAO: 'chip-warning',
-      CONFIRMADO: 'chip-success',
-      REALIZADO: 'chip-info',
-      CANCELADO: 'chip-danger',
-      FALTA: 'chip-muted'
+      AGUARDANDO_CONFIRMACAO: 'warning',
+      CONFIRMADO: 'success',
+      REALIZADO: 'info',
+      CANCELADO: 'danger',
+      FALTA: 'muted'
     };
-    return cores[status] ?? 'chip-muted';
+    return cores[status] ?? 'muted';
   }
 }

@@ -45,7 +45,7 @@
   } @else {
     <div class="agendamentos-list">
       @for (ag of agendamentos; track ag.id) {
-        <div class="agendamento-card" [class]="statusClass[ag.status]">
+        <div class="agendamento-card" [ngClass]="statusClass[ag.status]">
           <div class="card-time">
             <span class="horario">{{ formatarHorario(ag.dataHoraInicio) }}</span>
             <span class="duracao">{{ ag.duracaoMinutos }}min</span>

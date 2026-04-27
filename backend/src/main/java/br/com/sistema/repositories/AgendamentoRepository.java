@@ -3,6 +3,7 @@ package br.com.sistema.repositories;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -89,6 +90,16 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
      * @param agora momento atual para filtrar apenas agendamentos futuros
      * @return lista de agendamentos aguardando confirmação ordenados por data
      */
+    /**
+     * Busca o agendamento realizado mais recente de um paciente para exibir última visita.
+     *
+     * @param pacienteId ID do paciente
+     * @return agendamento mais recente com status REALIZADO
+     */
+    @Query("SELECT a FROM Agendamento a WHERE a.paciente.id = :pacienteId " +
+           "AND a.status = 'REALIZADO' ORDER BY a.dataHoraInicio DESC LIMIT 1")
+    Optional<Agendamento> findUltimaVisita(@Param("pacienteId") Long pacienteId);
+
     @Query("SELECT a FROM Agendamento a JOIN FETCH a.paciente p " +
            "WHERE p.telefoneWhatsapp = :numero " +
            "AND a.status = 'AGUARDANDO_CONFIRMACAO' " +

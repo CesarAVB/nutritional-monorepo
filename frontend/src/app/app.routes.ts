@@ -10,6 +10,7 @@ import { DietaFormComponent } from './pages/dietas/dieta-form/dieta-form';
 import { ConfiguracoesIAComponent } from './pages/configuracoes/configuracoes-ia';
 import { CustosIAComponent } from './pages/configuracoes/custos-ia';
 import { ConfiguracoesAgendamentoComponent } from './pages/configuracoes/configuracoes-agendamento/configuracoes-agendamento';
+import { ConfiguracoesLayoutComponent } from './pages/configuracoes/layout/configuracoes-layout';
 import { LoginComponent } from './pages/login/login';
 import { AgendamentosDiaComponent } from './pages/agendamentos/agendamentos-dia/agendamentos-dia';
 import { AgendamentoFormComponent } from './pages/agendamentos/agendamento-form/agendamento-form';
@@ -94,15 +95,30 @@ export const routes: Routes = [
   },
   {
     path: 'configuracoes',
-    component: ConfiguracoesIAComponent,
-    title: 'Configurações de IA - NutriControl',
-    canActivate: [authGuard]
-  },
-  {
-    path: 'configuracoes/custos-ia',
-    component: CustosIAComponent,
-    title: 'Custos de IA - NutriControl',
-    canActivate: [authGuard]
+    component: ConfiguracoesLayoutComponent,
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        redirectTo: 'agendamento',
+        pathMatch: 'full'
+      },
+      {
+        path: 'agendamento',
+        component: ConfiguracoesAgendamentoComponent,
+        title: 'Configurações de Agendamento - NutriControl'
+      },
+      {
+        path: 'ia',
+        component: ConfiguracoesIAComponent,
+        title: 'Configurações de IA - NutriControl'
+      },
+      {
+        path: 'custos-ia',
+        component: CustosIAComponent,
+        title: 'Custos de IA - NutriControl'
+      }
+    ]
   },
   {
     path: 'agendamentos',
@@ -121,11 +137,5 @@ export const routes: Routes = [
     component: AgendamentoFormComponent,
     title: 'Editar Agendamento - NutriControl',
     canActivate: [authGuard]
-  },
-  {
-    path: 'configuracoes/agendamento',
-    component: ConfiguracoesAgendamentoComponent,
-    title: 'Configurações de Agendamento - NutriControl',
-    canActivate: [authGuard]
-  },
+  }
 ];

@@ -15,6 +15,7 @@ import br.com.sistema.dtos.PacienteDTO;
 import br.com.sistema.exceptions.BusinessException;
 import br.com.sistema.exceptions.ResourceNotFoundException;
 import br.com.sistema.models.Paciente;
+import br.com.sistema.repositories.AgendamentoRepository;
 import br.com.sistema.repositories.ConsultaRepository;
 import br.com.sistema.repositories.PacienteRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class PacienteService {
     
     private final PacienteRepository pacienteRepository;
     private final ConsultaRepository consultaRepository;
+    private final AgendamentoRepository agendamentoRepository;
     
     /**
      * Cadastra novo paciente validando unicidade de CPF e obrigatoriedade
@@ -203,8 +205,23 @@ public class PacienteService {
         Long totalConsultas = consultaRepository.countByPacienteId(paciente.getId());
         dto.setTotalConsultas(totalConsultas.intValue());
 
-        consultaRepository.findFirstByPacienteIdOrderByDataConsultaDesc(paciente.getId())
-                .ifPresent(c -> dto.setUltimaConsulta(c.getDataConsulta()));
+        LocalDateTime ultimaConsulta = consultaRepository
+                .findFirstByPacienteIdOrderByDataConsultaDesc(paciente.getId())
+                .map(c -> c.getDataConsulta())
+                .orElse(null);
+
+        LocalDateTime ultimoAgendamento = agendamentoRepository
+                .findUltimaVisita(paciente.getId())
+                .map(a -> a.getDataHoraInicio())
+                .orElse(null);
+
+        if (ultimaConsulta != null && ultimoAgendamento != null) {
+            dto.setUltimaConsulta(ultimaConsulta.isAfter(ultimoAgendamento) ? ultimaConsulta : ultimoAgendamento);
+        } else if (ultimoAgendamento != null) {
+            dto.setUltimaConsulta(ultimoAgendamento);
+        } else if (ultimaConsulta != null) {
+            dto.setUltimaConsulta(ultimaConsulta);
+        }
 
         return dto;
     }

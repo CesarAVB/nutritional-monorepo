@@ -1,0 +1,22 @@
+<div class="config-layout-container">
+  <aside class="config-sidebar">
+    <h2 class="sidebar-title">Configurações</h2>
+    <nav class="sidebar-nav">
+      <a routerLink="/configuracoes/agendamento" routerLinkActive="active" class="nav-item">
+        <i class="fas fa-calendar-alt"></i>
+        <span>Agendamentos</span>
+      </a>
+      <a routerLink="/configuracoes/ia" routerLinkActive="active" class="nav-item">
+        <i class="fas fa-robot"></i>
+        <span>Inteligência Artificial</span>
+      </a>
+      <a routerLink="/configuracoes/custos-ia" routerLinkActive="active" class="nav-item">
+        <i class="fas fa-dollar-sign"></i>
+        <span>Custos de IA</span>
+      </a>
+    </nav>
+  </aside>
+  <main class="config-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

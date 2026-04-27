@@ -1,42 +1,60 @@
-<div class="calendar-wrapper">
-  <div class="calendar-header">
-    <button class="nav-btn" (click)="semanaAnterior.emit()">
-      <i class="fas fa-chevron-left"></i>
-    </button>
-    <span class="periodo" *ngIf="semana">
-      {{ formatarData(semana.dataInicio) }} – {{ formatarData(semana.dataFim) }}
-    </span>
-    <button class="nav-btn" (click)="proximaSemana.emit()">
-      <i class="fas fa-chevron-right"></i>
-    </button>
-    <button class="hoje-btn" (click)="hoje.emit()">Hoje</button>
+<div class="gcal-wrapper">
+  <!-- Cabeçalho com navegação -->
+  <div class="gcal-header">
+    <div class="gcal-header-left">
+      <h3 class="gcal-title">Agenda da Semana</h3>
+      @if (semana) {
+        <span class="gcal-periodo">{{ formatarPeriodo() }}</span>
+      }
+    </div>
+    <div class="gcal-header-right">
+      <button class="gcal-nav-btn" (click)="semanaAnterior.emit()" title="Semana anterior">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button class="gcal-nav-btn" (click)="proximaSemana.emit()" title="Próxima semana">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+      <button class="gcal-hoje-btn" (click)="hoje.emit()">Hoje</button>
+      <button class="gcal-ver-dia-btn" (click)="diaSelecionado.emit(hoje_str)">
+        Ver dia <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
   </div>
 
   @if (carregando) {
-    <div class="calendar-loading">
-      <div class="spinner-small"></div>
+    <div class="gcal-loading">
+      <div class="gcal-spinner"></div>
     </div>
   } @else if (semana) {
-    <div class="calendar-grid">
+    <!-- Grade de dias -->
+    <div class="gcal-grid">
       @for (dia of semana.dias; track dia.data; let i = $index) {
-        <div class="day-col" [class.hoje]="ehHoje(dia.data)" (click)="diaSelecionado.emit(dia.data)">
-          <div class="day-header">
-            <span class="day-name">{{ DIAS_SEMANA[i] }}</span>
-            <span class="day-num" [class.hoje-num]="ehHoje(dia.data)">{{ formatarData(dia.data).split('/')[0] }}</span>
+        <div class="gcal-day" [class.gcal-day--hoje]="ehHoje(dia.data)" (click)="diaSelecionado.emit(dia.data)">
+          <div class="gcal-day-header">
+            <span class="gcal-day-name">{{ DIAS_SEMANA[i] }}</span>
+            <span class="gcal-day-num" [class.gcal-day-num--hoje]="ehHoje(dia.data)">
+              {{ numeroDia(dia.data) }}
+            </span>
           </div>
-          <div class="day-events">
+          <div class="gcal-day-body">
             @for (ag of dia.agendamentos; track ag.id) {
-              <div class="event-chip" [class]="corStatus(ag.status)" (click)="$event.stopPropagation(); diaSelecionado.emit(dia.data)">
-                <span class="event-time">{{ formatarHorario(ag.dataHoraInicio) }}</span>
-                <span class="event-name">{{ ag.nomePaciente.split(' ')[0] }}</span>
+              <div class="gcal-event" [class]="'gcal-event--' + corStatus(ag.status)"
+                   (click)="$event.stopPropagation(); diaSelecionado.emit(dia.data)"
+                   [title]="ag.nomePaciente + ' — ' + formatarHorario(ag.dataHoraInicio)">
+                <span class="gcal-event-time">{{ formatarHorario(ag.dataHoraInicio) }}</span>
+                <span class="gcal-event-name">{{ primeiroNome(ag.nomePaciente) }}</span>
               </div>
             }
             @if (dia.agendamentos.length === 0) {
-              <span class="no-events">–</span>
+              <span class="gcal-empty">—</span>
             }
           </div>
         </div>
       }
+    </div>
+  } @else {
+    <div class="gcal-loading">
+      <span class="gcal-empty-msg">Nenhum dado para exibir</span>
     </div>
   }
 </div>

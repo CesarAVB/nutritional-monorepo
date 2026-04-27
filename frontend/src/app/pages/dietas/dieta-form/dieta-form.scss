@@ -152,7 +152,7 @@
     padding: 0.55rem 0.75rem;
     font-size: 0.9rem;
     color: #1e293b;
-    background: rgba(255, 255, 255, 0.9);
+    background: #fff;
     transition: border-color 0.2s;
     width: 100%;
     &:focus { outline: none; border-color: #0d9488; background: #fff; }
@@ -182,8 +182,8 @@
   border: 1.5px solid var(--gray-200, #e2e8f0);
   border-radius: 8px;
   overflow: hidden;
-  background: #fafbfc;
-  &:focus-within { border-color: #0d9488; background: #fff; }
+  background: #fff;
+  &:focus-within { border-color: #0d9488; }
 
   input {
     border: none; border-radius: 0; flex: 1;
@@ -387,6 +387,38 @@
   background: #0d9488; color: #fff;
   font-size: 0.82rem;
   &:hover { background: #0b826f; }
+}
+
+/* ====================== IA OVERLAY ====================== */
+.ia-loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.ia-loading-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+
+  svg { color: #6366f1; }
+
+  p {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+  }
 }
 
 /* ====================== FORM ACTIONS ====================== */

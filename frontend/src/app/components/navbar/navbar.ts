@@ -255,11 +255,6 @@ export class NavbarComponent implements OnInit {
     this.router.navigate(['/configuracoes']);
   }
 
-  navigateToCustosIA(): void {
-    this.userMenuOpen = false;
-    this.router.navigate(['/configuracoes/custos-ia']);
-  }
-
   // ===========================================
   // # navegarParaAgendamentos - Navega para agendamentos
   // ===========================================
