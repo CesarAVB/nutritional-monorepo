@@ -176,6 +176,7 @@ export class DietaFormComponent implements OnInit {
       nome: ['', Validators.required],
       quantidade: [null],
       unidade: [''],
+      calorias: [null],
       ordem: [0],
     });
   }
@@ -226,6 +227,7 @@ export class DietaFormComponent implements OnInit {
                         nome: [a.nome, Validators.required],
                         quantidade: [a.quantidade],
                         unidade: [a.unidade],
+                        calorias: [a.calorias],
                         ordem: [a.ordem],
                       })
                     )
@@ -372,6 +374,7 @@ export class DietaFormComponent implements OnInit {
                     nome: [a.nome, Validators.required],
                     quantidade: [a.quantidade ?? null],
                     unidade: [a.unidade ?? ''],
+                    calorias: [a.calorias ?? null],
                     ordem: [a.ordem ?? 0],
                   })
                 )
@@ -403,10 +406,10 @@ export class DietaFormComponent implements OnInit {
       const alimentos = primeiraOpcao.get('alimentos') as FormArray;
       if (alimentos) {
         alimentos.controls.forEach((a: any) => {
-          // A estimativa simples: considera 1g de comida = 1-2 kcal dependendo do tipo, 
-          // ou aqui apenas um valor fixo se não houver base de dados.
-          // Como não temos base nutricional, usaremos uma estimativa genérica de 150kcal por alimento comum
-          total += 150;
+          const calorias = a.get('calorias')?.value;
+          if (calorias) {
+            total += Number(calorias);
+          }
         });
       }
     }

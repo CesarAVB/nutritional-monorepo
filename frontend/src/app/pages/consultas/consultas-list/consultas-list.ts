@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, signal, inject, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -14,7 +14,7 @@ import { ToastService } from '../../../services/toast';
   styleUrl: './consultas-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ConsultasListComponent implements OnInit, OnDestroy {
+export class ConsultasListComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private consultaService = inject(ConsultaService);
@@ -30,7 +30,6 @@ export class ConsultasListComponent implements OnInit, OnDestroy {
   totalPaginas = signal(0);
   totalItens = signal(0);
   pacienteIdFiltro = signal<number | null>(null);
-  private debounceHandle: ReturnType<typeof setTimeout> | null = null;
 
   consultasFiltradas = computed(() => {
     const termo = this.searchTermAplicado().toLowerCase().trim();
@@ -51,13 +50,6 @@ export class ConsultasListComponent implements OnInit, OnDestroy {
     const pacienteId = Number(this.route.snapshot.queryParamMap.get('pacienteId'));
     this.pacienteIdFiltro.set(Number.isFinite(pacienteId) ? pacienteId : null);
     this.carregarConsultas(0);
-  }
-
-  ngOnDestroy(): void {
-    if (this.debounceHandle) {
-      clearTimeout(this.debounceHandle);
-      this.debounceHandle = null;
-    }
   }
 
   // ===========================================
@@ -89,18 +81,11 @@ export class ConsultasListComponent implements OnInit, OnDestroy {
   }
 
   // ===========================================
-  // # onSearchTermChange - Atualiza termo aplicado com debounce
+  // # onSearchTermChange - Atualiza termo aplicado sem delay
   // ===========================================
   onSearchTermChange(value: string): void {
     this.searchTerm.set(value);
-
-    if (this.debounceHandle) {
-      clearTimeout(this.debounceHandle);
-    }
-
-    this.debounceHandle = setTimeout(() => {
-      this.searchTermAplicado.set(value);
-    }, 350);
+    this.searchTermAplicado.set(value);
   }
 
   // ===========================================

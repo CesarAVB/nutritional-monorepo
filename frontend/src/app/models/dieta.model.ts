@@ -21,6 +21,7 @@ export interface AlimentoRefeicaoDTO {
   quantidade?: number;
   unidade?: string;
   ordem?: number;
+  calorias?: number;
 }
 
 export interface RefeicaoOpcaoDTO {
@@ -101,6 +102,7 @@ export interface DietaRequest {
         nome: string;
         quantidade?: number;
         unidade?: string;
+        calorias?: number;
         ordem?: number;
       }[];
     }[];

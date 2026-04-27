@@ -41,4 +41,7 @@ public class AlimentoRefeicao {
 
     @Column(nullable = false)
     private Integer ordem = 0;
+
+    @Column(precision = 8, scale = 2)
+    private BigDecimal calorias;
 }
