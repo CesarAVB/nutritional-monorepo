@@ -153,7 +153,8 @@ export class AgendamentoFormComponent implements OnInit {
     }
     this.isSaving = true;
     const v = this.form.value;
-    const dataHoraInicio = `${v.data}T${v.horario}:00`;
+    const horario = v.horario.includes(':') ? v.horario.substring(0, 5) : v.horario;
+    const dataHoraInicio = `${v.data}T${horario}:00`;
 
     const dto: AgendamentoRequestDto = {
       pacienteId: v.pacienteId,
