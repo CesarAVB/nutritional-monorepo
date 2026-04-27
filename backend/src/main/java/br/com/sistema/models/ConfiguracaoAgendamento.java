@@ -83,21 +83,21 @@ public class ConfiguracaoAgendamento {
     @Convert(converter = AesEncryptedConverter.class)
     private String evolutionApiKey;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "template_confirmacao", columnDefinition = "TEXT")
     private String templateConfirmacao;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "template_lembrete_72h", columnDefinition = "TEXT")
     private String templateLembrete72h;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "template_lembrete_24h", columnDefinition = "TEXT")
     private String templateLembrete24h;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "template_lembrete_2h", columnDefinition = "TEXT")
     private String templateLembrete2h;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "template_consulta_confirmada", columnDefinition = "TEXT")
     private String templateConsultaConfirmada;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "template_consulta_cancelada", columnDefinition = "TEXT")
     private String templateConsultaCancelada;
 }
