@@ -1,3 +1,15 @@
+## [1.14.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.13.0...v1.14.0) (2026-04-27)
+
+### Features
+
+* adicionar configurações de agendamento com interface e serviço ([7ddba9f](https://github.com/CesarAVB/nutritional-monorepo/commit/7ddba9f935c5d903e5965b485503284b494a803a))
+* adicionar funcionalidades de agendamento com calendário semanal e contagem de consultas ([95bda61](https://github.com/CesarAVB/nutritional-monorepo/commit/95bda617be56906a4169eaab478168c0b56a991c))
+* adicionar funcionalidades de agendamento com formulários e listagem por dia ([e22ce64](https://github.com/CesarAVB/nutritional-monorepo/commit/e22ce640676f137461f1af86be1df7efdd889c5d))
+* adicionar funcionalidades de agendamento e notificações com criptografia AES ([a8077aa](https://github.com/CesarAVB/nutritional-monorepo/commit/a8077aaa61da4e5a6ea4cffa0f50a22a1cd5858a))
+* atualizar placeholders de templates de lembretes e confirmações para suportar interpolação ([812e94a](https://github.com/CesarAVB/nutritional-monorepo/commit/812e94a317761e85f6f39e94fef96b9edd02dd5c))
+* implementar serviço de agendamento com CRUD, validação de conflitos e integração com WhatsApp ([f140704](https://github.com/CesarAVB/nutritional-monorepo/commit/f140704b9f46ef73a66ae6e48b0950e9864b1692))
+* implementar serviço de notificações de agendamento via WhatsApp e Email, incluindo agendamento de lembretes ([d3cf4fe](https://github.com/CesarAVB/nutritional-monorepo/commit/d3cf4fe896e5705a0e1b3e8fccc55589d280363f))
+
 ## [1.13.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.12.0...v1.13.0) (2026-04-27)
 
 ### Features
