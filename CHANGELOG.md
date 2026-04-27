@@ -1,3 +1,10 @@
+## [1.11.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.10.0...v1.11.0) (2026-04-27)
+
+### Features
+
+* adicionar campo de calorias em AlimentoRefeicao e atualizar interfaces relacionadas ([01026b8](https://github.com/CesarAVB/nutritional-monorepo/commit/01026b828e4a3792cb46eac8547e01a7187fccab))
+* adicionar campo de calorias em AlimentoRefeicao e atualizar métodos relacionados ([e918d0d](https://github.com/CesarAVB/nutritional-monorepo/commit/e918d0d5a7952a89957a4b2f400ef45f4f538608))
+
 ## [1.10.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.9.0...v1.10.0) (2026-04-26)
 
 ### Features
