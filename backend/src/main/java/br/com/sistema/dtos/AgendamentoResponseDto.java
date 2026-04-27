@@ -24,4 +24,5 @@ public class AgendamentoResponseDto {
     private StatusAgendamento status;
     private String observacoes;
     private LocalDateTime criadoEm;
+    private boolean notificacaoEnviada = true;
 }

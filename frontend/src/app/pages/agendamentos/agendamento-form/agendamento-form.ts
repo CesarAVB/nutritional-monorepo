@@ -166,6 +166,11 @@ export class AgendamentoFormComponent implements OnInit {
     op.subscribe({
       next: (ag) => {
         this.toastService.success(this.isEditMode ? 'Agendamento atualizado!' : 'Agendamento criado!');
+        if (!this.isEditMode && ag.notificacaoEnviada === false) {
+          setTimeout(() => {
+            this.toastService.warning('Notificação WhatsApp não enviada. Configure a integração em Configurações de Agendamento.');
+          }, 500);
+        }
         const data = ag.dataHoraInicio.substring(0, 10);
         this.router.navigate(['/agendamentos'], { queryParams: { data } });
       },

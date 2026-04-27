@@ -13,6 +13,7 @@ export interface AgendamentoResponseDto {
   status: StatusAgendamento;
   observacoes?: string;
   criadoEm: string;
+  notificacaoEnviada: boolean;
 }
 
 export interface AgendamentoDiaDto {

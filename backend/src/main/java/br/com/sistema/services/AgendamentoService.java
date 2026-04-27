@@ -82,13 +82,17 @@ public class AgendamentoService {
 
         Agendamento saved = agendamentoRepository.save(agendamento);
 
+        boolean notificacaoEnviada = true;
         try {
             notificacaoService.enviarNotificacaoImediata(saved);
         } catch (Exception ex) {
             log.warn("Falha ao enviar notificação imediata para agendamento {}: {}", saved.getId(), ex.getMessage());
+            notificacaoEnviada = false;
         }
 
-        return toDto(saved);
+        AgendamentoResponseDto dto = toDto(saved);
+        dto.setNotificacaoEnviada(notificacaoEnviada);
+        return dto;
     }
 
     /**
