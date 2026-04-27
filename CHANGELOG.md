@@ -1,3 +1,9 @@
+## [1.18.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.17.0...v1.18.0) (2026-04-27)
+
+### Features
+
+* aprimorar calendário semanal com estilo e funcionalidade de eventos ([ec10041](https://github.com/CesarAVB/nutritional-monorepo/commit/ec100411e5b95ba4369ab198702fc1237da60713))
+
 ## [1.17.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.16.0...v1.17.0) (2026-04-27)
 
 ### Features
