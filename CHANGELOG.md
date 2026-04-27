@@ -1,3 +1,13 @@
+## [1.13.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.12.0...v1.13.0) (2026-04-27)
+
+### Features
+
+* atualizar a distribuição calórica esperada e simplificar a apresentação das refeições ([c06a888](https://github.com/CesarAVB/nutritional-monorepo/commit/c06a888a4d08563b0bd00ef8b83a94b61e291919))
+
+### Bug Fixes
+
+* arredondar o total para uma casa decimal na função de cálculo ([59c1258](https://github.com/CesarAVB/nutritional-monorepo/commit/59c12581ce3ec5b616015e3f6a61458fc8a8f5d5))
+
 ## [1.12.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.11.0...v1.12.0) (2026-04-27)
 
 ### Features
