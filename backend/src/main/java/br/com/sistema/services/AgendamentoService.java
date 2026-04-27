@@ -27,6 +27,7 @@ import br.com.sistema.repositories.AgendamentoRepository;
 import br.com.sistema.repositories.ConfiguracaoAgendamentoRepository;
 import br.com.sistema.repositories.PacienteRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Orquestra operações de agendamento de consultas.
@@ -35,11 +36,13 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AgendamentoService {
 
     private final AgendamentoRepository agendamentoRepository;
     private final ConfiguracaoAgendamentoRepository configuracaoRepository;
     private final PacienteRepository pacienteRepository;
+    private final NotificacaoAgendamentoService notificacaoService;
 
     /**
      * Cria novo agendamento validando disponibilidade de horário e janela de atendimento.
@@ -78,6 +81,12 @@ public class AgendamentoService {
         agendamento.setObservacoes(request.getObservacoes());
 
         Agendamento saved = agendamentoRepository.save(agendamento);
+
+        try {
+            notificacaoService.enviarNotificacaoImediata(saved);
+        } catch (Exception ex) {
+            log.warn("Falha ao enviar notificação imediata para agendamento {}: {}", saved.getId(), ex.getMessage());
+        }
 
         return toDto(saved);
     }
@@ -154,7 +163,13 @@ public class AgendamentoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Agendamento não encontrado"));
 
         agendamento.setStatus(StatusAgendamento.CANCELADO);
-        agendamentoRepository.save(agendamento);
+        Agendamento saved = agendamentoRepository.save(agendamento);
+
+        try {
+            notificacaoService.enviarNotificacaoCancelamento(saved);
+        } catch (Exception ex) {
+            log.warn("Falha ao enviar notificação de cancelamento para agendamento {}: {}", saved.getId(), ex.getMessage());
+        }
     }
 
     /**
