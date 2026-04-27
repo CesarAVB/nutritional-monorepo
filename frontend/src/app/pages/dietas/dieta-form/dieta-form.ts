@@ -413,7 +413,7 @@ export class DietaFormComponent implements OnInit {
         });
       }
     }
-    return total;
+    return Math.round(total * 10) / 10;
   }
 
   // ===================================================
