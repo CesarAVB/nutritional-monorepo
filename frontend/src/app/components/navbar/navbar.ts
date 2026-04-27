@@ -1,7 +1,8 @@
-import { Component, ElementRef, ViewChild, OnDestroy } from '@angular/core';
+import { Component, ElementRef, ViewChild, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth';
+import { AgendamentoService } from '../../services/agendamento';
 
 @Component({
   selector: 'app-navbar',
@@ -10,7 +11,7 @@ import { AuthService } from '../../services/auth';
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.scss']
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   menuAberto = false;
   userMenuOpen = false;
   @ViewChild('mobileMenuContent', { read: ElementRef }) mobileMenuContent?: ElementRef;
@@ -18,14 +19,27 @@ export class NavbarComponent {
   private _moved = false;
   private _overlay: HTMLElement | null = null;
   private _closeBtn: HTMLElement | null = null;
-  
+
+  private agendamentoService = inject(AgendamentoService);
+  protected readonly consultasHoje = signal(0);
+
   // ===========================================
   // # constructor - Inicializa o componente
   // ===========================================
   constructor(
-    private router: Router,
+    protected router: Router,
     private authService: AuthService
   ) {}
+
+  // ===========================================
+  // # ngOnInit - Carrega contador de consultas
+  // ===========================================
+  ngOnInit(): void {
+    this.agendamentoService.contarHoje().subscribe({
+      next: (contador) => this.consultasHoje.set(contador.quantidade),
+      error: () => this.consultasHoje.set(0)
+    });
+  }
 
   // ===========================================
   // # currentUser - Getter para usuário atual
@@ -244,6 +258,14 @@ export class NavbarComponent {
   navigateToCustosIA(): void {
     this.userMenuOpen = false;
     this.router.navigate(['/configuracoes/custos-ia']);
+  }
+
+  // ===========================================
+  // # navegarParaAgendamentos - Navega para agendamentos
+  // ===========================================
+  navegarParaAgendamentos(): void {
+    this.fecharMenu();
+    this.router.navigate(['/agendamentos']);
   }
 
   // ===========================================

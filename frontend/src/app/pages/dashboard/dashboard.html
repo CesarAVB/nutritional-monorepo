@@ -95,51 +95,24 @@
 
   <!-- Grid de Conteúdo -->
   <div class="content-grid">
-    <!-- Consultas de Hoje -->
-    <div class="content-card">
+    <!-- Calendário Semanal de Agendamentos -->
+    <div class="content-card calendar-card">
       <div class="card-header">
-        <h2 class="card-title">Consultas de Hoje</h2>
-        @if (consultasHoje().length > 0) {
-          <span class="badge badge-primary">
-            {{ consultasHoje().length }} {{ consultasHoje().length === 1 ? 'consulta' : 'consultas' }}
-          </span>
-        }
+        <h2 class="card-title">Agenda da Semana</h2>
+        <button class="link-button" (click)="irParaDia(dataReferenciaCalendario())">
+          Ver dia
+          <fa-icon [icon]="faChevronRight"></fa-icon>
+        </button>
       </div>
-      <div class="card-body">
-        @if (loadingConsultas()) {
-          <div class="section-loading">
-            <div class="spinner-small"></div>
-            <p>Carregando consultas...</p>
-          </div>
-        } @else {
-          <div class="consulta-list">
-          @for (consulta of consultasHoje(); track consulta.id) {
-            <div class="consulta-item">
-              <div class="consulta-avatar">
-                <span>{{ consulta.iniciais }}</span>
-              </div>
-              <div class="consulta-info">
-                <h3 class="consulta-nome">{{ consulta.nomePaciente }}</h3>
-                <p class="consulta-tipo">{{ consulta.objetivo || 'Consulta nutricional' }}</p>
-              </div>
-              <div class="consulta-horario">
-                <span>{{ consulta.horario | date: 'HH:mm' }}</span>
-              </div>
-            </div>
-          }
-
-          <!-- Estado Vazio Melhorado -->
-          @if (consultasHoje().length === 0) {
-            <div class="empty-state">
-            <div class="empty-icon">
-              <fa-icon [icon]="faCalendarAlt"></fa-icon>
-            </div>
-            <h3 class="empty-title">Nenhuma consulta agendada</h3>
-            <p class="empty-message">Você não tem consultas agendadas para hoje</p>
-          </div>
-          }
-        </div>
-        }
+      <div class="card-body no-padding">
+        <app-week-calendar
+          [semana]="semanaAgendamentos()"
+          [carregando]="loadingCalendario()"
+          (semanaAnterior)="navegarSemanaAnterior()"
+          (proximaSemana)="navegarProximaSemana()"
+          (hoje)="voltarHoje()"
+          (diaSelecionado)="irParaDia($event)">
+        </app-week-calendar>
       </div>
     </div>
 

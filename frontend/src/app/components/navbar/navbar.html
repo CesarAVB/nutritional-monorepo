@@ -25,6 +25,14 @@
         <i class="fas fa-file-alt"></i>
         <span>Consultas</span>
       </a>
+
+      <a routerLink="/agendamentos" routerLinkActive="active" class="menu-item" style="position:relative">
+        <i class="fas fa-calendar-check"></i>
+        <span>Agendamentos</span>
+        @if (consultasHoje() > 0) {
+          <span class="nav-badge">{{ consultasHoje() }}</span>
+        }
+      </a>
     </div>
 
     <!-- User Menu -->
@@ -84,6 +92,11 @@
           <span>Custos de IA</span>
         </button>
 
+        <button class="dropdown-item" (click)="userMenuOpen = false; router.navigate(['/configuracoes/agendamento'])">
+          <i class="fas fa-calendar-alt"></i>
+          <span>Configurações de Agendamento</span>
+        </button>
+
         <div class="dropdown-divider"></div>
 
         <button class="dropdown-item logout-item" (click)="logout()">
@@ -120,6 +133,14 @@
       <a routerLink="/consultas" routerLinkActive="active" class="mobile-menu-item" (click)="fecharMenu()">
         <i class="fas fa-file-alt"></i>
         <span>Consultas</span>
+      </a>
+
+      <a routerLink="/agendamentos" routerLinkActive="active" class="mobile-menu-item" (click)="fecharMenu()" style="position:relative">
+        <i class="fas fa-calendar-check"></i>
+        <span>Agendamentos</span>
+        @if (consultasHoje() > 0) {
+          <span class="nav-badge">{{ consultasHoje() }}</span>
+        }
       </a>
 
       <div class="mobile-menu-divider"></div>

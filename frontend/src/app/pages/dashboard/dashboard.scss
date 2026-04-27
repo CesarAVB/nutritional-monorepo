@@ -250,6 +250,14 @@
   .card-body {
     padding: 0;
   }
+
+  &.calendar-card .card-body {
+    padding: 0;
+  }
+}
+
+.no-padding {
+  padding: 0;
 }
 
 .consulta-item, .paciente-item {
