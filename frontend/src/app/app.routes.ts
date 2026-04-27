@@ -10,6 +10,8 @@ import { DietaFormComponent } from './pages/dietas/dieta-form/dieta-form';
 import { ConfiguracoesIAComponent } from './pages/configuracoes/configuracoes-ia';
 import { CustosIAComponent } from './pages/configuracoes/custos-ia';
 import { LoginComponent } from './pages/login/login';
+import { AgendamentosDiaComponent } from './pages/agendamentos/agendamentos-dia/agendamentos-dia';
+import { AgendamentoFormComponent } from './pages/agendamentos/agendamento-form/agendamento-form';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -99,6 +101,24 @@ export const routes: Routes = [
     path: 'configuracoes/custos-ia',
     component: CustosIAComponent,
     title: 'Custos de IA - NutriControl',
+    canActivate: [authGuard]
+  },
+  {
+    path: 'agendamentos',
+    component: AgendamentosDiaComponent,
+    title: 'Agendamentos - NutriControl',
+    canActivate: [authGuard]
+  },
+  {
+    path: 'agendamentos/novo',
+    component: AgendamentoFormComponent,
+    title: 'Novo Agendamento - NutriControl',
+    canActivate: [authGuard]
+  },
+  {
+    path: 'agendamentos/:id/editar',
+    component: AgendamentoFormComponent,
+    title: 'Editar Agendamento - NutriControl',
     canActivate: [authGuard]
   },
 ];

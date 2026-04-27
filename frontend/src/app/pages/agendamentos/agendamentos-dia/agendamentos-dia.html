@@ -1,0 +1,83 @@
+<div class="dia-container">
+  <!-- Header -->
+  <div class="dia-header">
+    <div class="header-left">
+      <button class="btn-back" (click)="voltarDashboard()">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <div class="header-title">
+        <h1>Agendamentos</h1>
+        <p class="header-subtitle">{{ formatarDataExibicao() }}</p>
+      </div>
+    </div>
+    <button class="btn-primary" (click)="novoAgendamento()">
+      <i class="fas fa-plus"></i>
+      Novo Agendamento
+    </button>
+  </div>
+
+  <!-- Navegação de Data -->
+  <div class="date-nav">
+    <button class="nav-btn" (click)="irParaDiaAnterior()">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <span class="date-label">{{ formatarDataExibicao() }}</span>
+    <button class="nav-btn" (click)="irParaProximoDia()">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <!-- Conteúdo -->
+  @if (isLoading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Carregando agendamentos...</p>
+    </div>
+  } @else if (agendamentos.length === 0) {
+    <div class="empty-state">
+      <i class="fas fa-calendar-times empty-icon"></i>
+      <h3>Nenhum agendamento</h3>
+      <p>Não há agendamentos para este dia</p>
+      <button class="btn-primary" (click)="novoAgendamento()">
+        <i class="fas fa-plus"></i> Novo Agendamento
+      </button>
+    </div>
+  } @else {
+    <div class="agendamentos-list">
+      @for (ag of agendamentos; track ag.id) {
+        <div class="agendamento-card" [class]="statusClass[ag.status]">
+          <div class="card-time">
+            <span class="horario">{{ formatarHorario(ag.dataHoraInicio) }}</span>
+            <span class="duracao">{{ ag.duracaoMinutos }}min</span>
+          </div>
+          <div class="card-info">
+            <h3 class="paciente-nome">{{ ag.nomePaciente }}</h3>
+            <div class="card-meta">
+              <span class="tipo-badge">{{ tipoLabel[ag.tipo] }}</span>
+              <span class="status-badge" [class]="statusClass[ag.status]">{{ statusLabel[ag.status] }}</span>
+            </div>
+            @if (ag.observacoes) {
+              <p class="observacoes">{{ ag.observacoes }}</p>
+            }
+          </div>
+          <div class="card-actions">
+            @if (ag.status === 'AGUARDANDO_CONFIRMACAO' || ag.status === 'CONFIRMADO') {
+              <button class="btn-action btn-success" title="Marcar realizado" (click)="marcarRealizado(ag)">
+                <i class="fas fa-check"></i>
+              </button>
+              <button class="btn-action btn-warning" title="Registrar falta" (click)="marcarFalta(ag)">
+                <i class="fas fa-user-times"></i>
+              </button>
+              <button class="btn-action btn-edit" title="Editar" (click)="editar(ag.id)">
+                <i class="fas fa-pencil-alt"></i>
+              </button>
+              <button class="btn-action btn-danger" title="Cancelar" (click)="cancelarAgendamento(ag)">
+                <i class="fas fa-times"></i>
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

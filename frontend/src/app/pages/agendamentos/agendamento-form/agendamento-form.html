@@ -1,0 +1,132 @@
+<div class="form-container">
+  <!-- Header -->
+  <div class="form-header">
+    <button class="btn-back" (click)="cancelar()">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <h1>{{ isEditMode ? 'Editar Agendamento' : 'Novo Agendamento' }}</h1>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Carregando...</p>
+    </div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-card">
+
+      <!-- Busca de paciente -->
+      <div class="form-group">
+        <label class="form-label">Paciente <span class="required">*</span></label>
+        <div class="autocomplete-wrapper">
+          <input
+            type="text"
+            class="form-input"
+            placeholder="Digite o nome do paciente..."
+            formControlName="buscaPaciente"
+            (input)="buscarPacientes($event)"
+            autocomplete="off"
+          />
+          @if (showDropdown && pacientesBusca.length > 0) {
+            <div class="autocomplete-dropdown">
+              @for (p of pacientesBusca; track p.id) {
+                <button type="button" class="dropdown-item" (click)="selecionarPaciente(p)">
+                  <span class="item-nome">{{ p.nomeCompleto }}</span>
+                  <span class="item-tel">{{ p.telefoneWhatsapp }}</span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+        @if (pacienteSelecionado) {
+          <div class="paciente-selecionado">
+            <i class="fas fa-user-check"></i>
+            {{ pacienteSelecionado.nomeCompleto }}
+          </div>
+        }
+        @if (form.get('pacienteId')?.touched && form.get('pacienteId')?.errors) {
+          <span class="field-error">Selecione um paciente</span>
+        }
+      </div>
+
+      <!-- Data e Horário -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Data <span class="required">*</span></label>
+          <input type="date" class="form-input" formControlName="data" />
+          @if (getCampoErro('data')) { <span class="field-error">{{ getCampoErro('data') }}</span> }
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Horário <span class="required">*</span></label>
+          @if (loadingSlots) {
+            <div class="slots-loading">
+              <div class="spinner-xs"></div>
+              <span>Buscando horários...</span>
+            </div>
+          } @else if (slots.length > 0) {
+            <select class="form-input" formControlName="horario">
+              <option value="">Selecione o horário</option>
+              @for (slot of slots; track slot) {
+                <option [value]="slot">{{ slot }}</option>
+              }
+            </select>
+          } @else {
+            <input type="time" class="form-input" formControlName="horario" />
+          }
+          @if (getCampoErro('horario')) { <span class="field-error">{{ getCampoErro('horario') }}</span> }
+        </div>
+      </div>
+
+      <!-- Duração e Tipo -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Duração (min) <span class="required">*</span></label>
+          <input type="number" class="form-input" formControlName="duracaoMinutos" min="10" step="5" />
+          @if (getCampoErro('duracaoMinutos')) { <span class="field-error">{{ getCampoErro('duracaoMinutos') }}</span> }
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tipo <span class="required">*</span></label>
+          <select class="form-input" formControlName="tipo">
+            @for (t of tipos; track t) {
+              <option [value]="t">{{ tipoLabel[t] }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- Status (apenas edição) -->
+      @if (isEditMode) {
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-input" formControlName="status">
+            @for (s of statusOptions; track s) {
+              <option [value]="s">{{ statusLabel[s] }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      <!-- Observações -->
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <textarea class="form-input form-textarea" formControlName="observacoes" rows="3" placeholder="Observações adicionais..."></textarea>
+      </div>
+
+      <!-- Ações -->
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" (click)="cancelar()" [disabled]="isSaving">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="isSaving">
+          @if (isSaving) {
+            <div class="spinner-xs"></div>
+            Salvando...
+          } @else {
+            <i class="fas fa-save"></i>
+            {{ isEditMode ? 'Salvar Alterações' : 'Criar Agendamento' }}
+          }
+        </button>
+      </div>
+    </form>
+  }
+</div>
