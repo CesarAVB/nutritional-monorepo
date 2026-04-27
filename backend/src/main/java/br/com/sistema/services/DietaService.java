@@ -54,7 +54,7 @@ public class DietaService {
     @Transactional(readOnly = true)
     public DietaContextoPacienteDTO buscarContextoPaciente(Long pacienteId) {
         pacienteRepository.findById(pacienteId)
-            .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+            .orElseThrow(() -> new ResourceNotFoundException("Paciente nï¿½o encontrado"));
 
         return consultaRepository.findFirstByPacienteIdOrderByDataConsultaDesc(pacienteId)
             .flatMap(c -> questionarioRepository.findByConsultaId(c.getId()))
@@ -72,7 +72,7 @@ public class DietaService {
     @Transactional(readOnly = true)
     public List<DietaResumoResponse> listarPorPaciente(Long pacienteId) {
         pacienteRepository.findById(pacienteId)
-            .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+            .orElseThrow(() -> new ResourceNotFoundException("Paciente nï¿½o encontrado"));
 
         return dietaRepository.findByPacienteIdOrderByDataCriacaoDesc(pacienteId)
             .stream()
@@ -90,7 +90,7 @@ public class DietaService {
     @Transactional(readOnly = true)
     public DietaResponse buscarPorId(Long id) {
         Dieta dieta = dietaRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Dieta não encontrada"));
+            .orElseThrow(() -> new ResourceNotFoundException("Dieta nï¿½o encontrada"));
         return toResponse(dieta);
     }
 
@@ -106,7 +106,7 @@ public class DietaService {
     @Transactional
     public DietaResponse criar(Long pacienteId, DietaRequest request) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
-            .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+            .orElseThrow(() -> new ResourceNotFoundException("Paciente nï¿½o encontrado"));
 
         Dieta dieta = new Dieta();
         dieta.setPaciente(paciente);
@@ -128,7 +128,7 @@ public class DietaService {
     @Transactional
     public DietaResponse atualizar(Long id, DietaRequest request) {
         Dieta dieta = dietaRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Dieta não encontrada"));
+            .orElseThrow(() -> new ResourceNotFoundException("Dieta nï¿½o encontrada"));
 
         dieta.getRefeicoes().clear();
         dieta.getSuplementos().clear();
@@ -146,12 +146,12 @@ public class DietaService {
     @Transactional
     public void deletar(Long id) {
         Dieta dieta = dietaRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Dieta não encontrada"));
+            .orElseThrow(() -> new ResourceNotFoundException("Dieta nï¿½o encontrada"));
         dietaRepository.delete(dieta);
     }
 
     /**
-     * Aplica campos do DTO Request a entidade Dieta e reconstrói
+     * Aplica campos do DTO Request a entidade Dieta e reconstrï¿½i
      * hierarquia de refeicoes, opcoes, alimentos e suplementos.
      * Trata nulos preservando valores existentes quando orden
      * nao eh informada.
@@ -191,6 +191,7 @@ public class DietaService {
                                 alimento.setQuantidade(aReq.getQuantidade());
                                 alimento.setUnidade(aReq.getUnidade());
                                 alimento.setOrdem(aReq.getOrdem() != null ? aReq.getOrdem() : ordem++);
+                                alimento.setCalorias(aReq.getCalorias());
                                 opcao.getAlimentos().add(alimento);
                             }
                         }
@@ -268,6 +269,7 @@ public class DietaService {
                     aDTO.setQuantidade(a.getQuantidade());
                     aDTO.setUnidade(a.getUnidade());
                     aDTO.setOrdem(a.getOrdem());
+                    aDTO.setCalorias(a.getCalorias());
                     return aDTO;
                 }).collect(Collectors.toList()));
                 return oDTO;

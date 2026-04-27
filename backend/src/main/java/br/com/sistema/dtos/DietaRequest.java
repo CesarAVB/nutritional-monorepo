@@ -49,6 +49,7 @@ public class DietaRequest {
         private BigDecimal quantidade;
         private String unidade;
         private Integer ordem;
+        private BigDecimal calorias;
     }
 
     @Data

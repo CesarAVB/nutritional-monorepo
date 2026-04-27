@@ -29,34 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ConfiguracaoIAService {
 
-    private static final String PROMPT_SISTEMA_DEFAULT = """
-            Voce e um nutricionista especialista. Responda APENAS com JSON valido, sem markdown, sem blocos de codigo, sem texto adicional.
-            Estrutura obrigatoria do JSON:
-            {
-              "titulo": "string",
-              "objetivo": "string",
-              "observacoes": "string",
-              "refeicoes": [
-                {
-                  "tipo": "ENUM_VALOR",
-                  "ordemExibicao": 0,
-                  "opcoes": [
-                    {
-                      "numeroOpcao": 1,
-                      "alimentos": [
-                        { "nome": "string", "quantidade": 0.0, "unidade": "string", "ordem": 0 }
-                      ]
-                    }
-                  ]
-                }
-              ],
-              "suplementos": []
-            }
-            Tipos validos para refeicao: AO_ACORDAR, DESJEJUM, ALMOCO, LANCHE_DA_TARDE, JANTAR, CEIA.
-            Use SOMENTE alimentos da lista TACO fornecida. Nunca inclua alimentos fora dessa lista.
-            A soma total de calorias de todas as refeicoes deve ser proxima do valor de Kcal Total definido.
-            """;
-
     private final ConfiguracaoIARepository repository;
 
     /**
@@ -161,13 +133,13 @@ public class ConfiguracaoIAService {
     }
 
     /**
-     * Retorna o prompt de sistema a ser enviado com cada requisicao.
-     * Usa o valor personalizado do banco ou o template padrao se vazio.
+     * Retorna o prompt de sistema cadastrado no banco.
+     * Lanca excecao se nao houver prompt configurado.
      */
     public String resolverPromptSistema(ConfiguracaoIA config) {
         String prompt = config.getPromptSistema();
         if (prompt == null || prompt.isBlank()) {
-            return PROMPT_SISTEMA_DEFAULT;
+            throw new BusinessException("Prompt de sistema nao configurado. Acesse Configuracoes > IA e defina o prompt.");
         }
         return prompt;
     }
@@ -183,7 +155,7 @@ public class ConfiguracaoIAService {
                 mascarar(config.getApiKey()),
                 config.getModelo(),
                 config.getBaseUrl(),
-                config.getPromptSistema() != null ? config.getPromptSistema() : PROMPT_SISTEMA_DEFAULT,
+                config.getPromptSistema(),
                 config.getTemperaturaModelo()
         );
     }
