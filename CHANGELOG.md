@@ -1,3 +1,9 @@
+## [1.18.1](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.18.0...v1.18.1) (2026-04-27)
+
+### Bug Fixes
+
+* corrigir formatação de horário ao salvar agendamento ([08cfddb](https://github.com/CesarAVB/nutritional-monorepo/commit/08cfddb674b143c88c5f6c3c7e1ad5b00e41a225))
+
 ## [1.18.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.17.0...v1.18.0) (2026-04-27)
 
 ### Features
