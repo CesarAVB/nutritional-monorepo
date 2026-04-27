@@ -174,6 +174,24 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
   gap: 1.5rem;
+  align-items: stretch;
+}
+
+.calendar-card-container {
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  border: none;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  app-week-calendar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 .content-card {
@@ -202,43 +220,20 @@
       margin: 0;
     }
 
-    .badge {
-      padding: 0.4rem 0.75rem;
-      border-radius: var(--radius-xl);
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-
-      &.badge-primary {
-        background: var(--primary-50);
-        color: var(--primary-700);
-      }
-    }
-
     .link-button {
+      background: none;
+      border: none;
+      color: var(--primary-600);
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      background: transparent;
-      color: var(--primary-600);
-      border: 1px solid var(--primary-200);
-      border-radius: var(--radius-md);
-      padding: 0.5rem 0.85rem;
-      font-size: 0.85rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-decoration: none;
+      transition: color 0.2s ease;
 
       &:hover {
-        background: var(--primary-50);
-        border-color: var(--primary-300);
-        transform: translateY(-1px);
-      }
-
-      svg {
-        transition: transform 0.2s ease;
+        color: var(--primary-700);
       }
 
       &:hover svg {
@@ -248,10 +243,6 @@
   }
 
   .card-body {
-    padding: 0;
-  }
-
-  &.calendar-card .card-body {
     padding: 0;
   }
 }

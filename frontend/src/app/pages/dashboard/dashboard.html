@@ -96,24 +96,15 @@
   <!-- Grid de Conteúdo -->
   <div class="content-grid">
     <!-- Calendário Semanal de Agendamentos -->
-    <div class="content-card calendar-card">
-      <div class="card-header">
-        <h2 class="card-title">Agenda da Semana</h2>
-        <button class="link-button" (click)="irParaDia(dataReferenciaCalendario())">
-          Ver dia
-          <fa-icon [icon]="faChevronRight"></fa-icon>
-        </button>
-      </div>
-      <div class="card-body no-padding">
-        <app-week-calendar
-          [semana]="semanaAgendamentos()"
-          [carregando]="loadingCalendario()"
-          (semanaAnterior)="navegarSemanaAnterior()"
-          (proximaSemana)="navegarProximaSemana()"
-          (hoje)="voltarHoje()"
-          (diaSelecionado)="irParaDia($event)">
-        </app-week-calendar>
-      </div>
+    <div class="calendar-card-container">
+      <app-week-calendar
+        [semana]="semanaAgendamentos()"
+        [carregando]="loadingCalendario()"
+        (semanaAnterior)="navegarSemanaAnterior()"
+        (proximaSemana)="navegarProximaSemana()"
+        (hoje)="voltarHoje()"
+        (diaSelecionado)="irParaDia($event)">
+      </app-week-calendar>
     </div>
 
     <!-- Pacientes Recentes -->
