@@ -2,6 +2,9 @@
 # BUILD & COMPILED
 # ============================================
 .codex/
+AGENTS.md
+backend/AGENTS.md
+frontend/AGENTS.md
 .github/agents/
 .github/copilot-instructions.md
 .llm
@@ -11,7 +14,8 @@ build/
 *.class
 *.jar
 *.war
-
+CLAUDE.md
+.claude/
 # ============================================
 # BACKEND (Spring Boot)
 # ============================================
@@ -57,12 +61,6 @@ frontend/src/environments/environment.development.ts
 *.swp
 *.swo
 *~
-
-# ============================================
-# CLAUDE CODE & DOCUMENTATION
-# ============================================
-CLAUDE.md
-.claude/
 
 # ============================================
 # SISTEMA OPERACIONAL
