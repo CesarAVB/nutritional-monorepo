@@ -238,12 +238,28 @@
             <i class="fas fa-info-circle"></i>
             <div class="info-content">
               <strong>Variáveis disponíveis nos templates:</strong>
-              <div class="tags-list">
-                <span class="tag">&#123;&#123;paciente_nome&#125;&#125;</span>
-                <span class="tag">&#123;&#123;nutricionista_nome&#125;&#125;</span>
-                <span class="tag">&#123;&#123;data_consulta&#125;&#125;</span>
-                <span class="tag">&#123;&#123;hora_consulta&#125;&#125;</span>
-                <span class="tag">&#123;&#123;tipo_consulta&#125;&#125;</span>
+              <p class="vars-hint">Use as variáveis abaixo dentro das mensagens. Elas serão substituídas automaticamente ao enviar.</p>
+              <div class="vars-table">
+                <div class="var-row">
+                  <span class="tag">&#123;&#123;paciente_nome&#125;&#125;</span>
+                  <span class="var-desc">Nome completo do paciente</span>
+                </div>
+                <div class="var-row">
+                  <span class="tag">&#123;&#123;nutricionista_nome&#125;&#125;</span>
+                  <span class="var-desc">Nome da nutricionista (fixo: "sua nutricionista")</span>
+                </div>
+                <div class="var-row">
+                  <span class="tag">&#123;&#123;data_consulta&#125;&#125;</span>
+                  <span class="var-desc">Data da consulta no formato dd/MM/aaaa</span>
+                </div>
+                <div class="var-row">
+                  <span class="tag">&#123;&#123;hora_consulta&#125;&#125;</span>
+                  <span class="var-desc">Horário da consulta no formato HH:mm</span>
+                </div>
+                <div class="var-row">
+                  <span class="tag">&#123;&#123;tipo_consulta&#125;&#125;</span>
+                  <span class="var-desc">Tipo da consulta (ex: primeira consulta, retorno)</span>
+                </div>
               </div>
             </div>
           </div>
