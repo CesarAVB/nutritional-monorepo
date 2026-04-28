@@ -1,3 +1,9 @@
+## [1.19.3](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.19.2...v1.19.3) (2026-04-28)
+
+### Bug Fixes
+
+* melhorar mensagens de erro e sucesso na conexão com a API Evolution ([725e1f3](https://github.com/CesarAVB/nutritional-monorepo/commit/725e1f32b3187ecf20d4ec58ad75997040be095c))
+
 ## [1.19.2](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.19.1...v1.19.2) (2026-04-28)
 
 ### Bug Fixes
