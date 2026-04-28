@@ -61,6 +61,8 @@ public class ConfiguracaoIAService {
         config.setBaseUrl(request.getBaseUrl());
         config.setPromptSistema(request.getPromptSistema());
         config.setTemperaturaModelo(request.getTemperaturaModelo());
+        config.setPrecoInputPorMilhao(request.getPrecoInputPorMilhao());
+        config.setPrecoOutputPorMilhao(request.getPrecoOutputPorMilhao());
 
         if (!request.getApiKey().contains("...")) {
             config.setApiKey(request.getApiKey());
@@ -156,7 +158,9 @@ public class ConfiguracaoIAService {
                 config.getModelo(),
                 config.getBaseUrl(),
                 config.getPromptSistema(),
-                config.getTemperaturaModelo()
+                config.getTemperaturaModelo(),
+                config.getPrecoInputPorMilhao(),
+                config.getPrecoOutputPorMilhao()
         );
     }
 

@@ -1,5 +1,7 @@
 package br.com.sistema.dtos;
 
+import java.math.BigDecimal;
+
 import br.com.sistema.enums.ProvedorIA;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -31,4 +33,8 @@ public class ConfiguracaoIARequest {
     @DecimalMin("0.1")
     @DecimalMax("1.0")
     private Double temperaturaModelo;
+
+    private BigDecimal precoInputPorMilhao;
+
+    private BigDecimal precoOutputPorMilhao;
 }

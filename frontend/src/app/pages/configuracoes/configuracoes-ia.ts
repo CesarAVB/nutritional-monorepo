@@ -38,6 +38,8 @@ export class ConfiguracoesIAComponent implements OnInit {
       baseUrl: ['https://api.openai.com/v1'],
       temperaturaModelo: [0.7],
       promptSistema: [''],
+      precoInputPorMilhao: [null],
+      precoOutputPorMilhao: [null],
     });
 
     this.service.buscar().subscribe({
@@ -49,6 +51,8 @@ export class ConfiguracoesIAComponent implements OnInit {
           baseUrl: config.baseUrl,
           temperaturaModelo: config.temperaturaModelo,
           promptSistema: config.promptSistema ?? '',
+          precoInputPorMilhao: config.precoInputPorMilhao ?? null,
+          precoOutputPorMilhao: config.precoOutputPorMilhao ?? null,
         });
         this.isCarregando.set(false);
       },

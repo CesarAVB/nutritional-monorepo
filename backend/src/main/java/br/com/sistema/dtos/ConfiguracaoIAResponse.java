@@ -1,5 +1,7 @@
 package br.com.sistema.dtos;
 
+import java.math.BigDecimal;
+
 import br.com.sistema.enums.ProvedorIA;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,4 +19,6 @@ public class ConfiguracaoIAResponse {
     private String baseUrl;
     private String promptSistema;
     private Double temperaturaModelo;
+    private BigDecimal precoInputPorMilhao;
+    private BigDecimal precoOutputPorMilhao;
 }

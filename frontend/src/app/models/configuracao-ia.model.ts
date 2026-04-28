@@ -8,6 +8,8 @@ export interface ConfiguracaoIAResponse {
   baseUrl?: string;
   promptSistema?: string;
   temperaturaModelo: number;
+  precoInputPorMilhao?: number;
+  precoOutputPorMilhao?: number;
 }
 
 export interface ConfiguracaoIARequest {
@@ -17,6 +19,8 @@ export interface ConfiguracaoIARequest {
   baseUrl?: string;
   promptSistema?: string;
   temperaturaModelo: number;
+  precoInputPorMilhao?: number | null;
+  precoOutputPorMilhao?: number | null;
 }
 
 export interface TesteConexaoResponse {

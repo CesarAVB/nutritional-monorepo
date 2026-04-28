@@ -40,7 +40,7 @@ public class UsoIALogService {
             saida = response.getUsage().getCompletionTokens();
         }
 
-        BigDecimal custo = calcularCusto(config.getModelo(), entrada, saida);
+        BigDecimal custo = calcularCusto(config, entrada, saida);
 
         UsoIALog log = new UsoIALog();
         log.setDataHora(LocalDateTime.now());
@@ -71,8 +71,9 @@ public class UsoIALogService {
     }
 
     /**
-     * Estima custo em USD com base nos preços públicos dos provedores.
-     * Preços por 1M de tokens (entrada / saída):
+     * Estima custo em USD com base nos preços configurados ou fallback público.
+     * Usa preços personalizados por 1M de tokens quando disponíveis na configuração.
+     * Fallback para preços públicos estimados quando não configurados:
      *   gpt-4o           : $2.50 / $10.00
      *   gpt-4o-mini      : $0.15 / $0.60
      *   gpt-3.5-turbo    : $0.50 / $1.50
@@ -80,32 +81,38 @@ public class UsoIALogService {
      *   google/gemini-*  : $0.35 / $1.05
      *   outros           : $1.00 / $3.00 (estimativa genérica)
      */
-    private BigDecimal calcularCusto(String modelo, int tokensEntrada, int tokensSaida) {
-        if (modelo == null) return BigDecimal.ZERO;
-
-        String m = modelo.toLowerCase();
+    private BigDecimal calcularCusto(ConfiguracaoIA config, int tokensEntrada, int tokensSaida) {
+        if (config == null) return BigDecimal.ZERO;
 
         BigDecimal precoEntrada;
         BigDecimal precoSaida;
 
-        if (m.contains("gpt-4o-mini")) {
-            precoEntrada = new BigDecimal("0.15");
-            precoSaida = new BigDecimal("0.60");
-        } else if (m.contains("gpt-4o")) {
-            precoEntrada = new BigDecimal("2.50");
-            precoSaida = new BigDecimal("10.00");
-        } else if (m.contains("gpt-3.5-turbo")) {
-            precoEntrada = new BigDecimal("0.50");
-            precoSaida = new BigDecimal("1.50");
-        } else if (m.contains("anthropic/") || m.contains("claude-")) {
-            precoEntrada = new BigDecimal("3.00");
-            precoSaida = new BigDecimal("15.00");
-        } else if (m.contains("google/") || m.contains("gemini")) {
-            precoEntrada = new BigDecimal("0.35");
-            precoSaida = new BigDecimal("1.05");
+        // Usa preços configurados pelo usuário quando disponíveis
+        if (config.getPrecoInputPorMilhao() != null && config.getPrecoOutputPorMilhao() != null) {
+            precoEntrada = config.getPrecoInputPorMilhao();
+            precoSaida = config.getPrecoOutputPorMilhao();
         } else {
-            precoEntrada = new BigDecimal("1.00");
-            precoSaida = new BigDecimal("3.00");
+            // Fallback: preços públicos estimados por padrão de nome do modelo
+            String m = config.getModelo() != null ? config.getModelo().toLowerCase() : "";
+            if (m.contains("gpt-4o-mini")) {
+                precoEntrada = new BigDecimal("0.15");
+                precoSaida = new BigDecimal("0.60");
+            } else if (m.contains("gpt-4o")) {
+                precoEntrada = new BigDecimal("2.50");
+                precoSaida = new BigDecimal("10.00");
+            } else if (m.contains("gpt-3.5-turbo")) {
+                precoEntrada = new BigDecimal("0.50");
+                precoSaida = new BigDecimal("1.50");
+            } else if (m.contains("anthropic/") || m.contains("claude-")) {
+                precoEntrada = new BigDecimal("3.00");
+                precoSaida = new BigDecimal("15.00");
+            } else if (m.contains("google/") || m.contains("gemini")) {
+                precoEntrada = new BigDecimal("0.35");
+                precoSaida = new BigDecimal("1.05");
+            } else {
+                precoEntrada = new BigDecimal("1.00");
+                precoSaida = new BigDecimal("3.00");
+            }
         }
 
         BigDecimal custoEntrada = precoEntrada.multiply(BigDecimal.valueOf(tokensEntrada)).divide(MILHAO, 6, RoundingMode.HALF_UP);

@@ -1,5 +1,7 @@
 package br.com.sistema.models;
 
+import java.math.BigDecimal;
+
 import br.com.sistema.enums.ProvedorIA;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -42,4 +44,10 @@ public class ConfiguracaoIA {
 
     @Column(nullable = false)
     private Double temperaturaModelo;
+
+    @Column(name = "preco_input_por_milhao", precision = 10, scale = 6)
+    private BigDecimal precoInputPorMilhao;
+
+    @Column(name = "preco_output_por_milhao", precision = 10, scale = 6)
+    private BigDecimal precoOutputPorMilhao;
 }
