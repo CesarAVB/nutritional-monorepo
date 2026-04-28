@@ -43,7 +43,7 @@ public class EvolutionApiService {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             Map<String, Object> body = new HashMap<>();
-            body.put("number", numero);
+            body.put("number", normalizarNumero(numero));
             body.put("text", mensagem);
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
@@ -54,5 +54,13 @@ public class EvolutionApiService {
             log.warn("Falha ao enviar WhatsApp para {}: {}", numero, ex.getMessage());
             return false;
         }
+    }
+
+    private String normalizarNumero(String numero) {
+        String digits = numero.replaceAll("\\D", "");
+        if (!digits.startsWith("55")) {
+            digits = "55" + digits;
+        }
+        return digits;
     }
 }
