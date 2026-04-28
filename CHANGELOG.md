@@ -1,3 +1,9 @@
+## [1.19.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.18.1...v1.19.0) (2026-04-28)
+
+### Features
+
+* adicionar gerenciamento de configurações de infraestrutura (Email, RabbitMQ, MinIO/S3) ([d51e1de](https://github.com/CesarAVB/nutritional-monorepo/commit/d51e1deebcb3bb2d1af1a0b7108d02ed48358bab))
+
 ## [1.18.1](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.18.0...v1.18.1) (2026-04-27)
 
 ### Bug Fixes
