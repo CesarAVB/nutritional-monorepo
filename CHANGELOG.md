@@ -1,3 +1,9 @@
+## [1.19.2](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.19.1...v1.19.2) (2026-04-28)
+
+### Bug Fixes
+
+* corrigir decodificação da chave AES removendo o padding desnecessário ([d6d5c10](https://github.com/CesarAVB/nutritional-monorepo/commit/d6d5c103e0043050e6542f9ed83ea2a43213db3a))
+
 ## [1.19.1](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.19.0...v1.19.1) (2026-04-28)
 
 ### Bug Fixes
