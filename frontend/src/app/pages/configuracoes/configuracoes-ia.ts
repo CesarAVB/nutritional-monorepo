@@ -6,8 +6,8 @@ import { ToastService } from '../../services/toast';
 import { ProvedorIA } from '../../models/configuracao-ia.model';
 
 const DEFAULTS: Record<ProvedorIA, { modelo: string; baseUrl: string }> = {
-  OPENAI: { modelo: 'gpt-4o', baseUrl: 'https://api.openai.com/v1' },
-  OPENROUTER: { modelo: 'anthropic/claude-3.5-sonnet', baseUrl: 'https://openrouter.ai/api/v1' },
+  OPENAI: { modelo: 'gpt-4o-mini', baseUrl: 'https://api.openai.com/v1' },
+  OPENROUTER: { modelo: 'google/gemini-2.5-flash-lite', baseUrl: 'https://openrouter.ai/api/v1' },
 };
 
 @Component({
