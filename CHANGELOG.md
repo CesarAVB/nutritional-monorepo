@@ -1,3 +1,9 @@
+## [1.19.5](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.19.4...v1.19.5) (2026-04-28)
+
+### Bug Fixes
+
+* normalizar número de telefone antes de enviar mensagem via Evolution API ([e90cf9b](https://github.com/CesarAVB/nutritional-monorepo/commit/e90cf9b81de9d929eff6ee62af8c14e1a1e57261))
+
 ## [1.19.4](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.19.3...v1.19.4) (2026-04-28)
 
 ### Bug Fixes
