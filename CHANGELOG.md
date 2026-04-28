@@ -1,3 +1,9 @@
+## [1.21.1](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.21.0...v1.21.1) (2026-04-28)
+
+### Bug Fixes
+
+* corrigir modelos e URLs padrão para provedores de IA ([abfd5c9](https://github.com/CesarAVB/nutritional-monorepo/commit/abfd5c9fb76cbd3376a5eab7511225b2a8390e6f))
+
 ## [1.21.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.20.0...v1.21.0) (2026-04-28)
 
 ### Features
