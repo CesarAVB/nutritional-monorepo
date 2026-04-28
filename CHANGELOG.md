@@ -1,3 +1,9 @@
+## [1.19.4](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.19.3...v1.19.4) (2026-04-28)
+
+### Bug Fixes
+
+* corrigir lógica de intervalo entre consultas para evitar loops infinitos ([5e0e630](https://github.com/CesarAVB/nutritional-monorepo/commit/5e0e63012592d8162763d7978e7c51997cbf6eb9))
+
 ## [1.19.3](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.19.2...v1.19.3) (2026-04-28)
 
 ### Bug Fixes
