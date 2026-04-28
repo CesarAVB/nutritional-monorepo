@@ -252,13 +252,23 @@ public class AgendamentoService {
             return List.of();
         }
 
+        int intervalo = config.getIntervaloEntreConsultasMinutos();
+        if (intervalo <= 0) {
+            intervalo = config.getDuracaoPadraoMinutos();
+        }
+        if (intervalo <= 0) {
+            return List.of();
+        }
+
         List<LocalTime> slots = new ArrayList<>();
         LocalTime horarioAtual = config.getHorarioInicio();
         LocalTime limite = config.getHorarioFim().minusMinutes(config.getDuracaoPadraoMinutos());
 
-        while (!horarioAtual.isAfter(limite)) {
+        // intervalo > 0 garante avanço; cap de 200 slots evita loop infinito por config corrompida
+        int maxSlots = 200;
+        while (!horarioAtual.isAfter(limite) && slots.size() < maxSlots) {
             slots.add(horarioAtual);
-            horarioAtual = horarioAtual.plusMinutes(config.getIntervaloEntreConsultasMinutos());
+            horarioAtual = horarioAtual.plusMinutes(intervalo);
         }
 
         List<Agendamento> agendamentosDia = agendamentoRepository.findByDia(data);
