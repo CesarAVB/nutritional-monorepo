@@ -25,8 +25,15 @@ public class AesEncryptedConverter implements AttributeConverter<String, String>
     private final SecretKey secretKey;
 
     public AesEncryptedConverter(@Value("${agendamento.aes-key}") String base64Key) {
-        byte[] decodedKey = Base64.getDecoder().decode(base64Key);
+        byte[] decodedKey = Base64.getDecoder().decode(padBase64(base64Key.trim()));
         this.secretKey = new SecretKeySpec(decodedKey, "AES");
+    }
+
+    private static String padBase64(String key) {
+        int mod = key.length() % 4;
+        if (mod == 2) return key + "==";
+        if (mod == 3) return key + "=";
+        return key;
     }
 
     @Override

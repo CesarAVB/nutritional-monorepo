@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . .
 
 RUN chmod +x ./mvnw \
- && ./mvnw -B -DskipTests clean package
+ && ./mvnw -B -Dmaven.test.skip=true clean package
 
 
 # ===============================
