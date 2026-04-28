@@ -1,6 +1,7 @@
 # ============================================
 # BUILD & COMPILED
 # ============================================
+.codex/
 .github/agents/
 .github/copilot-instructions.md
 .llm
