@@ -1,3 +1,9 @@
+## [1.21.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.20.0...v1.21.0) (2026-04-28)
+
+### Features
+
+* adicionar colunas de precificação no modelo de configurações IA ([b93f47a](https://github.com/CesarAVB/nutritional-monorepo/commit/b93f47a6e0d631e90d86899495e3666b8ad06a23))
+
 ## [1.20.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.19.5...v1.20.0) (2026-04-28)
 
 ### Features
