@@ -1,3 +1,9 @@
+## [1.20.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.19.5...v1.20.0) (2026-04-28)
+
+### Features
+
+* adicionar campos de precificação para entrada e saída no modelo de configuração IA ([99d5aa2](https://github.com/CesarAVB/nutritional-monorepo/commit/99d5aa25bcaa594883f2abda2df646e55acdd795))
+
 ## [1.19.5](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.19.4...v1.19.5) (2026-04-28)
 
 ### Bug Fixes
