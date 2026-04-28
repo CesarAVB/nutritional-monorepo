@@ -113,13 +113,13 @@ public class ConfiguracaoAgendamentoService {
             ConfiguracaoAgendamento config = carregarSingleton();
 
             if (config.getEvolutionUrl() == null || config.getEvolutionUrl().isBlank()) {
-                resultado.put("sucesso", false);
-                resultado.put("erro", "URL da instancia Evolution nao configurada");
+                resultado.put("conectado", false);
+                resultado.put("mensagem", "URL da Evolution API não configurada");
                 return resultado;
             }
             if (config.getEvolutionApiKey() == null || config.getEvolutionApiKey().isBlank()) {
-                resultado.put("sucesso", false);
-                resultado.put("erro", "API Key da Evolution nao configurada");
+                resultado.put("conectado", false);
+                resultado.put("mensagem", "API Key da Evolution não configurada");
                 return resultado;
             }
 
@@ -128,16 +128,15 @@ public class ConfiguracaoAgendamentoService {
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
             String url = config.getEvolutionUrl().stripTrailing() + "/instance/fetchInstances";
-            ResponseEntity<Object> response = restTemplate.exchange(url, HttpMethod.GET, entity, Object.class);
+            restTemplate.exchange(url, HttpMethod.GET, entity, Object.class);
 
-            resultado.put("sucesso", true);
-            resultado.put("instancia", config.getEvolutionInstancia());
-            resultado.put("status", response.getStatusCode().value());
+            resultado.put("conectado", true);
+            resultado.put("mensagem", "Conexão com Evolution API estabelecida com sucesso");
 
         } catch (Exception ex) {
             log.warn("Teste de conexao com Evolution API falhou: {}", ex.getMessage());
-            resultado.put("sucesso", false);
-            resultado.put("erro", "Falha na conexao: " + ex.getMessage());
+            resultado.put("conectado", false);
+            resultado.put("mensagem", "Falha na conexão: " + ex.getMessage());
         }
         return resultado;
     }
