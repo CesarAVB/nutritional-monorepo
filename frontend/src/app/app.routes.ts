@@ -10,6 +10,7 @@ import { DietaFormComponent } from './pages/dietas/dieta-form/dieta-form';
 import { ConfiguracoesIAComponent } from './pages/configuracoes/configuracoes-ia';
 import { CustosIAComponent } from './pages/configuracoes/custos-ia';
 import { ConfiguracoesAgendamentoComponent } from './pages/configuracoes/configuracoes-agendamento/configuracoes-agendamento';
+import { ConfiguracoesInfraestruturaComponent } from './pages/configuracoes/configuracoes-infraestrutura/configuracoes-infraestrutura';
 import { ConfiguracoesLayoutComponent } from './pages/configuracoes/layout/configuracoes-layout';
 import { LoginComponent } from './pages/login/login';
 import { AgendamentosDiaComponent } from './pages/agendamentos/agendamentos-dia/agendamentos-dia';
@@ -117,6 +118,11 @@ export const routes: Routes = [
         path: 'custos-ia',
         component: CustosIAComponent,
         title: 'Custos de IA - NutriControl'
+      },
+      {
+        path: 'infraestrutura',
+        component: ConfiguracoesInfraestruturaComponent,
+        title: 'Infraestrutura - NutriControl'
       }
     ]
   },

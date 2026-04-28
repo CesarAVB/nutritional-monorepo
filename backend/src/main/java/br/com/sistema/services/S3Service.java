@@ -3,18 +3,22 @@ package br.com.sistema.services;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.time.Duration;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import br.com.sistema.exceptions.BusinessException;
-import lombok.RequiredArgsConstructor;
+import br.com.sistema.models.ConfiguracaoInfraestrutura;
 import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -23,22 +27,60 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 /**
- * AbstraÁ„o para operaÁıes de armazenamento de arquivos no S3/MinIO.
- * Gerencia upload, exclus„o e geraÁ„o de URLs tempor·rias (presigned) para objetos.
+ * Abstra√ß√£o para opera√ß√µes de armazenamento de arquivos no S3/MinIO.
+ * Configura√ß√£o din√¢mica via banco de dados.
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class S3Service {
 
-    private final S3Client s3Client;
-    private final S3Presigner s3Presigner;
+    private S3Client s3Client;
+    private S3Presigner s3Presigner;
+    private String bucketName = "";
+    private String endpoint = "";
 
-    @Value("${minio.bucket-name}")
-    private String bucketName;
+    /**
+     * Reconfigura o servi√ßo de armazenamento com base nas configura√ß√µes de infraestrutura.
+     * Se desabilitado, limpa a configura√ß√£o existente.
+     *
+     * @param config configura√ß√£o de infraestrutura do banco
+     */
+    public void reconfigurar(ConfiguracaoInfraestrutura config) {
+        if (!Boolean.TRUE.equals(config.getMinioHabilitado())) {
+            this.s3Client = null;
+            this.s3Presigner = null;
+            this.bucketName = "";
+            this.endpoint = "";
+            log.info("S3Service: MinIO desabilitado.");
+            return;
+        }
+        try {
+            AwsBasicCredentials credentials = AwsBasicCredentials.create(
+                config.getMinioAccessKey(), config.getMinioSecretKey());
+            String region = config.getMinioRegion() != null ? config.getMinioRegion() : "us-east-1";
+            S3Configuration s3Config = S3Configuration.builder().pathStyleAccessEnabled(true).build();
 
-    @Value("${minio.endpoint}")
-    private String endpoint;
+            this.s3Client = S3Client.builder()
+                .endpointOverride(URI.create(config.getMinioEndpoint()))
+                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .region(Region.of(region))
+                .serviceConfiguration(s3Config)
+                .build();
+
+            this.s3Presigner = S3Presigner.builder()
+                .endpointOverride(URI.create(config.getMinioEndpoint()))
+                .region(Region.of(region))
+                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .serviceConfiguration(s3Config)
+                .build();
+
+            this.bucketName = config.getMinioBucketName();
+            this.endpoint = config.getMinioEndpoint();
+            log.info("S3Service reconfigurado - endpoint: {}", config.getMinioEndpoint());
+        } catch (Exception e) {
+            log.error("Erro ao reconfigurar S3Service: {}", e.getMessage(), e);
+        }
+    }
 
     /**
      * Faz upload de um arquivo MultipartFile para o bucket S3, organizando por pasta.
@@ -47,9 +89,12 @@ public class S3Service {
      * @param file   Arquivo a ser enviado (imagem)
      * @param folder Pasta de destino no bucket
      * @return Key do objeto criado no S3
-     * @throws BusinessException se o arquivo for inv·lido ou o upload falhar
+     * @throws BusinessException se o arquivo for inv√°lido ou o upload falhar
      */
     public String uploadFile(MultipartFile file, String folder) {
+        if (s3Client == null) {
+            throw new BusinessException("MinIO n√£o configurado. Acesse Configura√ß√µes > Infraestrutura.");
+        }
         validateFile(file);
         String fileName = generateFileName(file.getOriginalFilename());
         String key = folder + "/" + fileName;
@@ -77,16 +122,19 @@ public class S3Service {
     }
 
     /**
-     * Faz upload de um array de bytes para o bucket S3, ˙til para arquivos gerados em memÛria.
+     * Faz upload de um array de bytes para o bucket S3, √∫til para arquivos gerados em mem√≥ria.
      *
-     * @param bytes        Conte˙do do arquivo em bytes
-     * @param fileName     Nome original do arquivo (usado para extrair extens„o)
-     * @param contentType  Tipo MIME do conte˙do
+     * @param bytes        Conte√∫do do arquivo em bytes
+     * @param fileName     Nome original do arquivo (usado para extrair extens√£o)
+     * @param contentType  Tipo MIME do conte√∫do
      * @param folder       Pasta de destino no bucket
      * @return Key do objeto criado no S3
      * @throws BusinessException se o upload falhar
      */
     public String uploadBytes(byte[] bytes, String fileName, String contentType, String folder) {
+        if (s3Client == null) {
+            throw new BusinessException("MinIO n√£o configurado. Acesse Configura√ß√µes > Infraestrutura.");
+        }
         String key = folder + "/" + generateFileName(fileName);
 
         try {
@@ -112,9 +160,12 @@ public class S3Service {
      * Remove um objeto do bucket a partir da URL completa ou key do arquivo.
      *
      * @param fileUrl URL completa ou key do arquivo no S3
-     * @throws BusinessException se a URL for inv·lida ou a exclus„o falhar
+     * @throws BusinessException se a URL for inv√°lida ou a exclus√£o falhar
      */
     public void deleteFile(String fileUrl) {
+        if (s3Client == null) {
+            throw new BusinessException("MinIO n√£o configurado. Acesse Configura√ß√µes > Infraestrutura.");
+        }
         try {
             String key = extractKeyFromUrl(fileUrl);
 
@@ -133,15 +184,18 @@ public class S3Service {
     }
 
     /**
-     * Gera uma URL presigned para acesso tempor·rio a um objeto no S3.
-     * ⁄til para conceder acesso ????????? sem expor credenciais.
+     * Gera uma URL presigned para acesso tempor√°rio a um objeto no S3.
+     * √ötil para conceder acesso controlado sem expor credenciais.
      *
      * @param key      Key do objeto no bucket
      * @param duration Tempo de validade da URL
      * @return URL presigned para download do objeto
-     * @throws BusinessException se a geraÁ„o da URL falhar
+     * @throws BusinessException se a gera√ß√£o da URL falhar
      */
     public String generatePresignedUrl(String key, Duration duration) {
+        if (s3Presigner == null) {
+            throw new BusinessException("MinIO n√£o configurado. Acesse Configura√ß√µes > Infraestrutura.");
+        }
         try {
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                     .bucket(bucketName)
@@ -166,7 +220,7 @@ public class S3Service {
      */
     private String extractKeyFromUrl(String fileUrl) {
         if (fileUrl == null || fileUrl.isEmpty()) {
-            throw new BusinessException("URL do arquivo inv·lida");
+            throw new BusinessException("URL do arquivo inv√°lida");
         }
 
         String baseUrl = String.format("%s/%s/", endpoint, bucketName);
@@ -174,8 +228,8 @@ public class S3Service {
     }
 
     /**
-     * Gera um nome de arquivo ˙nico usando UUID, preservando a extens„o original.
-     * Evita colisıes de nomes no bucket.
+     * Gera um nome de arquivo √∫nico usando UUID, preservando a extens√£o original.
+     * Evita colis√µes de nomes no bucket.
      */
     private String generateFileName(String originalFilename) {
         String extension = "";
@@ -186,27 +240,27 @@ public class S3Service {
     }
 
     /**
-     * Valida arquivo quanto a tamanho (m·x 5MB) e tipo (apenas imagens).
-     * @throws BusinessException se o arquivo n„o atender aos critÈrios
+     * Valida arquivo quanto a tamanho (m√°x 5MB) e tipo (apenas imagens).
+     * @throws BusinessException se o arquivo n√£o atender aos crit√©rios
      */
     private void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new BusinessException("Arquivo n„o pode ser vazio");
+            throw new BusinessException("Arquivo n√£o pode ser vazio");
         }
 
         long maxSize = 5 * 1024 * 1024; // 5MB
         if (file.getSize() > maxSize) {
-            throw new BusinessException("Arquivo muito grande. Tamanho m·ximo: 5MB");
+            throw new BusinessException("Arquivo muito grande. Tamanho m√°ximo: 5MB");
         }
 
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
-            throw new BusinessException("Apenas arquivos de imagem s„o permitidos");
+            throw new BusinessException("Apenas arquivos de imagem s√£o permitidos");
         }
     }
 
     /**
-     * Retorna o nome do bucket configurado para operaÁıes de armazenamento.
+     * Retorna o nome do bucket configurado para opera√ß√µes de armazenamento.
      */
     public String getBucketName() {
         return bucketName;

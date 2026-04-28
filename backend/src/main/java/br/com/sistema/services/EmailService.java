@@ -1,26 +1,48 @@
 package br.com.sistema.services;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.stereotype.Service;
-
-import lombok.RequiredArgsConstructor;
+import br.com.sistema.models.ConfiguracaoInfraestrutura;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.stereotype.Service;
+import java.util.Properties;
 
 /**
  * Serviço para envio de emails simples via SMTP.
- * Utiliza configuração de SMTP definida no application.properties.
+ * Configuração dinâmica via banco de dados.
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    private JavaMailSenderImpl mailSender;
+    private String remetenteEmail = "";
 
-    @Value("${spring.mail.username:}")
-    private String remetenteEmail;
+    /**
+     * Reconfigura o serviço de email com base nas configurações de infraestrutura.
+     * Se desabilitado, limpa a configuração existente.
+     *
+     * @param config configuração de infraestrutura do banco
+     */
+    public void reconfigurar(ConfiguracaoInfraestrutura config) {
+        if (!Boolean.TRUE.equals(config.getEmailHabilitado())) {
+            this.mailSender = null;
+            this.remetenteEmail = "";
+            log.info("EmailService: email desabilitado.");
+            return;
+        }
+        JavaMailSenderImpl sender = new JavaMailSenderImpl();
+        sender.setHost(config.getEmailHost());
+        sender.setPort(config.getEmailPort() != null ? config.getEmailPort() : 587);
+        sender.setUsername(config.getEmailUsername());
+        sender.setPassword(config.getEmailPassword());
+        Properties props = sender.getJavaMailProperties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        this.mailSender = sender;
+        this.remetenteEmail = config.getEmailUsername() != null ? config.getEmailUsername() : "";
+        log.info("EmailService reconfigurado - host: {}", config.getEmailHost());
+    }
 
     /**
      * Envia email simples com remetente configurado no SMTP.
@@ -32,6 +54,10 @@ public class EmailService {
      * @return true se enviado com sucesso, false em caso de falha
      */
     public boolean enviarEmail(String destinatario, String assunto, String corpo) {
+        if (mailSender == null) {
+            log.warn("EmailService: tentativa de envio sem configuração ativa.");
+            return false;
+        }
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(remetenteEmail);

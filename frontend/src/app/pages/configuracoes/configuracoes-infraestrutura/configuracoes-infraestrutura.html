@@ -1,0 +1,355 @@
+<div class="config-container">
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="header-info">
+      <h1>
+        <i class="fas fa-server"></i>
+        Infraestrutura
+      </h1>
+      <p class="header-sub">Configure servidores de Email, RabbitMQ e MinIO/S3</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-salvar" (click)="salvar()" [disabled]="isSaving()">
+        @if (isSaving()) {
+          <svg class="spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+          Salvando...
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Salvar Configurações
+        }
+      </button>
+    </div>
+  </div>
+
+  @if (isCarregando()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Carregando configurações...</p>
+    </div>
+  } @else {
+    <!-- TABS -->
+    <div class="tabs-wrapper">
+      <button class="tab-btn" [class.active]="abaAtiva() === 'email'" (click)="mudarAba('email')">
+        <i class="fas fa-envelope"></i>
+        <span>Email</span>
+      </button>
+      <button class="tab-btn" [class.active]="abaAtiva() === 'minio'" (click)="mudarAba('minio')">
+        <i class="fas fa-database"></i>
+        <span>MinIO/S3</span>
+      </button>
+      <button class="tab-btn" [class.active]="abaAtiva() === 'rabbitmq'" (click)="mudarAba('rabbitmq')">
+        <i class="fas fa-paper-plane"></i>
+        <span>RabbitMQ</span>
+      </button>
+    </div>
+
+    <form [formGroup]="form" class="form-body">
+      <!-- ABA EMAIL -->
+      @if (abaAtiva() === 'email') {
+        <div class="form-card animate-fade-in">
+          <h2 class="section-title">
+            <i class="fas fa-envelope"></i>
+            Configuração de Email (SMTP)
+          </h2>
+
+          <div class="field-group mb-4">
+            <label class="switch-item">
+              <div class="switch-info">
+                <span class="switch-title">Email Habilitado</span>
+                <span class="switch-desc">Ativar ou desativar o envio de emails pelo sistema</span>
+              </div>
+              <div class="switch-control">
+                <input type="checkbox" formControlName="emailHabilitado" />
+                <span class="slider round"></span>
+              </div>
+            </label>
+          </div>
+
+          <div class="fields-row mb-4">
+            <div class="field-group">
+              <label>Host SMTP</label>
+              <input
+                type="text"
+                formControlName="emailHost"
+                placeholder="smtp.gmail.com"
+                [disabled]="!form.get('emailHabilitado')?.value"
+              />
+            </div>
+            <div class="field-group">
+              <label>Porta</label>
+              <input
+                type="number"
+                formControlName="emailPort"
+                placeholder="587"
+                [disabled]="!form.get('emailHabilitado')?.value"
+              />
+            </div>
+          </div>
+
+          <div class="field-group mb-4">
+            <label>Usuário / Email</label>
+            <input
+              type="text"
+              formControlName="emailUsername"
+              placeholder="seu-email@exemplo.com"
+              [disabled]="!form.get('emailHabilitado')?.value"
+            />
+          </div>
+
+          <div class="field-group mb-4">
+            <label>Senha</label>
+            <div class="input-with-toggle">
+              <input
+                [type]="mostrarEmailPassword() ? 'text' : 'password'"
+                formControlName="emailPassword"
+                placeholder="Senha do email"
+                [disabled]="!form.get('emailHabilitado')?.value"
+              />
+              <button type="button" class="toggle-btn" (click)="toggleEmailPassword()">
+                <i [class]="mostrarEmailPassword() ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="test-actions mt-4">
+            <button
+              type="button"
+              class="btn-testar"
+              (click)="testarEmail()"
+              [disabled]="isTestandoEmail() || !form.get('emailHabilitado')?.value"
+            >
+              @if (isTestandoEmail()) {
+                <svg class="spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                Testando...
+              } @else {
+                <i class="fas fa-plug"></i> Testar Conexão
+              }
+            </button>
+
+            @if (resultadoTeste()) {
+              <div class="test-result" [class.success]="resultadoTeste()?.sucesso" [class.error]="!resultadoTeste()?.sucesso">
+                <i [class]="resultadoTeste()?.sucesso ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+                {{ resultadoTeste()?.mensagem }}
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ABA MINIO -->
+      @if (abaAtiva() === 'minio') {
+        <div class="form-card animate-fade-in">
+          <h2 class="section-title">
+            <i class="fas fa-database"></i>
+            Configuração de MinIO/S3
+          </h2>
+
+          <div class="field-group mb-4">
+            <label class="switch-item">
+              <div class="switch-info">
+                <span class="switch-title">MinIO/S3 Habilitado</span>
+                <span class="switch-desc">Ativar ou desativar armazenamento de arquivos em MinIO/S3</span>
+              </div>
+              <div class="switch-control">
+                <input type="checkbox" formControlName="minioHabilitado" />
+                <span class="slider round"></span>
+              </div>
+            </label>
+          </div>
+
+          <div class="field-group mb-4">
+            <label>Endpoint</label>
+            <input
+              type="text"
+              formControlName="minioEndpoint"
+              placeholder="https://minio.exemplo.com"
+              [disabled]="!form.get('minioHabilitado')?.value"
+            />
+          </div>
+
+          <div class="fields-row mb-4">
+            <div class="field-group">
+              <label>Access Key</label>
+              <input
+                type="text"
+                formControlName="minioAccessKey"
+                placeholder="SUA_ACCESS_KEY"
+                [disabled]="!form.get('minioHabilitado')?.value"
+              />
+            </div>
+            <div class="field-group">
+              <label>Bucket Name</label>
+              <input
+                type="text"
+                formControlName="minioBucketName"
+                placeholder="nutricontrol"
+                [disabled]="!form.get('minioHabilitado')?.value"
+              />
+            </div>
+          </div>
+
+          <div class="field-group mb-4">
+            <label>Secret Key</label>
+            <div class="input-with-toggle">
+              <input
+                [type]="mostrarMinioSecretKey() ? 'text' : 'password'"
+                formControlName="minioSecretKey"
+                placeholder="SUA_SECRET_KEY"
+                [disabled]="!form.get('minioHabilitado')?.value"
+              />
+              <button type="button" class="toggle-btn" (click)="toggleMinioSecretKey()">
+                <i [class]="mostrarMinioSecretKey() ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group mb-4">
+            <label>Região</label>
+            <input
+              type="text"
+              formControlName="minioRegion"
+              placeholder="us-east-1"
+              [disabled]="!form.get('minioHabilitado')?.value"
+            />
+          </div>
+
+          <div class="test-actions mt-4">
+            <button
+              type="button"
+              class="btn-testar"
+              (click)="testarMinio()"
+              [disabled]="isTestandoMinio() || !form.get('minioHabilitado')?.value"
+            >
+              @if (isTestandoMinio()) {
+                <svg class="spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                Testando...
+              } @else {
+                <i class="fas fa-plug"></i> Testar Conexão
+              }
+            </button>
+
+            @if (resultadoTeste()) {
+              <div class="test-result" [class.success]="resultadoTeste()?.sucesso" [class.error]="!resultadoTeste()?.sucesso">
+                <i [class]="resultadoTeste()?.sucesso ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+                {{ resultadoTeste()?.mensagem }}
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ABA RABBITMQ -->
+      @if (abaAtiva() === 'rabbitmq') {
+        <div class="form-card animate-fade-in">
+          <h2 class="section-title">
+            <i class="fas fa-paper-plane"></i>
+            Configuração de RabbitMQ
+          </h2>
+
+          <div class="field-group mb-4">
+            <label class="switch-item">
+              <div class="switch-info">
+                <span class="switch-title">RabbitMQ Habilitado</span>
+                <span class="switch-desc">Ativar ou desativar mensageria via RabbitMQ</span>
+              </div>
+              <div class="switch-control">
+                <input type="checkbox" formControlName="rabbitmqHabilitado" />
+                <span class="slider round"></span>
+              </div>
+            </label>
+          </div>
+
+          <div class="fields-row mb-4">
+            <div class="field-group">
+              <label>Host</label>
+              <input
+                type="text"
+                formControlName="rabbitmqHost"
+                placeholder="localhost"
+                [disabled]="!form.get('rabbitmqHabilitado')?.value"
+              />
+            </div>
+            <div class="field-group">
+              <label>Porta</label>
+              <input
+                type="number"
+                formControlName="rabbitmqPort"
+                placeholder="5672"
+                [disabled]="!form.get('rabbitmqHabilitado')?.value"
+              />
+            </div>
+          </div>
+
+          <div class="fields-row mb-4">
+            <div class="field-group">
+              <label>Usuário</label>
+              <input
+                type="text"
+                formControlName="rabbitmqUsername"
+                placeholder="guest"
+                [disabled]="!form.get('rabbitmqHabilitado')?.value"
+              />
+            </div>
+            <div class="field-group">
+              <label>VHost</label>
+              <input
+                type="text"
+                formControlName="rabbitmqVhost"
+                placeholder="/"
+                [disabled]="!form.get('rabbitmqHabilitado')?.value"
+              />
+            </div>
+          </div>
+
+          <div class="field-group mb-4">
+            <label>Senha</label>
+            <div class="input-with-toggle">
+              <input
+                [type]="mostrarRabbitmqPassword() ? 'text' : 'password'"
+                formControlName="rabbitmqPassword"
+                placeholder="Senha do RabbitMQ"
+                [disabled]="!form.get('rabbitmqHabilitado')?.value"
+              />
+              <button type="button" class="toggle-btn" (click)="toggleRabbitmqPassword()">
+                <i [class]="mostrarRabbitmqPassword() ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group mb-4">
+            <label>Nome da Fila</label>
+            <input
+              type="text"
+              formControlName="rabbitmqQueue"
+              placeholder="nutricontrol.queue"
+              [disabled]="!form.get('rabbitmqHabilitado')?.value"
+            />
+          </div>
+
+          <div class="test-actions mt-4">
+            <button
+              type="button"
+              class="btn-testar"
+              (click)="testarRabbitmq()"
+              [disabled]="isTestandoRabbitmq() || !form.get('rabbitmqHabilitado')?.value"
+            >
+              @if (isTestandoRabbitmq()) {
+                <svg class="spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                Testando...
+              } @else {
+                <i class="fas fa-plug"></i> Testar Conexão
+              }
+            </button>
+
+            @if (resultadoTeste()) {
+              <div class="test-result" [class.success]="resultadoTeste()?.sucesso" [class.error]="!resultadoTeste()?.sucesso">
+                <i [class]="resultadoTeste()?.sucesso ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+                {{ resultadoTeste()?.mensagem }}
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </form>
+  }
+</div>
