@@ -1,3 +1,13 @@
+## [1.22.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.21.1...v1.22.0) (2026-05-02)
+
+### Features
+
+* adicionar configurações de infraestrutura e agendamento ([0b03f9b](https://github.com/CesarAVB/nutritional-monorepo/commit/0b03f9b916a2550599c3dde173d49ce3c6f06324))
+
+### Bug Fixes
+
+* corrigir caracteres especiais e melhorar a formatação de relatórios nutricionais ([749eb94](https://github.com/CesarAVB/nutritional-monorepo/commit/749eb94f75ee3558542d5295824ce98422495ab3))
+
 ## [1.21.1](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.21.0...v1.21.1) (2026-04-28)
 
 ### Bug Fixes
