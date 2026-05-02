@@ -1,3 +1,9 @@
+## [1.23.1](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.23.0...v1.23.1) (2026-05-02)
+
+### Bug Fixes
+
+* adicionar id ao formulário de paciente e corrigir a formatação ([8a17980](https://github.com/CesarAVB/nutritional-monorepo/commit/8a17980d8a872da2951fda1903635f45cd158af1))
+
 ## [1.23.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.22.0...v1.23.0) (2026-05-02)
 
 ### Features
