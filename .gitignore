@@ -1,21 +1,26 @@
 # ============================================
-# BUILD & COMPILED
+# CLAUDE / GITHUB / CODEX
 # ============================================
 .codex/
+.claude/
+.github/agents/
+.github/copilot-instructions.md
+CLAUDE.md
 AGENTS.md
 backend/AGENTS.md
 frontend/AGENTS.md
-.github/agents/
-.github/copilot-instructions.md
 .llm
+
+# ============================================
+# BUILD & COMPILED
+# ============================================
 target/
 dist/
 build/
 *.class
 *.jar
 *.war
-CLAUDE.md
-.claude/
+
 # ============================================
 # BACKEND (Spring Boot)
 # ============================================
