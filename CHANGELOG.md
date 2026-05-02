@@ -1,3 +1,9 @@
+## [1.23.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.22.0...v1.23.0) (2026-05-02)
+
+### Features
+
+* adicionar atualização da data de nascimento no cadastro de paciente ([07ae687](https://github.com/CesarAVB/nutritional-monorepo/commit/07ae6870404040b0fd5aef71905afddafa10c898))
+
 ## [1.22.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.21.1...v1.22.0) (2026-05-02)
 
 ### Features
