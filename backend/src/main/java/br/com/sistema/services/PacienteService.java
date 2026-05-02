@@ -157,6 +157,7 @@ public class PacienteService {
     public PacienteDTO atualizarPaciente(Long id, PacienteDTO dto) {
         Paciente paciente = pacienteRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Paciente n�o encontrado"));
         paciente.setNomeCompleto(dto.getNomeCompleto());
+        paciente.setDataNascimento(dto.getDataNascimento());
         paciente.setTelefoneWhatsapp(dto.getTelefoneWhatsapp());
         paciente.setEmail(dto.getEmail());
         if (dto.getSexo() != null) {
