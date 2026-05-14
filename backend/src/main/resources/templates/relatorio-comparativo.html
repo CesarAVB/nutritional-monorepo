@@ -421,6 +421,7 @@
             <tr th:each="item, s : ${consultasComparativas}" th:with="prev=${s.index > 0 ? consultasComparativas[s.index - 1] : null}">
               <td style="padding-left: 12px;">
                 <div th:text="${item.dataFormatada}">—</div>
+                <div style="font-size: 9px; color: var(--muted); font-weight: normal;" th:text="${item.dataAbreviada + ' - Consulta #' + item.consultaId}">Consulta</div>
                 <div style="font-size: 9px; color: var(--muted); font-weight: normal;" th:text="${item.objetivo != null ? item.objetivo : ''}"></div>
               </td>
               <td class="trend-cell">
@@ -490,7 +491,7 @@
         <thead>
           <tr>
             <th class="photo-position-col">Posição</th>
-            <th th:each="c : ${consultasComFoto}" class="photo-consulta-col" th:text="${c.dataFormatada}">--/--/----</th>
+            <th th:each="c : ${consultasComFoto}" class="photo-consulta-col" th:text="${c.dataAbreviada + ' - ' + c.dataFormatada}">--/--/----</th>
           </tr>
         </thead>
         <tbody>

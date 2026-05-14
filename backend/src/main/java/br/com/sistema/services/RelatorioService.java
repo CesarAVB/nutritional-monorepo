@@ -276,9 +276,10 @@ public class RelatorioService {
         Integer idadePaciente = calcularIdadePaciente(paciente);
 
         List<ConsultaResumoDTO> consultasResumo = new ArrayList<>(consultaService.listarConsultasPorPaciente(pacienteId));
-        consultasResumo.sort(Comparator.comparing(ConsultaResumoDTO::getDataConsulta, Comparator.nullsLast(Comparator.naturalOrder())));
+        consultasResumo.sort(Comparator.comparing(ConsultaResumoDTO::getId, Comparator.nullsLast(Comparator.naturalOrder())));
 
         List<ConsultaComparativaItemDTO> consultasComAvaliacao = new ArrayList<>();
+        int numeroConsulta = 1;
         for (ConsultaResumoDTO consulta : consultasResumo) {
             try {
                 var avaliacao = avaliacaoFisicaService.buscarPorConsulta(consulta.getId());
@@ -299,8 +300,10 @@ public class RelatorioService {
                     item.setPerimetroBracoDireitoRelax(avaliacao.getPerimetroBracoDireitoRelax());
                     item.setPerimetroPanturrilhaDireita(avaliacao.getPerimetroPanturrilhaDireita());
                     item.setObjetivo(consulta.getObjetivo());
+                    item.setNumeroConsulta(numeroConsulta);
                     consultasComAvaliacao.add(item);
                 }
+                numeroConsulta++;
             } catch (Exception e) {
                 log.warn("Avaliaï¿½ï¿½o fï¿½sica nï¿½o encontrada para consultaId={}: {}", consulta.getId(), e.getMessage());
             }
@@ -313,6 +316,7 @@ public class RelatorioService {
             consultasComparativas.add(consultasComAvaliacao.get(0));
             consultasComparativas.add(consultasComAvaliacao.get(consultasComAvaliacao.size() - 1));
         }
+        aplicarRotulosComparativos(consultasComparativas);
 
         for (ConsultaComparativaItemDTO consulta : consultasComparativas) {
             try {
@@ -428,6 +432,17 @@ public class RelatorioService {
         item.put("unidade", unidade);
         item.put("melhora", melhora);
         variacoes.add(item);
+    }
+
+    private void aplicarRotulosComparativos(List<ConsultaComparativaItemDTO> consultasComparativas) {
+        if (consultasComparativas.isEmpty()) {
+            return;
+        }
+
+        consultasComparativas.get(0).setDataAbreviada("Inicial");
+        if (consultasComparativas.size() > 1) {
+            consultasComparativas.get(consultasComparativas.size() - 1).setDataAbreviada("Ultima");
+        }
     }
 
     private String formatDelta(Double valorFinal, Double valorInicial, String unidade) {
