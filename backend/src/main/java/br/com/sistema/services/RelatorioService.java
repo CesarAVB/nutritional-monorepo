@@ -277,6 +277,10 @@ public class RelatorioService {
 
         List<ConsultaResumoDTO> consultasResumo = new ArrayList<>(consultaService.listarConsultasPorPaciente(pacienteId));
         consultasResumo.sort(Comparator.comparing(ConsultaResumoDTO::getId, Comparator.nullsLast(Comparator.naturalOrder())));
+        log.info("Comparativo pacienteId={}: {} consultas encontradas. IDs={}",
+                pacienteId,
+                consultasResumo.size(),
+                consultasResumo.stream().map(ConsultaResumoDTO::getId).toList());
 
         List<ConsultaComparativaItemDTO> consultasComAvaliacao = new ArrayList<>();
         int numeroConsulta = 1;
@@ -309,6 +313,11 @@ public class RelatorioService {
             }
         }
 
+        log.info("Comparativo pacienteId={}: {} consultas com avaliacao fisica. IDs={}",
+                pacienteId,
+                consultasComAvaliacao.size(),
+                consultasComAvaliacao.stream().map(ConsultaComparativaItemDTO::getConsultaId).toList());
+
         List<ConsultaComparativaItemDTO> consultasComparativas = new ArrayList<>();
         if (consultasComAvaliacao.size() == 1) {
             consultasComparativas.add(consultasComAvaliacao.get(0));
@@ -317,6 +326,9 @@ public class RelatorioService {
             consultasComparativas.add(consultasComAvaliacao.get(consultasComAvaliacao.size() - 1));
         }
         aplicarRotulosComparativos(consultasComparativas);
+        log.info("Comparativo pacienteId={}: consultas selecionadas para PDF. IDs={}",
+                pacienteId,
+                consultasComparativas.stream().map(ConsultaComparativaItemDTO::getConsultaId).toList());
 
         for (ConsultaComparativaItemDTO consulta : consultasComparativas) {
             try {
@@ -329,7 +341,7 @@ public class RelatorioService {
                     consulta.setFotoLateralDireita(registro.getFotoLateralDireita());
                 }
             } catch (Exception e) {
-                log.warn("Registro fotogrï¿½fico nï¿½o encontrado para consultaId={}: {}", consulta.getConsultaId(), e.getMessage());
+                log.debug("Registro fotografico nao encontrado para consultaId={}", consulta.getConsultaId());
             }
         }
 
@@ -343,6 +355,11 @@ public class RelatorioService {
                 consultasComFoto.add(consulta);
             }
         }
+        consultasComFoto = selecionarExtremos(montarConsultasComRegistroFotografico(consultasResumo));
+        aplicarRotulosComparativos(consultasComFoto);
+        log.info("Comparativo pacienteId={}: consultas selecionadas para fotos. IDs={}",
+                pacienteId,
+                consultasComFoto.stream().map(ConsultaComparativaItemDTO::getConsultaId).toList());
         boolean hasComparacaoFotos = !consultasComFoto.isEmpty();
 
         Map<String, Object> evolucao = new LinkedHashMap<>();
@@ -443,6 +460,49 @@ public class RelatorioService {
         if (consultasComparativas.size() > 1) {
             consultasComparativas.get(consultasComparativas.size() - 1).setDataAbreviada("Ultima");
         }
+    }
+
+    private List<ConsultaComparativaItemDTO> montarConsultasComRegistroFotografico(List<ConsultaResumoDTO> consultasResumo) {
+        List<ConsultaComparativaItemDTO> consultasComFoto = new ArrayList<>();
+        int numeroConsulta = 1;
+
+        for (ConsultaResumoDTO consulta : consultasResumo) {
+            try {
+                var registro = registroFotograficoService.buscarPorConsulta(consulta.getId());
+                if (registro != null) {
+                    escaparUrlsFotos(registro);
+                    ConsultaComparativaItemDTO item = new ConsultaComparativaItemDTO();
+                    item.setConsultaId(consulta.getId());
+                    item.setDataConsulta(consulta.getDataConsulta());
+                    item.setDataFormatada(consulta.getDataConsulta().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                    item.setDataAbreviada(consulta.getDataConsulta().format(DateTimeFormatter.ofPattern("MMM/yy", new Locale("pt", "BR"))).toUpperCase(new Locale("pt", "BR")));
+                    item.setNumeroConsulta(numeroConsulta);
+                    item.setFotoAnterior(registro.getFotoAnterior());
+                    item.setFotoPosterior(registro.getFotoPosterior());
+                    item.setFotoLateralEsquerda(registro.getFotoLateralEsquerda());
+                    item.setFotoLateralDireita(registro.getFotoLateralDireita());
+                    consultasComFoto.add(item);
+                }
+            } catch (Exception ignored) {
+                // Consulta sem registro fotografico; o comparativo usa a proxima consulta com fotos.
+            }
+            numeroConsulta++;
+        }
+
+        return consultasComFoto;
+    }
+
+    private List<ConsultaComparativaItemDTO> selecionarExtremos(List<ConsultaComparativaItemDTO> consultas) {
+        List<ConsultaComparativaItemDTO> extremos = new ArrayList<>();
+        if (consultas.isEmpty()) {
+            return extremos;
+        }
+
+        extremos.add(consultas.get(0));
+        if (consultas.size() > 1) {
+            extremos.add(consultas.get(consultas.size() - 1));
+        }
+        return extremos;
     }
 
     private String formatDelta(Double valorFinal, Double valorInicial, String unidade) {

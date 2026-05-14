@@ -138,6 +138,7 @@ public class PlaywrightPdfService {
             // Sinal de que todos os charts terminou de renderizar
             try {
                 page.waitForFunction("() => window.__chartsReady === true",
+                        null,
                         new Page.WaitForFunctionOptions().setTimeout(12_000));
             } catch (Exception e) {
                 log.warn("Timeout aguardando charts - PDF sera gerado sem alguns graficos: {}", e.getMessage());
