@@ -293,6 +293,7 @@ public class RelatorioService {
                     item.setDataConsulta(consulta.getDataConsulta());
                     item.setDataFormatada(consulta.getDataConsulta().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
                     item.setDataAbreviada(consulta.getDataConsulta().format(DateTimeFormatter.ofPattern("MMM/yy", new Locale("pt", "BR"))).toUpperCase(new Locale("pt", "BR")));
+                    item.setAltura(normalizarAlturaCm(avaliacao.getAltura()));
                     item.setPeso(avaliacao.getPesoAtual());
                     item.setImc(avaliacao.getImc());
                     item.setPercentualGordura(avaliacao.getPercentualGordura());
@@ -396,6 +397,7 @@ public class RelatorioService {
 
         Map<String, Object> reportData = new LinkedHashMap<>();
         reportData.put("labels", consultasComparativas.stream().map(ConsultaComparativaItemDTO::getDataAbreviada).toList());
+        reportData.put("altura", consultasComparativas.stream().map(ConsultaComparativaItemDTO::getAltura).toList());
         reportData.put("peso", consultasComparativas.stream().map(ConsultaComparativaItemDTO::getPeso).toList());
         reportData.put("imc", consultasComparativas.stream().map(ConsultaComparativaItemDTO::getImc).toList());
         reportData.put("percentualGordura", consultasComparativas.stream().map(ConsultaComparativaItemDTO::getPercentualGordura).toList());
@@ -503,6 +505,13 @@ public class RelatorioService {
             extremos.add(consultas.get(consultas.size() - 1));
         }
         return extremos;
+    }
+
+    private Double normalizarAlturaCm(Double altura) {
+        if (altura == null) {
+            return null;
+        }
+        return altura > 10 ? altura : altura * 100;
     }
 
     private String formatDelta(Double valorFinal, Double valorInicial, String unidade) {

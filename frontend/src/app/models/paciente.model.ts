@@ -16,6 +16,7 @@ export interface ConsultaResumoDTO {
   pacienteId: number;
   nomePaciente: string;
   dataConsulta: string;
+  altura?: number;
   peso?: number;
   percentualGordura?: number;
   objetivo?: string;

@@ -21,6 +21,7 @@ public class ConsultaComparativaItemDTO {
     private String dataAbreviada;         // "MMM/yy" para eixo X dos gráficos
 
     // Composição Corporal
+    private Double altura;
     private Double peso;
     private Double imc;
     private Double percentualGordura;

@@ -114,6 +114,7 @@ public class ConsultaService {
             dto.setTemFotos(comFotos.contains(consulta.getId()));
             AvaliacaoFisica avaliacao = avaliacoesPorConsulta.get(consulta.getId());
             if (avaliacao != null) {
+                dto.setAltura(avaliacao.getAltura());
                 dto.setPeso(avaliacao.getPesoAtual());
                 dto.setPercentualGordura(avaliacao.getPercentualGordura());
             }
@@ -446,6 +447,7 @@ public class ConsultaService {
         dto.setDataConsulta(consulta.getDataConsulta());
 
         avaliacaoFisicaRepository.findByConsultaId(consulta.getId()).ifPresent(a -> {
+            dto.setAltura(a.getAltura());
             dto.setPeso(a.getPesoAtual());
             dto.setPercentualGordura(a.getPercentualGordura());
         });

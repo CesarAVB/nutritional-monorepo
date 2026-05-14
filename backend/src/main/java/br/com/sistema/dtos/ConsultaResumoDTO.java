@@ -15,6 +15,7 @@ public class ConsultaResumoDTO {
     private Long pacienteId;
     private String nomePaciente;
     private LocalDateTime dataConsulta;
+    private Double altura;
     private Double peso;
     private Double percentualGordura;
     private String objetivo;

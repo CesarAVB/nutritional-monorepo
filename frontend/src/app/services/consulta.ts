@@ -44,6 +44,8 @@ export class ConsultaService {
             return {
               ...item,
               dataConsulta: this.normalizeDateValue(raw),
+              altura:
+                item.altura ?? item.avaliacaoFisica?.altura ?? null,
               peso:
                 item.peso ?? item.pesoAtual ?? item.avaliacaoFisica?.pesoAtual ?? null,
               percentualGordura:
@@ -110,6 +112,8 @@ export class ConsultaService {
             return {
               ...item,
               dataConsulta: this.normalizeDateValue(raw),
+              altura:
+                item.altura ?? item.avaliacaoFisica?.altura ?? null,
               peso:
                 item.peso ?? item.pesoAtual ?? item.avaliacaoFisica?.pesoAtual ?? null,
               percentualGordura:
@@ -223,6 +227,8 @@ export class ConsultaService {
       return {
         ...item,
         dataConsulta: this.normalizeDateValue(raw),
+        altura:
+          item.altura ?? item.avaliacaoFisica?.altura ?? null,
         peso:
           item.peso ?? item.pesoAtual ?? item.avaliacaoFisica?.pesoAtual ?? null,
         percentualGordura:

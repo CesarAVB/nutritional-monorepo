@@ -20,7 +20,7 @@
         <div class="metric-card metric-height">
           <div class="metric-icon"><i class="fas fa-ruler-vertical" aria-hidden="true"></i></div>
           <p class="metric-value">
-            <span th:text="${(avaliacaoFisica != null and avaliacaoFisica.altura != null) ? avaliacaoFisica.altura : '0.00'}">0.00</span>
+            <span th:text="${(avaliacaoFisica != null and avaliacaoFisica.altura != null) ? #numbers.formatDecimal(avaliacaoFisica.altura > 10 ? avaliacaoFisica.altura : avaliacaoFisica.altura * 100, 1, 'POINT', 1, 'COMMA') : '0.00'}">0.00</span>
             <span class="metric-value-small">cm</span>
           </p>
           <p class="metric-label">Altura</p>

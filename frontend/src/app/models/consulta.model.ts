@@ -3,6 +3,7 @@ export interface ConsultaResumoDTO {
   pacienteId: number;
   nomePaciente: string;
   dataConsulta: string;
+  altura?: number;
   peso?: number;
   percentualGordura?: number;
   objetivo?: string;
@@ -14,6 +15,7 @@ export interface ConsultaResumoDTO {
 export interface AvaliacaoFisicaDTO {
   id: number;
   consultaId: number;
+  altura?: number;
   perimetroOmbro?: number;
   perimetroTorax?: number;
   perimetroCintura?: number;

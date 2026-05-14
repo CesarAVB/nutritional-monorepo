@@ -408,6 +408,7 @@
             <tr>
               <th style="padding-left: 12px;">Data</th>
               <th>Peso</th>
+              <th>Altura</th>
               <th>IMC</th>
               <th>Gordura</th>
               <th>M. Magra</th>
@@ -429,6 +430,9 @@
                 <span th:if="${prev != null and item.peso != null and prev.peso != null}"
                       th:class="${item.peso > prev.peso ? 'trend-arrow trend-up' : (item.peso < prev.peso ? 'trend-arrow trend-down' : 'trend-arrow trend-neutral')}"
                       th:text="${item.peso > prev.peso ? '▲' : (item.peso < prev.peso ? '▼' : '•')}">•</span>
+              </td>
+              <td class="trend-cell">
+                <span th:text="${item.altura != null ? #numbers.formatDecimal(item.altura, 1,'POINT',1,'COMMA') + ' cm' : '—'}">—</span>
               </td>
               <td class="trend-cell">
                 <span th:text="${item.imc != null ? #numbers.formatDecimal(item.imc, 1,'POINT',1,'COMMA') : '—'}">—</span>
