@@ -1,3 +1,9 @@
+## [1.27.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.26.0...v1.27.0) (2026-05-14)
+
+### Features
+
+* permitir cadastro de pacientes incompletos e adicionar validações no agendamento ([b04ce60](https://github.com/CesarAVB/nutritional-monorepo/commit/b04ce60023415d36889a477b600ddcbfc00fa77d))
+
 ## [1.26.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.25.0...v1.26.0) (2026-05-14)
 
 ### Features
