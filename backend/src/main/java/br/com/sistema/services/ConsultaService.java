@@ -96,6 +96,12 @@ public class ConsultaService {
         Set<Long> comAvaliacao = new HashSet<>(avaliacaoFisicaRepository.findConsultaIdsComAvaliacao(ids));
         Set<Long> comQuestionario = new HashSet<>(questionarioRepository.findConsultaIdsComQuestionario(ids));
         Set<Long> comFotos = new HashSet<>(registroFotograficoRepository.findConsultaIdsComFotos(ids));
+        Map<Long, AvaliacaoFisica> avaliacoesPorConsulta = new HashMap<>();
+        avaliacaoFisicaRepository.findAllByConsultaIdIn(ids)
+                .forEach(avaliacao -> avaliacoesPorConsulta.put(avaliacao.getConsulta().getId(), avaliacao));
+        Map<Long, QuestionarioEstiloVida> questionariosPorConsulta = new HashMap<>();
+        questionarioRepository.findAllByConsultaIdIn(ids)
+                .forEach(questionario -> questionariosPorConsulta.put(questionario.getConsulta().getId(), questionario));
 
         return consultas.stream().map(consulta -> {
             ConsultaResumoDTO dto = new ConsultaResumoDTO();
@@ -106,6 +112,15 @@ public class ConsultaService {
             dto.setTemAvaliacaoFisica(comAvaliacao.contains(consulta.getId()));
             dto.setTemQuestionario(comQuestionario.contains(consulta.getId()));
             dto.setTemFotos(comFotos.contains(consulta.getId()));
+            AvaliacaoFisica avaliacao = avaliacoesPorConsulta.get(consulta.getId());
+            if (avaliacao != null) {
+                dto.setPeso(avaliacao.getPesoAtual());
+                dto.setPercentualGordura(avaliacao.getPercentualGordura());
+            }
+            QuestionarioEstiloVida questionario = questionariosPorConsulta.get(consulta.getId());
+            if (questionario != null) {
+                dto.setObjetivo(questionario.getObjetivo());
+            }
             return dto;
         }).toList();
     }

@@ -20,6 +20,8 @@ public interface AvaliacaoFisicaRepository extends JpaRepository<AvaliacaoFisica
     @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM AvaliacaoFisica a WHERE a.consulta.id = :consultaId")
     boolean existsByConsultaId(Long consultaId);
 
+    List<AvaliacaoFisica> findAllByConsultaIdIn(List<Long> consultaIds);
+
     @Modifying
     @Query("DELETE FROM AvaliacaoFisica a WHERE a.consulta.id = :consultaId")
     void deleteByConsultaId(Long consultaId);
