@@ -617,6 +617,15 @@
 }
 
 // Form Actions
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.upload-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 .form-actions {
   display: flex;
   justify-content: center;

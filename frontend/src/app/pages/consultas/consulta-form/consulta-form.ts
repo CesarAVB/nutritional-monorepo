@@ -40,6 +40,9 @@ export class ConsultaFormComponent implements OnInit {
   pacienteUltimaVisita: string = '-';
   consultaId?: number;
   isEditMode = false;
+  isSaving = false;
+  isProcessingFotos = false;
+  private fotosEmProcessamento = 0;
 
   estiloVidaForm: FormGroup;
   medidasForm: FormGroup;
@@ -338,8 +341,17 @@ export class ConsultaFormComponent implements OnInit {
       return;
     }
 
+    this.fotosEmProcessamento++;
+    this.isProcessingFotos = true;
+
     // Opcional: Comprimir imagem antes de enviar
     this.comprimirImagem(arquivo).then(comprimida => {
+      const maxCompressedSize = 5 * 1024 * 1024; // 5MB, alinhado ao backend/S3
+      if (comprimida.size > maxCompressedSize) {
+        this.toastService.error('A imagem ficou acima de 5MB apos a compressao');
+        return;
+      }
+
       this.fotos[tipoFoto].arquivo = comprimida;
       this.fotosRemovidas[tipoFoto] = false;
 
@@ -348,6 +360,9 @@ export class ConsultaFormComponent implements OnInit {
         this.fotos[tipoFoto].preview = e.target?.result as string;
       };
       reader.readAsDataURL(comprimida);
+    }).finally(() => {
+      this.fotosEmProcessamento = Math.max(0, this.fotosEmProcessamento - 1);
+      this.isProcessingFotos = this.fotosEmProcessamento > 0;
     });
   }
 }
@@ -391,7 +406,9 @@ export class ConsultaFormComponent implements OnInit {
         }, 'image/jpeg', 0.85); // 85% de qualidade
       };
       img.src = e.target?.result as string;
+      img.onerror = () => resolve(arquivo);
     };
+    reader.onerror = () => resolve(arquivo);
     reader.readAsDataURL(arquivo);
   });
 }
@@ -400,6 +417,8 @@ export class ConsultaFormComponent implements OnInit {
   // # removerFoto - Remove foto selecionada e marca como removida
   // ===========================================
   removerFoto(tipoFoto: TipoFoto): void {
+    if (this.isSaving || this.isProcessingFotos) return;
+
     this.fotos[tipoFoto] = { arquivo: null, preview: null, uploading: false };
     this.fotosRemovidas[tipoFoto] = true; // Marcar como removida
   }
@@ -408,6 +427,8 @@ export class ConsultaFormComponent implements OnInit {
   // # triggerFileInput - Aciona seletor de arquivo para tipo específico
   // ===========================================
   triggerFileInput(tipoFoto: TipoFoto): void {
+    if (this.isSaving || this.isProcessingFotos) return;
+
     const inputId = `file-${tipoFoto.toLowerCase().replace(/_/g, '-')}`;
     const input = document.getElementById(inputId) as HTMLInputElement;
     if (input) input.click();
@@ -460,6 +481,15 @@ export class ConsultaFormComponent implements OnInit {
   // # onSubmit - Processa envio do formulário de consulta
   // ===========================================
   onSubmit(): void {
+    if (this.isSaving) {
+      return;
+    }
+
+    if (this.isProcessingFotos) {
+      this.toastService.warning('Aguarde o processamento das fotos terminar');
+      return;
+    }
+
     if (!this.estiloVidaForm.valid || !this.medidasForm.valid) {
       this.toastService.warning('Preencha todos os campos obrigatórios');
       Object.keys(this.estiloVidaForm.controls).forEach((k) =>
@@ -475,6 +505,8 @@ export class ConsultaFormComponent implements OnInit {
       this.toastService.error('Paciente não identificado');
       return;
     }
+
+    this.isSaving = true;
 
     let questionarioData = { ...this.estiloVidaForm.value };
     let avaliacaoData = { ...this.medidasForm.value };
@@ -548,6 +580,7 @@ export class ConsultaFormComponent implements OnInit {
           }
         },
         error: (err) => {
+          this.isSaving = false;
           this.toastService.error('Erro ao atualizar consulta');
         },
       });
@@ -574,11 +607,13 @@ export class ConsultaFormComponent implements OnInit {
               }
             },
             error: (error) => {
+              this.isSaving = false;
               this.toastService.error('Erro ao salvar dados adicionais da consulta');
             },
           });
         },
         error: (err) => {
+          this.isSaving = false;
           this.toastService.error('Erro ao salvar consulta');
         },
       });
