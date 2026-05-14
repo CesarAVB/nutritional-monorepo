@@ -1,3 +1,9 @@
+## [1.26.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.25.0...v1.26.0) (2026-05-14)
+
+### Features
+
+* adicionar campo de altura em DTOs e relatórios ([3ae5e95](https://github.com/CesarAVB/nutritional-monorepo/commit/3ae5e952af86977b8ee0408e0e468c4d48e4574a))
+
 ## [1.25.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.24.0...v1.25.0) (2026-05-14)
 
 ### Features
