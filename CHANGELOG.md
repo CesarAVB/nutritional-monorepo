@@ -1,3 +1,9 @@
+## [1.25.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.24.0...v1.25.0) (2026-05-14)
+
+### Features
+
+* adicionar logs informativos para consultas e registros fotográficos no relatório ([76edc4d](https://github.com/CesarAVB/nutritional-monorepo/commit/76edc4d1afaa521bfda45df46d776dfb1a5d1dd4))
+
 ## [1.24.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.23.1...v1.24.0) (2026-05-14)
 
 ### Features
