@@ -1,3 +1,11 @@
+## [1.24.0](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.23.1...v1.24.0) (2026-05-14)
+
+### Features
+
+* adicionar método para buscar avaliações físicas e questionários por ID de consulta ([124b26c](https://github.com/CesarAVB/nutritional-monorepo/commit/124b26cc32f15618dea0eb4a424cf35fe902f7b5))
+* adicionar numeração de consultas e rótulos comparativos no relatório ([84c9782](https://github.com/CesarAVB/nutritional-monorepo/commit/84c978217fa6658c3dc6596e072167e1abb9c0bc))
+* adicionar tratamento de exceção para uploads multipart e melhorias na interface do formulário de consulta ([49ce17c](https://github.com/CesarAVB/nutritional-monorepo/commit/49ce17cdd562e610002a59917b37010adaaf34db))
+
 ## [1.23.1](https://github.com/CesarAVB/nutritional-monorepo/compare/v1.23.0...v1.23.1) (2026-05-02)
 
 ### Bug Fixes
