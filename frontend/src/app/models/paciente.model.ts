@@ -9,6 +9,8 @@ export interface PacienteDTO {
   prontuario?: string;
   totalConsultas?: number;
   ultimaConsulta?: string;
+  cadastroIncompleto?: boolean;
+  origemAgendamento?: boolean;
 }
 
 export interface ConsultaResumoDTO {

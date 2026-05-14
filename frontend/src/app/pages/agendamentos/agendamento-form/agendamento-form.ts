@@ -53,8 +53,9 @@ export class AgendamentoFormComponent implements OnInit {
     private toastService: ToastService
   ) {
     this.form = this.fb.group({
-      buscaPaciente: [''],
-      pacienteId: [null, Validators.required],
+      buscaPaciente: ['', [Validators.required, Validators.minLength(3)]],
+      pacienteId: [null],
+      telefoneWhatsapp: [''],
       data: ['', Validators.required],
       horario: ['', Validators.required],
       duracaoMinutos: [50, [Validators.required, Validators.min(10)]],
@@ -100,6 +101,7 @@ export class AgendamentoFormComponent implements OnInit {
         this.form.patchValue({
           buscaPaciente: ag.nomePaciente,
           pacienteId: ag.pacienteId,
+          telefoneWhatsapp: this.formatarTelefoneString(ag.telefoneWhatsapp),
           data,
           horario,
           duracaoMinutos: ag.duracaoMinutos,
@@ -119,6 +121,10 @@ export class AgendamentoFormComponent implements OnInit {
 
   buscarPacientes(event: Event): void {
     const termo = (event.target as HTMLInputElement).value;
+    if (this.pacienteSelecionado && termo !== this.pacienteSelecionado.nomeCompleto) {
+      this.pacienteSelecionado = null;
+      this.form.patchValue({ pacienteId: null }, { emitEvent: false });
+    }
     if (termo.length < 2) { this.pacientesBusca = []; this.showDropdown = false; return; }
     if (this.buscaDebounce) clearTimeout(this.buscaDebounce);
     this.buscaDebounce = setTimeout(() => {
@@ -131,9 +137,24 @@ export class AgendamentoFormComponent implements OnInit {
 
   selecionarPaciente(p: PacienteDTO): void {
     this.pacienteSelecionado = p;
-    this.form.patchValue({ pacienteId: p.id, buscaPaciente: p.nomeCompleto }, { emitEvent: false });
+    this.form.patchValue({
+      pacienteId: p.id,
+      buscaPaciente: p.nomeCompleto,
+      telefoneWhatsapp: this.formatarTelefoneString(p.telefoneWhatsapp)
+    }, { emitEvent: false });
+    this.form.get('telefoneWhatsapp')?.setErrors(null);
     this.showDropdown = false;
     this.pacientesBusca = [];
+  }
+
+  formatarTelefone(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const valorFormatado = this.formatarTelefoneString(input.value);
+    input.value = valorFormatado;
+    this.form.patchValue({ telefoneWhatsapp: valorFormatado }, { emitEvent: false });
+    if (this.form.get('telefoneWhatsapp')?.hasError('telefoneInvalido')) {
+      this.form.get('telefoneWhatsapp')?.setErrors(null);
+    }
   }
 
   carregarSlots(data: string): void {
@@ -146,7 +167,7 @@ export class AgendamentoFormComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.form.invalid) {
+    if (this.form.invalid || !this.validarPacienteRapido()) {
       this.toastService.warning('Preencha todos os campos obrigatórios');
       Object.values(this.form.controls).forEach(c => c.markAsTouched());
       return;
@@ -157,12 +178,18 @@ export class AgendamentoFormComponent implements OnInit {
     const dataHoraInicio = `${v.data}T${horario}:00`;
 
     const dto: AgendamentoRequestDto = {
-      pacienteId: v.pacienteId,
       dataHoraInicio,
       duracaoMinutos: v.duracaoMinutos,
       tipo: v.tipo,
       observacoes: v.observacoes || undefined
     };
+
+    if (v.pacienteId) {
+      dto.pacienteId = v.pacienteId;
+    } else {
+      dto.nomePaciente = String(v.buscaPaciente).trim();
+      dto.telefoneWhatsapp = this.removerMascara(v.telefoneWhatsapp);
+    }
 
     const op = this.isEditMode
       ? this.agendamentoService.atualizar(this.agendamentoId!, dto)
@@ -192,9 +219,59 @@ export class AgendamentoFormComponent implements OnInit {
     this.router.navigate(['/agendamentos'], { queryParams: data ? { data } : {} });
   }
 
+  private validarPacienteRapido(): boolean {
+    if (this.form.value.pacienteId) {
+      return true;
+    }
+
+    const nome = String(this.form.value.buscaPaciente || '').trim();
+    const telefone = this.removerMascara(this.form.value.telefoneWhatsapp || '');
+
+    if (nome.length < 3) {
+      return false;
+    }
+
+    if (telefone.length < 10 || telefone.length > 15) {
+      this.form.get('telefoneWhatsapp')?.setErrors({ telefoneInvalido: true });
+      return false;
+    }
+
+    return true;
+  }
+
+  private removerMascara(valor: string): string {
+    return valor ? valor.replace(/\D/g, '') : '';
+  }
+
+  private formatarTelefoneString(telefone?: string): string {
+    if (!telefone) return '';
+    let valor = telefone.replace(/\D/g, '');
+    if (valor.length > 11) {
+      valor = valor.substring(0, 11);
+    }
+
+    if (valor.length <= 10) {
+      return valor.replace(/^(\d{2})(\d{0,4})(\d{0,4}).*/, (_m, ddd, meio, fim) => {
+        const prefixo = ddd ? `(${ddd})` : '';
+        const parteMeio = meio ? ` ${meio}` : '';
+        const parteFim = fim ? `-${fim}` : '';
+        return `${prefixo}${parteMeio}${parteFim}`;
+      });
+    }
+
+    return valor.replace(/^(\d{2})(\d{0,5})(\d{0,4}).*/, (_m, ddd, meio, fim) => {
+      const prefixo = ddd ? `(${ddd})` : '';
+      const parteMeio = meio ? ` ${meio}` : '';
+      const parteFim = fim ? `-${fim}` : '';
+      return `${prefixo}${parteMeio}${parteFim}`;
+    });
+  }
+
   getCampoErro(campo: string): string | null {
     const ctrl = this.form.get(campo);
     if (ctrl?.touched && ctrl?.errors) {
+      if (ctrl.errors['minlength']) return 'Informe pelo menos 3 caracteres';
+      if (ctrl.errors['telefoneInvalido']) return 'Telefone invalido';
       if (ctrl.errors['required']) return 'Campo obrigatório';
       if (ctrl.errors['min']) return 'Mínimo de 10 minutos';
     }

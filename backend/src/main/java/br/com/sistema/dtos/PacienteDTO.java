@@ -43,4 +43,8 @@ public class PacienteDTO {
     // Campos calculados
     private Integer totalConsultas;
     private LocalDateTime ultimaConsulta;
+
+    // Origem/cadastro
+    private boolean cadastroIncompleto;
+    private boolean origemAgendamento;
 }

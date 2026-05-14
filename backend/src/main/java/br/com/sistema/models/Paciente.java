@@ -29,14 +29,14 @@ public class Paciente {
     @Column(nullable = false)
     private String nomeCompleto;
     
-    @Column(unique = true, nullable = false, length = 11, columnDefinition = "CHAR(11)")
+    @Column(unique = true, length = 11, columnDefinition = "CHAR(11)")
     private String cpf;
     
-    @Column(nullable = false)
+    @Column
     private LocalDate dataNascimento;
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column
     private Sexo sexo;
     
     @Column(columnDefinition = "TEXT")
@@ -46,4 +46,10 @@ public class Paciente {
     private String telefoneWhatsapp;
     
     private String email;
+
+    @Column(nullable = false)
+    private boolean cadastroIncompleto = false;
+
+    @Column(nullable = false)
+    private boolean origemAgendamento = false;
 }

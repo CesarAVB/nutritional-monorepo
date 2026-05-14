@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,7 +53,7 @@ public class AgendamentoService {
      */
     @Transactional
     public AgendamentoResponseDto criar(AgendamentoRequestDto request) {
-        Paciente paciente = pacienteRepository.findById(request.getPacienteId())
+        Paciente paciente = resolverPacienteOptional(request)
                 .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
 
         LocalDateTime dataHoraFim = request.getDataHoraInicio().plusMinutes(request.getDuracaoMinutos());
@@ -107,7 +108,7 @@ public class AgendamentoService {
         Agendamento agendamento = agendamentoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Agendamento não encontrado"));
 
-        Paciente paciente = pacienteRepository.findById(request.getPacienteId())
+        Paciente paciente = resolverPacienteOptional(request)
                 .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
 
         LocalDateTime dataHoraFim = request.getDataHoraInicio().plusMinutes(request.getDuracaoMinutos());
@@ -357,6 +358,37 @@ public class AgendamentoService {
      *
      * @return configuração de agendamento
      */
+    private Optional<Paciente> resolverPacienteOptional(AgendamentoRequestDto request) {
+        if (request.getPacienteId() != null) {
+            return pacienteRepository.findById(request.getPacienteId());
+        }
+
+        validarDadosPacienteRapido(request);
+
+        Paciente paciente = new Paciente();
+        paciente.setNomeCompleto(request.getNomePaciente().trim());
+        paciente.setTelefoneWhatsapp(somenteDigitos(request.getTelefoneWhatsapp()));
+        paciente.setCadastroIncompleto(true);
+        paciente.setOrigemAgendamento(true);
+
+        return Optional.of(pacienteRepository.save(paciente));
+    }
+
+    private void validarDadosPacienteRapido(AgendamentoRequestDto request) {
+        if (request.getNomePaciente() == null || request.getNomePaciente().trim().length() < 3) {
+            throw new BusinessException("Informe o nome do paciente para criar o agendamento");
+        }
+
+        String telefone = somenteDigitos(request.getTelefoneWhatsapp());
+        if (telefone.length() < 10 || telefone.length() > 15) {
+            throw new BusinessException("Informe um telefone valido para criar o agendamento");
+        }
+    }
+
+    private String somenteDigitos(String valor) {
+        return valor == null ? "" : valor.replaceAll("\\D", "");
+    }
+
     private ConfiguracaoAgendamento carregarConfiguracao() {
         return configuracaoRepository.findById(1L)
                 .orElseThrow(() -> new ResourceNotFoundException("Configuração de agendamento não encontrada"));

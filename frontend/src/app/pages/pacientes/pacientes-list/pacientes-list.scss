@@ -188,6 +188,14 @@
         background: var(--gray-50);
       }
 
+      &.incomplete-row {
+        background: #fff7f7;
+
+        &:hover {
+          background: #feecec;
+        }
+      }
+
       &:last-child {
         border-bottom: none;
       }
@@ -230,6 +238,17 @@
       font-weight: 600;
       color: var(--gray-800);
       font-size: 0.95rem;
+    }
+
+    .badge-incompleto {
+      width: fit-content;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-md);
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+      font-size: 0.72rem;
+      font-weight: 700;
     }
 
     .paciente-email {

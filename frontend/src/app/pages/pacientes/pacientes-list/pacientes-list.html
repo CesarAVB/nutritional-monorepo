@@ -71,7 +71,7 @@
           </thead>
           <tbody>
             @for (paciente of pacientesFiltrados(); track paciente.id) {
-              <tr (click)="verDetalhes(paciente.id!)" class="table-row">
+              <tr (click)="verDetalhes(paciente.id!)" class="table-row" [class.incomplete-row]="paciente.cadastroIncompleto">
                 <td>
                   <div class="paciente-cell">
                     <div class="paciente-avatar">
@@ -79,11 +79,14 @@
                     </div>
                     <div class="paciente-info">
                       <div class="paciente-nome">{{ paciente.nomeCompleto }}</div>
+                      @if (paciente.cadastroIncompleto) {
+                        <span class="badge-incompleto">Agendamento - completar cadastro</span>
+                      }
                       <div class="paciente-email">{{ paciente.email || '-' }}</div>
                     </div>
                   </div>
                 </td>
-                <td>{{ paciente.cpf }}</td>
+                <td>{{ paciente.cpf || '-' }}</td>
                 <td>
                   <button class="whatsapp-button" (click)="abrirWhatsApp(paciente.telefoneWhatsapp); $event.stopPropagation()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

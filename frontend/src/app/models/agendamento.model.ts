@@ -32,7 +32,9 @@ export interface ContadorHojeDto {
 }
 
 export interface AgendamentoRequestDto {
-  pacienteId: number;
+  pacienteId?: number;
+  nomePaciente?: string;
+  telefoneWhatsapp?: string;
   dataHoraInicio: string;
   duracaoMinutos: number;
   tipo: TipoAgendamento;

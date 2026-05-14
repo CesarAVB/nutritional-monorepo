@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import br.com.sistema.enums.TipoAgendamento;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,16 +14,20 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AgendamentoRequestDto {
 
-    @NotNull(message = "ID do paciente é obrigatório")
     private Long pacienteId;
 
-    @NotNull(message = "Data e hora de início são obrigatórias")
+    private String nomePaciente;
+
+    @Pattern(regexp = "\\d{10,15}", message = "Telefone invalido")
+    private String telefoneWhatsapp;
+
+    @NotNull(message = "Data e hora de inicio sao obrigatorias")
     private LocalDateTime dataHoraInicio;
 
-    @NotNull(message = "Duração em minutos é obrigatória")
+    @NotNull(message = "Duracao em minutos e obrigatoria")
     private Integer duracaoMinutos;
 
-    @NotNull(message = "Tipo de agendamento é obrigatório")
+    @NotNull(message = "Tipo de agendamento e obrigatorio")
     private TipoAgendamento tipo;
 
     private String observacoes;

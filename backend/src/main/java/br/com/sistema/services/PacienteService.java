@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -59,6 +60,8 @@ public class PacienteService {
         paciente.setEmail(dto.getEmail());
         paciente.setSexo(dto.getSexo());
         paciente.setProntuario(dto.getProntuario());
+        paciente.setCadastroIncompleto(false);
+        paciente.setOrigemAgendamento(false);
         Paciente saved = pacienteRepository.save(paciente);
         return converterParaDTO(saved);
     }
@@ -157,6 +160,7 @@ public class PacienteService {
     public PacienteDTO atualizarPaciente(Long id, PacienteDTO dto) {
         Paciente paciente = pacienteRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Paciente n�o encontrado"));
         paciente.setNomeCompleto(dto.getNomeCompleto());
+        atualizarCpfQuandoInformado(paciente, dto.getCpf());
         paciente.setDataNascimento(dto.getDataNascimento());
         paciente.setTelefoneWhatsapp(dto.getTelefoneWhatsapp());
         paciente.setEmail(dto.getEmail());
@@ -166,6 +170,7 @@ public class PacienteService {
         if (dto.getProntuario() != null) {
             paciente.setProntuario(dto.getProntuario());
         }
+        paciente.setCadastroIncompleto(temCamposObrigatoriosPendentes(paciente));
         Paciente updated = pacienteRepository.save(paciente);
         return converterParaDTO(updated);
     }
@@ -202,6 +207,8 @@ public class PacienteService {
         dto.setEmail(paciente.getEmail());
         dto.setSexo(paciente.getSexo());
         dto.setProntuario(paciente.getProntuario());
+        dto.setCadastroIncompleto(isCadastroIncompleto(paciente));
+        dto.setOrigemAgendamento(paciente.isOrigemAgendamento());
 
         Long totalConsultas = consultaRepository.countByPacienteId(paciente.getId());
         dto.setTotalConsultas(totalConsultas.intValue());
@@ -261,6 +268,8 @@ public class PacienteService {
         dto.setEmail(paciente.getEmail());
         dto.setSexo(paciente.getSexo());
         dto.setProntuario(paciente.getProntuario());
+        dto.setCadastroIncompleto(isCadastroIncompleto(paciente));
+        dto.setOrigemAgendamento(paciente.isOrigemAgendamento());
 
         Object[] summary = summaryMap.get(paciente.getId());
         if (summary != null) {
@@ -271,5 +280,32 @@ public class PacienteService {
         }
 
         return dto;
+    }
+
+    /**
+     * Atualiza CPF apenas quando o valor muda, validando unicidade.
+     */
+    private void atualizarCpfQuandoInformado(Paciente paciente, String novoCpf) {
+        if (Objects.equals(paciente.getCpf(), novoCpf)) {
+            return;
+        }
+
+        if (novoCpf != null && pacienteRepository.existsByCpf(novoCpf)) {
+            throw new BusinessException("CPF jï¿½ cadastrado no sistema");
+        }
+
+        paciente.setCpf(novoCpf);
+    }
+
+    private boolean isCadastroIncompleto(Paciente paciente) {
+        return paciente.isCadastroIncompleto()
+                || temCamposObrigatoriosPendentes(paciente);
+    }
+
+    private boolean temCamposObrigatoriosPendentes(Paciente paciente) {
+        return paciente.getCpf() == null
+                || paciente.getCpf().isBlank()
+                || paciente.getDataNascimento() == null
+                || paciente.getSexo() == null;
     }
 }

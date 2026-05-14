@@ -43,13 +43,31 @@
             <i class="fas fa-user-check"></i>
             {{ pacienteSelecionado.nomeCompleto }}
           </div>
+        } @else if ((form.get('buscaPaciente')?.value || '').trim().length >= 3) {
+          <div class="paciente-novo">
+            <i class="fas fa-user-plus"></i>
+            Novo paciente de agendamento
+          </div>
         }
-        @if (form.get('pacienteId')?.touched && form.get('pacienteId')?.errors) {
-          <span class="field-error">Selecione um paciente</span>
-        }
+        @if (getCampoErro('buscaPaciente')) { <span class="field-error">{{ getCampoErro('buscaPaciente') }}</span> }
       </div>
 
       <!-- Data e Horário -->
+      <div class="form-group">
+        <label class="form-label">Telefone <span class="required">*</span></label>
+        <input
+          type="text"
+          class="form-input"
+          placeholder="(00) 00000-0000"
+          formControlName="telefoneWhatsapp"
+          maxlength="15"
+          (input)="formatarTelefone($event)"
+        />
+        @if (form.get('telefoneWhatsapp')?.touched && form.get('telefoneWhatsapp')?.hasError('telefoneInvalido')) {
+          <span class="field-error">Telefone invalido</span>
+        }
+      </div>
+
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Data <span class="required">*</span></label>
